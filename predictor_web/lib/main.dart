@@ -80,7 +80,6 @@ class _DashboardPageState extends State<DashboardPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Calendar section
                 Expanded(
                   flex: 1,
                   child: CalendarDatePicker(
@@ -93,8 +92,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 SizedBox(width: 20),
-
-                // Input + Prediction section
                 Expanded(
                   flex: 2,
                   child: Column(
@@ -143,9 +140,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                       ),
-
                       SizedBox(height: 20),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
