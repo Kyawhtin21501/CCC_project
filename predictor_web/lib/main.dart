@@ -5,6 +5,8 @@ import 'dart:convert';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,6 +19,8 @@ class MyApp extends StatelessWidget {
 }
 
 class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
+
   @override
   _DashboardPageState createState() => _DashboardPageState();
 }
@@ -133,8 +137,8 @@ class _DashboardPageState extends State<DashboardPage> {
                               SizedBox(height: 10),
                               ElevatedButton(
                                 onPressed: fetchPredictions,
-                                child: Center(child: Text("保存")),
                                 style: ElevatedButton.styleFrom(minimumSize: Size(double.infinity, 40)),
+                                child: Center(child: Text("保存")),
                               ),
                             ],
                           ),
@@ -164,7 +168,7 @@ class PredictionCard extends StatelessWidget {
   final String title;
   final String value;
 
-  PredictionCard({required this.title, required this.value});
+  const PredictionCard({super.key, required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
