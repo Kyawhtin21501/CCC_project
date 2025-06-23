@@ -19,15 +19,11 @@ def predict():
         'customer_count': data.get('customer_count'),
         'sales': data.get('sales')
     }
-    csv_path = 'data/userinput.csv'
+    csv_path = 'data/user_input.csv'
     df = pd.DataFrame([input_row])
-    if os.path.exists(csv_path):
-        df.to_csv(csv_path, mode='a', header=False, index=False)
-    else:
-        df.to_csv(csv_path, mode='w', header=True, index=False)
+    df.to_csv(csv_path, mode='a', header=False, index=False)
     return jsonify({
-        'predicted_sales': 9999,
-        'predicted_staff': 5
+        "data": df["sales"].tolist()
     })
 
 if __name__ == '__main__':
