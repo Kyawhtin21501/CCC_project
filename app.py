@@ -19,7 +19,7 @@ def predict():
         'customer_count': data.get('customer_count'),
         'sales': data.get('sales')
     }
-    csv_path = 'data/user_input.csv'
+    csv_path = 'data/user_inputs.csv'
     df = pd.DataFrame([input_row])
     df.to_csv(csv_path, mode='a', header=False, index=False)
     return jsonify({

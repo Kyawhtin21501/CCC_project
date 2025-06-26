@@ -2,186 +2,201 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() => runApp(MyApp());
+import 'package:predictor_web/prediction_result_screen.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() {
+  runApp(const ShiftAIApp());
+}
+
+class ShiftAIApp extends StatelessWidget {
+  const ShiftAIApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '飲食店のシフトと売上予測',
+      title: 'ShiftAI Dashboard',
+      theme: ThemeData(fontFamily: 'Segoe UI'),
+      home: const DashboardScreen(),
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: DashboardPage(),
     );
   }
 }
 
-class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  _DashboardPageState createState() => _DashboardPageState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  final TextEditingController customerController = TextEditingController();
+class _DashboardScreenState extends State<DashboardScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  DateTime? _selectedDate;
   final TextEditingController salesController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
-  String selectedDay = '月曜日';
-  String selectedEvent = 'なし';
-  String salesPrediction = '-';
-  String staffPrediction = '-';
+  final TextEditingController customerController = TextEditingController();
+  final TextEditingController staffCountController = TextEditingController();
+  final TextEditingController staffNameController = TextEditingController();
+  String? festivalStatus;
 
-  Future<void> fetchPredictions() async {
-    final url = Uri.parse('http://127.0.0.1:5000/predict');
+  Future<void> _submitAndShowPrediction() async {
+    if (_formKey.currentState!.validate() &&
+        _selectedDate != null &&
+        festivalStatus != null) {
+      final url = Uri.parse('http://127.0.0.1:5000/predict'); // Flaskのpredictエンドポイントに変更
+      final Map<String, dynamic> payload = {
+        "date": _selectedDate!.toIso8601String().split('T')[0],
+        "day": _selectedDate!.weekday.toString(),
+        "event": festivalStatus == '1' ? "festival" : "none",
+        "customer_count": customerController.text,
+        "sales": salesController.text,
+      };
 
-    final body = {
-      'date': selectedDate.toIso8601String(),
-      'day': selectedDay,
-      'event': selectedEvent,
-      'customer_count': int.tryParse(customerController.text) ?? 0,
-      'sales': int.tryParse(salesController.text) ?? 0,
-    };
+      try {
+        final response = await http.post(
+          url,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(payload),
+        );
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+        if (response.statusCode == 200) {
+          final resultData = jsonDecode(response.body);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        salesPrediction = data['predicted_sales'].toString();
-        staffPrediction = data['predicted_staff'].toString();
-      });
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => PredictionResultScreen(
+                predictedSales: resultData['predicted_sales'],
+                predictedStaff: resultData['predicted_staff'],
+              ),
+              // transitionsBuilder: (_, animation, __, child) {
+              //   const begin = Offset(1.0, 0.0);
+              //   const end = Offset.zero;
+              //   const curve = Curves.easeInOut;
+              //   final tween =
+              //       Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              //   return SlideTransition(position: animation.drive(tween), child: child);
+              // },
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('保存または予測エラー (${response.statusCode})')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('通信エラー: $e')),//ERROR to get data
+        );
+      }
     } else {
-      setState(() {
-        salesPrediction = 'Error';
-        staffPrediction = 'Error';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('全ての項目を正しく入力してください')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F8FB),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
+      appBar: AppBar(title: const Text('売上・スタッフ予測ダッシュボード')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("ダッシュボード", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                Text("飲食店のシフトと売上予測", style: TextStyle(fontSize: 18)),
-              ],
+            const Text(
+              '売上・スタッフ数・祭り情報の入力',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2b5797),
+              ),
             ),
-            SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: CalendarDatePicker(
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2030),
-                    onDateChanged: (date) {
-                      setState(() => selectedDate = date);
-                    },
-                  ),
+            const SizedBox(height: 24),
+            Form(
+              key: _formKey,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
                 ),
-                SizedBox(width: 20),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    children: [
-                      Card(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("日次データ入力", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                              SizedBox(height: 10),
-                              Text("日付: ${selectedDate.toString().split(' ')[0]}", style: TextStyle(fontSize: 16)),
-                              DropdownButton<String>(
-                                value: selectedDay,
-                                onChanged: (val) => setState(() => selectedDay = val!),
-                                items: ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日']
-                                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                                    .toList(),
-                              ),
-                              TextField(
-                                controller: customerController,
-                                decoration: InputDecoration(labelText: '来客数'),
-                                keyboardType: TextInputType.number,
-                              ),
-                              TextField(
-                                controller: salesController,
-                                decoration: InputDecoration(labelText: '売上'),
-                                keyboardType: TextInputType.number,
-                              ),
-                              DropdownButton<String>(
-                                value: selectedEvent,
-                                onChanged: (val) => setState(() => selectedEvent = val!),
-                                items: ['なし', '祝日', 'イベント', 'セール']
-                                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                                    .toList(),
-                              ),
-                              SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: fetchPredictions,
-                                style: ElevatedButton.styleFrom(minimumSize: Size(double.infinity, 40)),
-                                child: Center(child: Text("保存")),
-                              ),
-                            ],
-                          ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      title: const Text("日付"),
+                      subtitle: Text(_selectedDate == null
+                          ? '日付を選択'
+                          : '${_selectedDate!.year}/${_selectedDate!.month}/${_selectedDate!.day}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (date != null) setState(() => _selectedDate = date);
+                        },
+                      ),
+                    ),
+                    TextFormField(
+                      controller: salesController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: '売上（円）'),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? '売上を入力してください' : null,
+                    ),
+                    TextFormField(
+                      controller: customerController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: '客数'),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? '客数を入力してください' : null,
+                    ),
+                    TextFormField(
+                      controller: staffCountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'スタッフ数'),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'スタッフ数を入力してください' : null,
+                    ),
+                    TextFormField(
+                      controller: staffNameController,
+                      decoration: const InputDecoration(labelText: 'スタッフ名前'),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'スタッフ名を入力してください' : null,
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: festivalStatus,
+                      decoration: const InputDecoration(labelText: '祭りの有無'),
+                      items: const [
+                        DropdownMenuItem(value: '1', child: Text('あり')),
+                        DropdownMenuItem(value: '0', child: Text('なし')),
+                      ],
+                      onChanged: (value) => setState(() => festivalStatus = value),
+                      validator: (value) =>
+                          value == null ? '祭りの有無を選択してください' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.trending_up),
+                        label: const Text('保存と予測'),
+                        onPressed: _submitAndShowPrediction,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2b5797),
+                          foregroundColor: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          PredictionCard(title: '売上の予測', value: salesPrediction),
-                          PredictionCard(title: 'スタッフの予測', value: staffPrediction),
-                        ],
-                      )
-                    ],
-                  ),
-                )
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class PredictionCard extends StatelessWidget {
-  final String title;
-  final String value;
-
-  const PredictionCard({super.key, required this.title, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: EdgeInsets.all(20),
-        width: 150,
-        child: Column(
-          children: [
-            Text(title, style: TextStyle(fontSize: 16)),
-            SizedBox(height: 10),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
