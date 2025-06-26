@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PredictionResultScreen extends StatelessWidget {
-  final int predictedSales;
-  final int predictedStaff;
+  final String predictedSales;
+  final String predictedStaff;
 
   const PredictionResultScreen({
     super.key,

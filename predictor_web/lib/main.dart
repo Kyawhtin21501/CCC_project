@@ -45,9 +45,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         festivalStatus != null) {
       final url = Uri.parse('http://127.0.0.1:5000/predict'); // Flaskのpredictエンドポイントに変更
       final Map<String, dynamic> payload = {
-        "date": _selectedDate!.toIso8601String().split('T')[0],
+        "date": _selectedDate!.toIso8601String(),
         "day": _selectedDate!.weekday.toString(),
-        "event": festivalStatus == '1' ? "festival" : "none",
+        "event": festivalStatus == '1' ? "True" : "Flase",
         "customer_count": customerController.text,
         "sales": salesController.text,
       };
@@ -60,25 +60,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
         if (response.statusCode == 200) {
+         
           final resultData = jsonDecode(response.body);
-
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => PredictionResultScreen(
-                predictedSales: resultData['predicted_sales'],
-                predictedStaff: resultData['predicted_staff'],
+          // print("----------------------"+ resultData.toString()+"----------------------");
+           Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) =>  PredictionResultScreen(
+                predictedSales: resultData['predicted_sales'].toString(),
+                predictedStaff: resultData['predicted_staff'].toString(),
               ),
-              // transitionsBuilder: (_, animation, __, child) {
-              //   const begin = Offset(1.0, 0.0);
-              //   const end = Offset.zero;
-              //   const curve = Curves.easeInOut;
-              //   final tween =
-              //       Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              //   return SlideTransition(position: animation.drive(tween), child: child);
-              // },
-            ),
-          );
+              
+              ),
+            
+            );
+
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('保存または予測エラー (${response.statusCode})')),
@@ -86,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('通信エラー: $e')),//ERROR to get data
+          SnackBar(content: Text('通信エラー: $e')),
         );
       }
     } else {
