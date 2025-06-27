@@ -39,17 +39,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController staffNameController = TextEditingController();
   String? festivalStatus;
 
+  /// Send data and get prediction result
   Future<void> _submitAndShowPrediction() async {
     if (_formKey.currentState!.validate() &&
         _selectedDate != null &&
         festivalStatus != null) {
-      final url = Uri.parse('http://127.0.0.1:5000/predict'); // Flaskのpredictエンドポイントに変更
-      final Map<String, dynamic> payload = {
-        "date": _selectedDate!.toIso8601String(),
+      final url = Uri.parse('http://127.0.0.1:5000/predict');
+
+      final payload = {
+        "date": _selectedDate!.toIso8601String().split('T').first,
         "day": _selectedDate!.weekday.toString(),
-        "event": festivalStatus == '1' ? "True" : "Flase",
-        "customer_count": customerController.text,
-        "sales": salesController.text,
+        "event": festivalStatus == '1' ? "True" : "False", // ✅ Fixed typo
+        "customer_count": int.tryParse(customerController.text) ?? 0,
+        "sales": int.tryParse(salesController.text) ?? 0,
+        "staff_names": staffNameController.text
+            .split(',')
+            .map((e) => e.trim())
+            .toList(), // ✅ Convert comma-separated to list
+        "staff_count": int.tryParse(staffCountController.text) ?? 0,
       };
 
       try {
@@ -60,20 +67,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
         if (response.statusCode == 200) {
-         
           final resultData = jsonDecode(response.body);
-          // print("----------------------"+ resultData.toString()+"----------------------");
-           Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>  PredictionResultScreen(
-                predictedSales: resultData['predicted_sales'].toString(),
-                predictedStaff: resultData['predicted_staff'].toString(),
-              ),
-              
-              ),
-            
-            );
 
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PredictionResultScreen(
+                predictedSales:
+                    resultData['predicted_sales'].toString(), // Keep as string
+                predictedStaff:
+                    resultData['predicted_staff'].toString(), // Keep as string
+              ),
+            ),
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('保存または予測エラー (${response.statusCode})')),
@@ -88,6 +94,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('全ての項目を正しく入力してください')),
       );
+    }
+  }
+
+  /// Just save data without showing prediction
+  Future<void> _saveDataOnly() async {
+    if (_formKey.currentState!.validate() &&
+        _selectedDate != null &&
+        festivalStatus != null) {
+      final url = Uri.parse('http://127.0.0.1:5000/save'); // ⚠️ Create this in Flask
+
+      final payload = {
+        "date": _selectedDate!.toIso8601String().split('T').first,
+        "day": _selectedDate!.weekday.toString(),
+        "event": festivalStatus == '1' ? "True" : "False",
+        "customer_count": int.tryParse(customerController.text) ?? 0,
+        "sales": int.tryParse(salesController.text) ?? 0,
+        "staff_names": staffNameController.text
+            .split(',')
+            .map((e) => e.trim())
+            .toList(),
+        "staff_count": int.tryParse(staffCountController.text) ?? 0,
+      };
+
+      try {
+        final response = await http.post(
+          url,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(payload),
+        );
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('データが保存されました')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('保存エラー (${response.statusCode})')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('通信エラー: $e')),
+        );
+      }
     }
   }
 
@@ -115,7 +165,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
+                  boxShadow: const [
+                    BoxShadow(blurRadius: 10, color: Colors.black12)
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -160,7 +212,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     TextFormField(
                       controller: staffNameController,
-                      decoration: const InputDecoration(labelText: 'スタッフ名前'),
+                      decoration: const InputDecoration(labelText: 'スタッフ名前（カンマ区切り）'),
                       validator: (value) =>
                           value == null || value.isEmpty ? 'スタッフ名を入力してください' : null,
                     ),
@@ -176,17 +228,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           value == null ? '祭りの有無を選択してください' : null,
                     ),
                     const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.trending_up),
-                        label: const Text('保存と予測'),
-                        onPressed: _submitAndShowPrediction,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2b5797),
-                          foregroundColor: Colors.white,
+
+                    /// Two buttons: save + prediction
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.save),
+                          label: const Text('保存のみ'),
+                          onPressed: _saveDataOnly,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[700],
+                            foregroundColor: Colors.white,
+                          ),
                         ),
-                      ),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.trending_up),
+                          label: const Text('保存と予測'),
+                          onPressed: _submitAndShowPrediction,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2b5797),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
