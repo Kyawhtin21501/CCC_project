@@ -58,8 +58,9 @@
       if (_formKey.currentState!.validate() &&
           _selectedDate != null &&
           festivalStatus != null) {
-        final url =  Uri.parse('http://100.64.1.37:5001/user_input');
+       final url = Uri.parse('http://127.0.0.1:5000/user_input');
 
+      //this url have to change
 
         final payload = _buildPayload();
 
@@ -91,7 +92,9 @@
       if (_formKey.currentState!.validate() &&
           _selectedDate != null &&
           festivalStatus != null) {
-        final url = Uri.parse('http://100.64.1.37:5001/predict');
+            final url = Uri.parse('http://127.0.0.1:5000/predict');
+
+       // url have to change
         final payload = _buildPayload();
 
         try {

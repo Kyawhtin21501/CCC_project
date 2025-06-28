@@ -15,3 +15,4 @@ date,is_festival,sales,guests,staff_count,assigned_staff,total_staff_level
 2025-06-29,True,20000,100,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",5
 2025-06-29,True,20000,100,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",5
 2025-06-29,True,20000,100,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",10
+2025-06-30,False,230000,89,1,['Kyipyarhlaing']
