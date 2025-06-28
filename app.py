@@ -5,6 +5,7 @@ import os
 import json
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)
 
@@ -22,7 +23,7 @@ def save_data():
         'sales': data.get('sales'),
         'guests': data.get('customer_count'),
         'staff_count': data.get('staff_count'),
-        'assigned_staff': json.dumps(data.get('staff_names')),
+        'assigned_staff': data.get('staff_names') ,
     }
     staff_data_path = "data/staff_data.csv"
     csv_path = "data/user_input.csv"
@@ -33,7 +34,7 @@ def save_data():
         if not match.empty:
             total_level += int(match['Level'].values[0])
 
-    input_row['total_staff_level'] = total_level
+            input_row['total_staff_level'] = total_level
 
     df = pd.DataFrame([input_row])
 
