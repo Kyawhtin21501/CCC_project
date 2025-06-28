@@ -15,13 +15,14 @@ def home():
 
 @app.route('/user_input', methods=['POST'])
 def save_data():
+    data = request.get_json()
     input_row = {
-        'date': "2025-06-28",
-        'is_festival': True,
-        'sales': 20000,
-        'guests': 10,
-        'staff_count': 2,
-        'assigned_staff': ["Alice", "Hannah", "Kevin"]
+        'date': data.get('date'),
+        'is_festival': data.get('event'),
+        'sales': data.get('sales'),
+        'guests': data.get('customer_count'),
+        'staff_count': data.get('staff_count'),
+        'assigned_staff': json.dumps(data.get('staff_names')),
     }
     staff_data_path = "data/staff_data.csv"
     csv_path = "data/user_input.csv"

@@ -2,3 +2,4 @@ date,is_festival,sales,guests,staff_count,assigned_staff,total_staff_level
 2025-06-28,True,20000,10,2,"['Alice', 'Hannah', 'Kevin']",8
 2025-06-28,True,20000,10,2,"['Alice', 'Hannah', 'Kevin']",8
 2025-06-28,True,20000,10,2,"['Alice', 'Hannah', 'Kevin']",8
+2025-06-27,True,2000,1,1,"[""Charlie""]",0
