@@ -29,7 +29,7 @@ def save_data():
     csv_path = "data/user_input.csv"
     staff_df = pd.read_csv(staff_data_path)
     total_level = 0
-    for name in input_row['assigned_staff']:
+    for name in input_row['assigned_staff']:#kyaw htin hein
         match = staff_df[staff_df['Name'] == name]
         if not match.empty:
             total_level += int(match['Level'].values[0])
