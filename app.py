@@ -59,10 +59,10 @@ def save_data():
 def predict():
     data = request.get_json()
 
-    # No saving to CSV here
+
     customer_count = int(data.get('customer_count', 0))
     sales = int(data.get('sales', 0))
-# add real result in here
+
     predicted_sales = sales + 10000  # Dummy logic
     predicted_staff = customer_count // 50 + 1  # Dummy logic
 
@@ -72,6 +72,6 @@ def predict():
     }), 200
 if __name__ == '__main__':
     app.run(debug=True)
-    #have to change the port number
+  
 
 
