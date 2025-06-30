@@ -25,6 +25,15 @@ def save_data():
         'staff_count': data.get('staff_count'),
         'assigned_staff': data.get('staff_names') ,
     }
+    cleaned_names = []
+    for name in input_row['assigned_staff']:
+        name = name.strip()
+        name = name.title()
+        cleaned_names.append(name)
+    input_row['assigned_staff'] = cleaned_names
+
+
+
     staff_data_path = "data/staff_data.csv"
     csv_path = "data/user_input.csv"
     staff_df = pd.read_csv(staff_data_path)
