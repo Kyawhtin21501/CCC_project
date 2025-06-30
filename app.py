@@ -1,4 +1,4 @@
-#second time updated one and added dummy logic for prediction result ===>kyi pyar hlaing
+
 from flask import Flask, request, jsonify
 import pandas as pd
 import os
