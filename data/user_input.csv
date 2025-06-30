@@ -1,19 +1,2 @@
-date,is_festival,sales,guests,staff_count,assigned_staff,total_staff_level
-2025-06-28,True,20000,10,2,"['Alice', 'Hannah', 'Kevin']",8
-2025-06-28,True,20000,10,2,"['Alice', 'Hannah', 'Kevin']",8
-2025-06-28,True,20000,10,2,"['Alice', 'Hannah', 'Kevin']",8
-2025-06-27,True,2000,1,1,"[""Charlie""]",0
-2025-06-29,True,200000,100,2,"[""Kyaw Htin"", ""Kyi Pyar Hlaing""]",0
-2025-06-29,True,20000,100,2,"[""Kyaw Htin Hein"", ""Kyi Pyar Hlaing""]",0
-2025-06-29,True,20000,100,2,"[""Kyaw Htin Hein"", ""Kyi Pyar Hlaing""]",0
-2025-06-29,True,20000,100,2,"[""Kyaw Htin Hein"", ""Kyi Pyar Hlaing""]",0
-2025-06-29,True,20000,100,2,"[""Hannah"", ""Kevin""]",0
-2025-06-29,True,20000,100,2,"[""Hannah"", ""Kevin""]",0
-2025-06-29,True,20000,100,2,"[""Hannah"", ""Kevin""]",0
-2025-06-29,True,20000,100,2,"[""Hannah"", ""Kevin""]"
-2025-06-29,True,20000,100,2,"['Hannah', 'Kevin']",7
-2025-06-29,True,20000,100,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",5
-2025-06-29,True,20000,100,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",5
-2025-06-29,True,20000,100,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",10
-2025-06-30,False,230000,89,1,['Kyipyarhlaing']
+2025-06-30,True,20000,200,2,"['Kyaw Htin', 'Kyipyarhlaing']",5
 2025-06-30,True,20000,200,2,"['Kyaw Htin', 'Kyi Pyar Hlaing']",10
