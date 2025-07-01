@@ -18,3 +18,5 @@ class staff_profile:
 
 staff1 = staff_profile(250324,"Kyaw Htin Hein",5,"Male",24)
 staff1.save_data()
+staff2 = staff_profile(250325,"Kyi Pyar Hlaing",5,"Female",24)
+staff1.save_data()
