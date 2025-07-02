@@ -1,8 +1,11 @@
+//added menu bar and shift range
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:predictor_web/create_shift.dart';
 import 'package:predictor_web/prediction_result_screen.dart';
+import 'package:predictor_web/staff_profile.dart';
 
 void main() {
   runApp(const ShiftAIApp());
@@ -33,6 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _formKey = GlobalKey<FormState>();
 
   DateTime? _selectedDate;
+  DateTime? _shiftStart;
+  DateTime? _shiftEnd;
   final TextEditingController salesController = TextEditingController();
   final TextEditingController customerController = TextEditingController();
   final TextEditingController staffCountController = TextEditingController();
@@ -54,6 +59,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       "sales": int.tryParse(salesController.text) ?? 0,
       "staff_names": selectedStaffNames,
       "staff_count": int.tryParse(staffCountController.text) ?? 0,
+      "shift_start": _shiftStart?.toIso8601String(),
+      "shift_end": _shiftEnd?.toIso8601String(),
     };
   }
 
@@ -149,6 +156,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('売上・スタッフ予測ダッシュボード')),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Color(0xFF2b5797)),
+              child: Text('メニュー', style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dashboard),
+              title: const Text('ダッシュボード'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.trending_up),
+              title: const Text('予測を実行'),
+              onTap: () {
+                Navigator.pop(context);
+                _submitAndShowPrediction();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.trending_up),
+              title: const Text('シフト作成'),
+              onTap: () {
+               Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DateRangeScreen()
+            ),
+          );
+                
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.trending_up),
+              title: const Text('Profile'),
+              onTap: () {
+               Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StaffProfileApp()
+            ),
+          );
+                
+              },
+            ),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -180,10 +237,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
               ),
-              _buildNumberField(salesController, '売上（円）'),
+              _buildNumberField(salesController, '売上（円）', allowNegative: false),
               _buildNumberField(customerController, '客数'),
               _buildNumberField(staffCountController, 'スタッフ数'),
-              _buildStaffMultiSelect(),
+               _buildStaffMultiSelect(),
               DropdownButtonFormField<String>(
                 value: festivalStatus,
                 decoration: const InputDecoration(labelText: '祭りの有無'),
@@ -195,22 +252,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 validator: (value) => value == null ? '祭りの有無を選択してください' : null,
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton.icon(
+              Center(
+               
+                 child:  ElevatedButton.icon(
                     icon: const Icon(Icons.save),
                     label: const Text('保存のみ'),
                     onPressed: _saveDataOnly,
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700], foregroundColor: Colors.white),
                   ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.trending_up),
-                    label: const Text('予測のみ'),
-                    onPressed: _submitAndShowPrediction,
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2b5797), foregroundColor: Colors.white),
-                  ),
-                ],
+                  // ElevatedButton.icon(
+                  //   icon: const Icon(Icons.trending_up),
+                  //   label: const Text('予測のみ'),
+                  //   onPressed: _submitAndShowPrediction,
+                  //   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2b5797), foregroundColor: Colors.white),
+                  // ),
+                
               ),
             ],
           ),
@@ -219,14 +275,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildNumberField(TextEditingController controller, String label) {
+  Widget _buildNumberField(TextEditingController controller, String label, {bool allowNegative = true}) {
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(labelText: label),
       validator: (value) {
         if (value == null || value.isEmpty) return '$label を入力してください';
-        if (int.tryParse(value) == null) return '数値を入力してください';
+        final number = int.tryParse(value);
+        if (number == null) return '数値を入力してください';
+        if (!allowNegative && number < 0) return '0以上の値を入力してください';
         return null;
       },
     );
@@ -266,4 +324,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
+
+
 }
