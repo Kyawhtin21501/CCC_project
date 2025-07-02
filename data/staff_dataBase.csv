@@ -1,8 +1,7 @@
-ID,Name,Level,Gender,Age,Email
-1001,Kyaw Htin Hein,5,Male,"(24,)",khein12345@gmail.com
-1002,Kyi Pyar Hlaing,4,Female,"(24,)",kyi1111@gmail.com
-<<<<<<< HEAD
-1003,Kurihara Saimoto,5,Male,"(26,)",kuria@gmail.com
-=======
-1003,Kha Lar Lay,2,Male,"(20,)",hein12345@gmail.com
->>>>>>> de22bdf (user_profile_edit_01)
+ID,Name,Level,Gender,Age,Email,Assign
+1001,Kyaw Htin Hein,5,Male,"(24,)",khein12345@gmail.com,
+1002,Kyi Pyar Hlaing,4,Female,"(24,)",kyi1111@gmail.com,
+1003,Kha Lar Lay,2,Male,"(20,)",hein12345@gmail.com,
+1004,Aria,5,Female,"(29,)",,aria@gmail.com
+1005,Aria,5,Female,"(29,)",,aria@gmail.com
+1006,Jeany,4,Male,"(33,)",,jean@gamil.com

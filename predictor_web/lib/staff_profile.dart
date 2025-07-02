@@ -52,6 +52,12 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
         if (response.statusCode == 200) {
           final responseData = jsonDecode(response.body);
+        // Clear all fields and reset state
+        _nameController.clear();
+        _ageController.clear();
+        _levelController.clear();
+        _emailController.clear();
+        setState(() => _selectedGender = 'Male'); // Reset gender
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -65,6 +71,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
               ],
             ),
           );
+          
         } else {
           throw Exception('Failed to submit data');
         }
@@ -98,7 +105,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Staff Profile Input')),
+      appBar: AppBar(title: const Text('Staff Profile')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Form(

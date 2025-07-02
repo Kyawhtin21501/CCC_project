@@ -89,6 +89,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
         if (response.statusCode == 200) {
+           // Reset form after saving
+          setState(() {
+            _selectedDate = null;
+            _shiftStart = null;
+            _shiftEnd = null;
+            salesController.clear();
+            customerController.clear();
+            staffCountController.clear();
+            selectedStaffNames.clear();
+            festivalStatus = null;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('データが保存されました')),
           );
@@ -126,6 +137,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         if (response.statusCode == 200) {
           final resultData = jsonDecode(response.body);
+          
           Navigator.push(
             context,
             MaterialPageRoute(
