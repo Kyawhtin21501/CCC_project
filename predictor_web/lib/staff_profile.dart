@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class StaffProfileApp extends StatelessWidget {
-  const StaffProfileApp({super.key});
+class StaffProfile extends StatelessWidget {
+  const StaffProfile({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,33 +24,24 @@ class StaffProfileForm extends StatefulWidget {
 
 class _StaffProfileFormState extends State<StaffProfileForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _idController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _levelController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
   String _selectedGender = 'Male';
-  bool _morningShift = false;
-  bool _lunchShift = false;
-  bool _nightShift = false;
 
   Future<void> _submitProfile() async {
     if (_formKey.currentState!.validate()) {
       final staffData = {
-        'id': _idController.text,
         'name': _nameController.text,
         'age': _ageController.text,
         'level': _levelController.text,
         'gender': _selectedGender,
-        'shifts': {
-          'morning': _morningShift,
-          'lunch': _lunchShift,
-          'night': _nightShift,
-        }
+        'email': _emailController.text,
       };
 
-      // Replace with your actual API URL
-      final url = Uri.parse('http://127.0.0.1:5000/testing');
+      final url = Uri.parse('http://127.0.0.1:5000/services/testing'); // ✅ Flask endpoint
 
       try {
         final response = await http.post(
@@ -97,10 +88,10 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
   @override
   void dispose() {
-    _idController.dispose();
     _nameController.dispose();
     _ageController.dispose();
     _levelController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -114,16 +105,6 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
-                controller: _idController,
-                decoration: const InputDecoration(
-                  labelText: 'Staff ID',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter staff ID' : null,
-              ),
-              const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -172,6 +153,17 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                 },
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter email' : null,
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedGender,
                 decoration: const InputDecoration(
@@ -181,31 +173,12 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                 items: const [
                   DropdownMenuItem(value: 'Male', child: Text('Male')),
                   DropdownMenuItem(value: 'Female', child: Text('Female')),
-                  DropdownMenuItem(value: 'Other', child: Text('Other')),
                 ],
                 onChanged: (value) {
                   setState(() {
                     _selectedGender = value!;
                   });
                 },
-              ),
-              const SizedBox(height: 20),
-              const Text('Available Shifts',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              CheckboxListTile(
-                title: const Text('Morning Shift'),
-                value: _morningShift,
-                onChanged: (val) => setState(() => _morningShift = val!),
-              ),
-              CheckboxListTile(
-                title: const Text('Lunch Shift'),
-                value: _lunchShift,
-                onChanged: (val) => setState(() => _lunchShift = val!),
-              ),
-              CheckboxListTile(
-                title: const Text('Night Shift'),
-                value: _nightShift,
-                onChanged: (val) => setState(() => _nightShift = val!),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
