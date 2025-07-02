@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services.staff_manager import StaffManager
-#from services.user_input_handler import UserInputHandler
+from services.user_input_handler import UserInputHandler
 
 app = Flask(__name__)
 CORS(app)
@@ -18,9 +18,9 @@ def home():
 def save_data():
     data = request.get_json()
     staff_manager = StaffManager()
-    #handler = UserInputHandler(data, staff_manager)
-    #cleaned_names = handler.process_and_save()
-    #print(cleaned_names)
+    handler = UserInputHandler(data, staff_manager)
+    cleaned_names = handler.process_and_save()
+    print(cleaned_names)
     return jsonify({"message": "Data saved successfully"}), 200
 
 
