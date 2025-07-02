@@ -1,4 +1,3 @@
-0,1,2,3,4
-250324,Kyaw Htin Hein,5,Male,24
-250324,Kyaw Htin Hein,5,Male,24
-250324,Kyaw Htin Hein,5,Male,24
+ID,Name,Level,Gender,Age
+1001,Kyaw Htin Hein,3,Male,24
+1003,Kyi Pyar Hlaing,4,Female,24

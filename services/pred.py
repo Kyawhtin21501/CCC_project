@@ -5,6 +5,8 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 import joblib
+
+
 class ShiftCreator:
     def __init__(self, start_date, end_date, latitude, longitude, date_format="%Y-%m-%d"):
         self.start_date = start_date
@@ -140,24 +142,4 @@ class ShiftCreator:
         return sales_preds[["date", "predicted_sales", "predicted_staff_level"]]
 
             
-
-if __name__ == "__main__":
-    start_date = input("Plz enter start date (YYYY-MM-DD): ")
-    end_date = input("Plz enter end date (YYYY-MM-DD): ")
-
-    #saitama
-    latitude = 35.8617
-    longitude = 139.6455
-    
-
-    creator = ShiftCreator(start_date, end_date, latitude, longitude)
-    start, end = creator.date_data_from_user()
-   
-    if start and end:
-        start, end = creator.date_data_from_user()
-        festivals = creator.check_festival_range(start, end)
-        weather_df = creator.weather_data(start, end) 
-        pred_df = creator.pred_from_model(start, end, festivals, weather_df)
-        pred_staff = creator.pred_staff_count(pred_df)
-
 

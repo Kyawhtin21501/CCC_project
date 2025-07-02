@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
-
+from services.pred import ShiftCreator
 app = Flask(__name__)
 CORS(app)
 
@@ -33,21 +33,32 @@ def submit_staff():
     # Save to DB or process here
     return jsonify({'message': 'Staff profile saved successfully'})
 
-# @app.route('/predict', methods=['POST'])
-# def predict():
-#     data = request.get_json()
+@app.route('/shift', methods=['POST'])
 
+@app.route('/shift', methods=['POST'])
+def shift():
+    data = request.get_json()
+    
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
 
-#     customer_count = int(data.get('customer_count', 0))
-#     sales = int(data.get('sales', 0))
+    creator = ShiftCreator(start_date, end_date, latitude, longitude)
+    start, end = creator.date_data_from_user()
 
-#     predicted_sales = sales + 10000  # Dummy logic
-#     predicted_staff = customer_count // 50 + 1  # Dummy logic
+    if not start or not end:
+        return jsonify({"error": "Invalid date format"}), 400
 
-#     return jsonify({
-#         "predicted_sales": predicted_sales,
-#         "predicted_staff": predicted_staff
-#     }), 200
+    festivals = creator.check_festival_range(start, end)
+    weather_df = creator.weather_data(start, end)
+    pred_df = creator.pred_from_model(start, end, festivals, weather_df)
+    result_df = creator.pred_staff_count(pred_df)
+
+    result_json = result_df.to_dict(orient="records")
+
+    return jsonify(result_json), 200
+    
 if __name__ == '__main__':
     app.run(debug=True)
   
