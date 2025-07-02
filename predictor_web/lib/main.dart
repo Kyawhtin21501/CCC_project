@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:predictor_web/create_shift.dart';
 import 'package:predictor_web/prediction_result_screen.dart';
+import 'package:predictor_web/staff_profile.dart';
 
 void main() {
   runApp(const ShiftAIApp());
@@ -175,6 +177,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _submitAndShowPrediction();
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.trending_up),
+              title: const Text('シフト作成'),
+              onTap: () {
+               Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DateRangeScreen()
+            ),
+          );
+                
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.trending_up),
+              title: const Text('Profile'),
+              onTap: () {
+               Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StaffProfileApp()
+            ),
+          );
+                
+              },
+            ),
           ],
         ),
       ),
@@ -212,8 +240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildNumberField(salesController, '売上（円）', allowNegative: false),
               _buildNumberField(customerController, '客数'),
               _buildNumberField(staffCountController, 'スタッフ数'),
-             
-              _buildStaffMultiSelect(),
+               _buildStaffMultiSelect(),
               DropdownButtonFormField<String>(
                 value: festivalStatus,
                 decoration: const InputDecoration(labelText: '祭りの有無'),

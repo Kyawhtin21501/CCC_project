@@ -24,22 +24,30 @@ def save_data():
     return jsonify({"message": "Data saved successfully"}), 200
 
 
-@app.route('/predict', methods=['POST'])
+#creating staff profile
 
-def predict():
-    data = request.get_json()
+@app.route('/testing', methods=['POST'])
+def submit_staff():
+    data = request.json
+    print("Received staff data:", data)
+    # Save to DB or process here
+    return jsonify({'message': 'Staff profile saved successfully'})
+
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     data = request.get_json()
 
 
-    customer_count = int(data.get('customer_count', 0))
-    sales = int(data.get('sales', 0))
+#     customer_count = int(data.get('customer_count', 0))
+#     sales = int(data.get('sales', 0))
 
-    predicted_sales = sales + 10000  # Dummy logic
-    predicted_staff = customer_count // 50 + 1  # Dummy logic
+#     predicted_sales = sales + 10000  # Dummy logic
+#     predicted_staff = customer_count // 50 + 1  # Dummy logic
 
-    return jsonify({
-        "predicted_sales": predicted_sales,
-        "predicted_staff": predicted_staff
-    }), 200
+#     return jsonify({
+#         "predicted_sales": predicted_sales,
+#         "predicted_staff": predicted_staff
+#     }), 200
 if __name__ == '__main__':
     app.run(debug=True)
   
