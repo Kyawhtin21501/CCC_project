@@ -2,22 +2,23 @@ import pandas as pd
 import os
 
 class StaffProfileOperation:
-    def __init__(self, csv_path="data/testing.csv"):
+    def __init__(self, csv_path="data/staff_dataBase.csv"):
         self.csv_path = csv_path
         if not os.path.exists(csv_path):
-            pd.DataFrame(columns=["ID", "Name", "Level", "Gender", "Age"]).to_csv(csv_path, index=False)
+            pd.DataFrame(columns=["ID", "Name", "Level", "Gender", "Age","Email"]).to_csv(csv_path, index=False)
 
     def operate(self):
         raise NotImplementedError("error")
 
 
 class CreateStaff(StaffProfileOperation):
-    def __init__(self, name, level, gender, age, csv_path="data/testing.csv"):
+    def __init__(self, name, level, gender, age,email, csv_path="data/staff_dataBase.csv"):
         super().__init__(csv_path)
         self.name = name
         self.level = level
         self.gender = gender
-        self.age = age
+        self.age = age,
+        self.email = email
 
     def _generate_new_id(self):
         df = pd.read_csv(self.csv_path)
@@ -30,7 +31,8 @@ class CreateStaff(StaffProfileOperation):
             "Name": self.name,
             "Level": self.level,
             "Gender": self.gender,
-            "Age": self.age
+            "Age": self.age,
+            "Email" : self.email
         }
 
         df = pd.read_csv(self.csv_path)
@@ -40,7 +42,7 @@ class CreateStaff(StaffProfileOperation):
 
 
 class EditStaff(StaffProfileOperation):
-    def __init__(self, staff_id, updates, csv_path="data/testing.csv"):
+    def __init__(self, staff_id, updates, csv_path="data/staff_dataBase.csv.csv"):
         super().__init__(csv_path)
         self.staff_id = staff_id
         self.updates = updates
@@ -59,7 +61,7 @@ class EditStaff(StaffProfileOperation):
 
 
 class DeleteStaff(StaffProfileOperation):
-    def __init__(self, staff_id, csv_path="data/testing.csv"):
+    def __init__(self, staff_id, csv_path="data/staff_dataBase.csv"):
         super().__init__(csv_path)
         self.staff_id = staff_id
 
@@ -74,7 +76,7 @@ class DeleteStaff(StaffProfileOperation):
 
 
 class SearchStaff(StaffProfileOperation):
-    def __init__(self, search_term, by="ID", csv_path="data/testing.csv"):
+    def __init__(self, search_term, by="ID", csv_path="staff_dataBase.csv"):
         super().__init__(csv_path)
         self.search_term = search_term
         self.by = by  

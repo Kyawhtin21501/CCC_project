@@ -2,13 +2,13 @@ from staff_pro import CreateStaff, EditStaff, DeleteStaff, SearchStaff
 
 
 print("== Create ==")
-staff1 = CreateStaff("Kyaw Htin Hein", 5, "Male", 24)
+staff1 = CreateStaff("Kyaw Htin Hein", 5, "Male", 24,"khein12345@gmail.com")
 print(staff1.operate()) 
 
-staff2 = CreateStaff("Kyi Pyar Hlaing", 4, "Female", 24)
+staff2 = CreateStaff("Kyi Pyar Hlaing", 4, "Female", 24,"kyi1111@gmail.com")
 print(staff2.operate()) 
 
-
+"""
 
 print("\n== Edit ==")
 edit = EditStaff(1001, {"Level": 3})
@@ -33,3 +33,5 @@ print(delete.operate())
 print("\n== Search Deleted ==")
 search_deleted = SearchStaff(1002, by="ID")
 print(search_deleted.operate())
+
+"""
