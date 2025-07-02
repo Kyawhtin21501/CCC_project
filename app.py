@@ -1,10 +1,10 @@
-
-from flask import Flask, request, jsonify
-import pandas as pd
+import sys
 import os
-import json
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-
+from services.staff_manager import StaffManager
+#from services.user_input_handler import UserInputHandler
 
 app = Flask(__name__)
 CORS(app)
@@ -17,42 +17,12 @@ def home():
 @app.route('/user_input', methods=['POST'])
 def save_data():
     data = request.get_json()
-    input_row = {
-        'date': data.get('date'),
-        'is_festival': data.get('event'),
-        'sales': data.get('sales'),
-        'guests': data.get('customer_count'),
-        'staff_count': data.get('staff_count'),
-        'assigned_staff': data.get('staff_names') ,
-    }
-    cleaned_names = []
-    for name in input_row['assigned_staff']:
-        name = name.strip()
-        name = name.title()
-        cleaned_names.append(name)
-    input_row['assigned_staff'] = cleaned_names
-
-
-
-    staff_data_path = "data/staff_data.csv"
-    csv_path = "data/user_input.csv"
-    staff_df = pd.read_csv(staff_data_path)
-    total_level = 0
-    for name in input_row['assigned_staff']:#kyaw htin hein
-        match = staff_df[staff_df['Name'] == name]
-        if not match.empty:
-            total_level += int(match['Level'].values[0])
-
-            input_row['total_staff_level'] = total_level
-
-    df = pd.DataFrame([input_row])
-
-   
-    file_exists = os.path.isfile(csv_path)
-    df.to_csv(csv_path, mode="a", index=False, header=not file_exists)
-
-
+    staff_manager = StaffManager()
+    #handler = UserInputHandler(data, staff_manager)
+    #cleaned_names = handler.process_and_save()
+    #print(cleaned_names)
     return jsonify({"message": "Data saved successfully"}), 200
+
 
 @app.route('/predict', methods=['POST'])
 
