@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:predictor_web/widgets/appdrawer.dart';
 
+// ignore: must_be_immutable
 class PredictionResultScreen extends StatelessWidget {
-  final String predictedSales;
-  final String predictedStaff;
-
-  const PredictionResultScreen({
+  // final String predictedSales;
+  // final String predictedStaff;
+  String predictedSales="";
+  String predictedStaff=" ";
+  PredictionResultScreen({
     super.key,
     required this.predictedSales,
     required this.predictedStaff,
@@ -14,9 +17,11 @@ class PredictionResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F6),
+     appBar: AppBar(),
+     drawer: AppDrawer(),
       body: Center(
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(60),
           margin: const EdgeInsets.symmetric(horizontal: 16),
           constraints: const BoxConstraints(maxWidth: 700),
           decoration: BoxDecoration(
@@ -45,36 +50,23 @@ class PredictionResultScreen extends StatelessWidget {
               const Text('売上予測', style: TextStyle(fontSize: 18)),
               Text(
                 '¥$predictedSales',
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E40AF),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text('スタッフ人数予測', style: TextStyle(fontSize: 18)),
-              Text(
-                '$predictedStaff 人',
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E40AF),
-                ),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('戻る'),
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2B5797),
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
+            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
           ),
-        ),
+          const SizedBox(height: 24),
+          const Text('必要スタッフ数の予測', style: TextStyle(fontSize: 18)),
+          Text(
+            '$predictedStaff 人',
+            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 36),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('戻る'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
       ),
-    );
-  }
-}
+    ),
+  ),
+);
+  }}

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class StaffProfile extends StatelessWidget {
-  const StaffProfile({super.key});
+import 'package:predictor_web/screens/create_shift.dart';
+import 'package:predictor_web/widgets/appdrawer.dart';
+
+class StaffProfileScreen extends StatelessWidget {
+  const StaffProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +55,14 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
         if (response.statusCode == 200) {
           final responseData = jsonDecode(response.body);
+          // Reset form fields
+                  setState(() {
+                    _nameController.clear();
+                    _ageController.clear();
+                    _levelController.clear();
+                    _emailController.clear();
+                    _selectedGender = 'Male';
+                  });
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -98,9 +109,10 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Staff Profile Input')),
+      appBar: AppBar(title: const Text('Staff Profile Input'),),
+      drawer: AppDrawer(),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(60.0),
         child: Form(
           key: _formKey,
           child: ListView(

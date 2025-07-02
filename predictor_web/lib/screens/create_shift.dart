@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:predictor_web/api_services/api_services.dart';
+import 'package:predictor_web/screens/daily_report.dart';
+import 'package:predictor_web/screens/staff_profile.dart';
+import 'package:predictor_web/widgets/appdrawer.dart';
+
 
 class DateRangeScreen extends StatefulWidget {
   const DateRangeScreen({super.key});
@@ -39,26 +43,28 @@ class _DateRangeScreenState extends State<DateRangeScreen> {
       return;
     }
 
-    final url = Uri.parse('http://127.0.0.1:5000/shift');
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
+    try {
+      final response = await ApiService.postShiftRequest({
         "start_date": start,
         "end_date": end,
-        "latitude": 35.6895,    // ← テスト用（東京）
+        "latitude": 35.6895,
         "longitude": 139.6917
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final List result = jsonDecode(response.body);
-      setState(() {
-        _resultMessage = "受信件数：${result.length}\n\n${result.take(5).map((e) => e.toString()).join('\n\n')}";
       });
-    } else {
+
+      if (response.statusCode == 200) {
+        final List result = jsonDecode(response.body);
+        setState(() {
+          _resultMessage =
+              "受信件数：${result.length}\n\n${result.take(5).map((e) => e.toString()).join('\n\n')}";
+        });
+      } else {
+        setState(() {
+          _resultMessage = "エラー: ${response.statusCode}";
+        });
+      }
+    } catch (e) {
       setState(() {
-        _resultMessage = "エラー: ${response.statusCode}";
+        _resultMessage = '通信エラー: $e';
       });
     }
   }
@@ -74,8 +80,9 @@ class _DateRangeScreenState extends State<DateRangeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("シフト期間の選択")),
+     drawer: AppDrawer(),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(60),
         child: Column(
           children: [
             _buildDateField("開始日", _startDateController),
