@@ -44,11 +44,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<String> selectedStaffNames = [];
   String? festivalStatus;
 
-  final List<String> availableStaffNames = [
-    'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace', 'Hannah', 'Ivy',
-    'Jack', 'Kevin', 'Liam', 'Mia', 'Noah', 'Olivia', 'Paul', 'Quinn', 'Riley',
-    'Sophia', 'Tyler', 'Uma', 'Kyi Pyar Hlaing', 'Kyaw Htin'
-  ];
+  List<String> availableStaffNames = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStaffList();
+  }
+
+  Future<void> fetchStaffList() async {
+    try {
+      final response = await http.get(Uri.parse('http://127.0.0.1:5000/staff_list'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          availableStaffNames = data.map((e) => e.toString()).toList();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('スタッフリストの取得に失敗しました: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('スタッフリスト取得エラー: $e')),
+      );
+    }
+  }
 
   Map<String, dynamic> _buildPayload() {
     return {
@@ -89,7 +111,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
         if (response.statusCode == 200) {
-           // Reset form after saving
           setState(() {
             _selectedDate = null;
             _shiftStart = null;
@@ -137,7 +158,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         if (response.statusCode == 200) {
           final resultData = jsonDecode(response.body);
-          
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -193,26 +213,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
               leading: const Icon(Icons.trending_up),
               title: const Text('シフト作成'),
               onTap: () {
-               Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DateRangeScreen()
-            ),
-          );
-                
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DateRangeScreen()
+                  ),
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.trending_up),
               title: const Text('Profile'),
               onTap: () {
-               Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => StaffProfile()
-            ),
-          );
-                
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StaffProfile()
+                  ),
+                );
               },
             ),
           ],
@@ -252,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildNumberField(salesController, '売上（円）', allowNegative: false),
               _buildNumberField(customerController, '客数'),
               _buildNumberField(staffCountController, 'スタッフ数'),
-               _buildStaffMultiSelect(),
+              _buildStaffMultiSelect(),
               DropdownButtonFormField<String>(
                 value: festivalStatus,
                 decoration: const InputDecoration(labelText: '祭りの有無'),
@@ -265,20 +283,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 20),
               Center(
-               
-                 child:  ElevatedButton.icon(
-                    icon: const Icon(Icons.save),
-                    label: const Text('保存のみ'),
-                    onPressed: _saveDataOnly,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700], foregroundColor: Colors.white),
-                  ),
-                  // ElevatedButton.icon(
-                  //   icon: const Icon(Icons.trending_up),
-                  //   label: const Text('予測のみ'),
-                  //   onPressed: _submitAndShowPrediction,
-                  //   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2b5797), foregroundColor: Colors.white),
-                  // ),
-                
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
+                  label: const Text('保存のみ'),
+                  onPressed: _saveDataOnly,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700], foregroundColor: Colors.white),
+                ),
               ),
             ],
           ),
@@ -336,6 +346,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
-
 }

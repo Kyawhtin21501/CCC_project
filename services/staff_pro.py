@@ -17,7 +17,7 @@ class CreateStaff(StaffProfileOperation):
         self.name = name
         self.level = level
         self.gender = gender
-        self.age = age,
+        self.age = age
         self.assign = assign
 
     def _generate_new_id(self):
