@@ -89,7 +89,7 @@ from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, StaffProfileOperation
-
+import pandas as pd
 app = Flask(__name__)
 CORS(app)
 
@@ -144,6 +144,13 @@ def shift():
 
     result_json = result_df.to_dict(orient="records")
     return jsonify(result_json), 200
+
+@app.route('/staff_list', methods=['GET'])
+def staff_list():
+    data_path = "data/staff_data.csv"
+    staff_df = pd.DataFrame(data_path)
+    staff_data = staff_df.values()
+    return jsonify(staff_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
