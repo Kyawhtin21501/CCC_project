@@ -4,7 +4,7 @@ import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/prediction_result_screen.dart';
-import 'package:predictor_web/screens/staff_profile.dart';
+
 import 'package:predictor_web/widgets/appdrawer.dart';
 
 

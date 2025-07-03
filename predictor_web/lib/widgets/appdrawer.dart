@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/daily_report.dart';
 import 'package:predictor_web/screens/prediction_result_screen.dart';
 
@@ -42,7 +43,13 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.work_history),
             title: const Text('シフト作成'),
-            onTap: () => Navigator.pop(context), // Add logic if needed
+           onTap: () {
+              Navigator.pop(context);
+             Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CreatedShiftScreen(),
+              ));
+            },
           ),
           ListTile(
             leading: const Icon(Icons.account_box_outlined),

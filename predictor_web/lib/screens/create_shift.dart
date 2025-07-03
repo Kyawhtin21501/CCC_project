@@ -1,19 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:predictor_web/api_services/api_services.dart';
-import 'package:predictor_web/screens/daily_report.dart';
-import 'package:predictor_web/screens/staff_profile.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
 
-class DateRangeScreen extends StatefulWidget {
-  const DateRangeScreen({super.key});
+class CreatedShiftScreen extends StatefulWidget {
+  const CreatedShiftScreen({super.key});
 
   @override
-  State<DateRangeScreen> createState() => _DateRangeScreenState();
+  State<CreatedShiftScreen> createState() => _CreatedShiftScreenState();
 }
 
-class _DateRangeScreenState extends State<DateRangeScreen> {
+class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
   String? _resultMessage;
