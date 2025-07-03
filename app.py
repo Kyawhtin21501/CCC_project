@@ -7,6 +7,7 @@ from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, StaffProfileOperation
+
 import pandas as pd
 app = Flask(__name__)
 CORS(app)
@@ -80,7 +81,17 @@ def staff_list():
             return jsonify({"error": "No 'name' column found"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+"""   
+# for pre menu
 
+@app.route('/predict', methods=['POST'])
+def predict():
+    data_sale = request.get_json()
+    sale_df =data_sale(orient = "records")
+    return jsonify(sale_df) ,500
+""" 
+    
 if __name__ == '__main__':
     app.run(debug=True)
 
