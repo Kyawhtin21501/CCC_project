@@ -3,7 +3,7 @@ import re
 import unicodedata
 
 class StaffManager:
-    def __init__(self, staff_csv_path="data/staff_data.csv"):
+    def __init__(self, staff_csv_path="data/staff_dataBase.csv"):
         self.staff_df = pd.read_csv(staff_csv_path)
 
     def clean_names(self, names):
