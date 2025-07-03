@@ -72,7 +72,7 @@ def shift():
 @app.route('/staff_list', methods=['GET'])
 def staff_list():
     try:
-        staff_df = pd.read_csv("data/staff_data.csv")
+        staff_df = pd.read_csv("data/staff_dataBase.csv")
         if "Name" in staff_df.columns:
             names = staff_df["Name"].dropna().unique().tolist()
             return jsonify(names)
