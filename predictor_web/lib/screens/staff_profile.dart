@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
 class StaffProfileScreen extends StatelessWidget {
@@ -33,7 +32,11 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   final TextEditingController _emailController = TextEditingController();
 
   String _selectedGender = 'Male';
-
+  
+  String searchText = '';
+  bool isSearching = false;
+  final TextEditingController searchController = TextEditingController();
+//created staff profile
   Future<void> _submitProfile() async {
     if (_formKey.currentState!.validate()) {
       final staffData = {
@@ -44,7 +47,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         'email': _emailController.text,
       };
 
-      final url = Uri.parse('http://127.0.0.1:5000/services/testing'); // ✅ Flask endpoint
+      final url = Uri.parse('http://127.0.0.1:5000/services/testing'); 
 
       try {
         final response = await http.post(
@@ -96,6 +99,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       }
     }
   }
+//End of creating staff profile
 
   @override
   void dispose() {
@@ -109,8 +113,42 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Staff Profile Input'),),
+     // appBar: AppBar(title: const Text('Staff Profile Input'),),
+      appBar: AppBar(
+        title: !isSearching
+            ? const Text('Staff Profile')
+            : TextField(
+                controller: searchController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Search...',
+                  hintStyle: TextStyle(color: Colors.white70),
+                  border: InputBorder.none,
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    searchText = value;
+                  });
+                },
+              ),
+        actions: [
+          IconButton(
+            icon: Icon(isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (isSearching) {
+                  searchText = '';
+                  searchController.clear();
+                }
+                isSearching = !isSearching;
+              });
+            },
+          )
+        ],
+      ),
       drawer: AppDrawer(),
+      
       body: Padding(
         padding: const EdgeInsets.all(60.0),
         child: Form(
@@ -193,14 +231,36 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitProfile,
-                child: const Text('Submit'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    
+                    onPressed: _submitProfile,
+                    child: const Text('Submit'),
+                  ),
+                  SizedBox(width: 30,),
+                  ElevatedButton(
+                    onPressed: _editProfile,
+                    child: const Text('Edit'),
+                  ),
+                  SizedBox(width: 30,),
+                  ElevatedButton(
+                    onPressed: _deleteProfile,
+                    child: const Text('Delete'),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _editProfile() {
+  }
+
+  void _deleteProfile() {
   }
 }
