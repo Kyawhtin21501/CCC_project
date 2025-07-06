@@ -9,11 +9,7 @@ class StaffProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Staff Profile',
-      home: StaffProfileForm(),
-    );
+    return const StaffProfileForm();
   }
 }
 
@@ -26,17 +22,58 @@ class StaffProfileForm extends StatefulWidget {
 
 class _StaffProfileFormState extends State<StaffProfileForm> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _idController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _levelController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   String _selectedGender = 'Male';
-  
-  String searchText = '';
   bool isSearching = false;
-  final TextEditingController searchController = TextEditingController();
-//created staff profile
+  String searchText = '';
+
+  final String baseUrl = 'http://127.0.0.1:5000/services/staff';
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    _nameController.dispose();
+    _ageController.dispose();
+    _levelController.dispose();
+    _emailController.dispose();
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _clearFields() {
+    setState(() {
+      _idController.clear();
+      _nameController.clear();
+      _ageController.clear();
+      _levelController.clear();
+      _emailController.clear();
+      _selectedGender = 'Male';
+    });
+  }
+
+  void _showMessage(String title, String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submitProfile() async {
     if (_formKey.currentState!.validate()) {
       final staffData = {
@@ -47,73 +84,74 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         'email': _emailController.text,
       };
 
-      final url = Uri.parse('http://127.0.0.1:5000/services/testing'); 
-
       try {
         final response = await http.post(
-          url,
+          Uri.parse(baseUrl),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(staffData),
         );
 
-        if (response.statusCode == 200) {
-          final responseData = jsonDecode(response.body);
-          // Reset form fields
-                  setState(() {
-                    _nameController.clear();
-                    _ageController.clear();
-                    _levelController.clear();
-                    _emailController.clear();
-                    _selectedGender = 'Male';
-                  });
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Success'),
-              content: Text(responseData['message'] ?? 'Staff profile submitted!'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        } else {
-          throw Exception('Failed to submit data');
-        }
+        final res = jsonDecode(response.body);
+        if (!mounted) return;
+        _showMessage(response.statusCode == 200 ? 'Success' : 'Error', res['message'] ?? 'Unknown response');
+        if (response.statusCode == 200) _clearFields();
       } catch (e) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Error: $e'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+        if (!mounted) return;
+        _showMessage('Error', 'Submit failed: $e');
       }
     }
   }
-//End of creating staff profile
+//Have some logical error-> Kyipyar Hlaing
+  // Future<void> _editProfile() async {
+  //   if (_formKey.currentState!.validate() && _idController.text.isNotEmpty) {
+  //     final updates = {
+  //       'name': _nameController.text,
+  //       'age': _ageController.text,
+  //       'level': _levelController.text,
+  //       'gender': _selectedGender,
+  //       'email': _emailController.text,
+  //     };
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _ageController.dispose();
-    _levelController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
+  //     try {
+  //       final response = await http.put(
+  //         Uri.parse('$baseUrl/${_idController.text}'),
+  //         headers: {'Content-Type': 'application/json'},
+  //         body: jsonEncode(updates),
+  //       );
+
+  //       final res = jsonDecode(response.body);
+  //       if (!mounted) return;
+  //       _showMessage(response.statusCode == 200 ? 'Updated' : 'Error', res['message'] ?? 'No message');
+  //     } catch (e) {
+  //       if (!mounted) return;
+  //       _showMessage('Error', 'Edit failed: $e');
+  //     }
+  //   } else {
+  //     _showMessage('Missing ID', 'Enter staff ID to edit.');
+  //   }
+  // }
+
+  // Future<void> _deleteProfile() async {
+  //   if (_idController.text.isEmpty) {
+  //     _showMessage('Missing ID', 'Enter staff ID to delete.');
+  //     return;
+  //   }
+
+  //   try {
+  //     final response = await http.delete(Uri.parse('$baseUrl/${_idController.text}'));
+  //     final res = jsonDecode(response.body);
+  //     if (!mounted) return;
+  //     _showMessage(response.statusCode == 200 ? 'Deleted' : 'Error', res['message'] ?? 'No message');
+  //     if (response.statusCode == 200) _clearFields();
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //     _showMessage('Error', 'Delete failed: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     // appBar: AppBar(title: const Text('Staff Profile Input'),),
       appBar: AppBar(
         title: !isSearching
             ? const Text('Staff Profile')
@@ -122,7 +160,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                 autofocus: true,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  hintText: 'Search...',
+                  hintText: 'Search by Name...',
                   hintStyle: TextStyle(color: Colors.white70),
                   border: InputBorder.none,
                 ),
@@ -148,21 +186,28 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         ],
       ),
       drawer: AppDrawer(),
-      
       body: Padding(
-        padding: const EdgeInsets.all(60.0),
+        padding: const EdgeInsets.all(40.0),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
+              // TextFormField(
+              //   controller: _idController,
+              //   keyboardType: TextInputType.number,
+              //   decoration: const InputDecoration(
+              //     labelText: 'Staff ID (for Edit/Delete)',
+              //     border: OutlineInputBorder(),
+              //   ),
+              // ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter name' : null,
+                validator: (value) => value!.isEmpty ? 'Please enter name' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -173,13 +218,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter age';
-                  }
+                  if (value == null || value.isEmpty) return 'Please enter age';
                   final age = int.tryParse(value);
-                  if (age == null || age < 18 || age > 100) {
-                    return 'Age must be between 18 and 100';
-                  }
+                  if (age == null || age < 18 || age > 100) return 'Age must be between 18 and 100';
                   return null;
                 },
               ),
@@ -192,13 +233,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter level';
-                  }
+                  if (value == null || value.isEmpty) return 'Please enter level';
                   final level = int.tryParse(value);
-                  if (level == null || level < 1 || level > 5) {
-                    return 'Level must be a number between 1 and 5';
-                  }
+                  if (level == null || level < 1 || level > 5) return 'Level must be 1 to 5';
                   return null;
                 },
               ),
@@ -210,8 +247,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Please enter email' : null,
+                validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -230,25 +266,17 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   });
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(
-                    
-                    onPressed: _submitProfile,
-                    child: const Text('Submit'),
-                  ),
-                  SizedBox(width: 30,),
-                  ElevatedButton(
-                    onPressed: _editProfile,
-                    child: const Text('Edit'),
-                  ),
-                  SizedBox(width: 30,),
-                  ElevatedButton(
-                    onPressed: _deleteProfile,
-                    child: const Text('Delete'),
-                  ),
+                  ElevatedButton(onPressed: _submitProfile, child: const Text('Submit')),
+                  const SizedBox(width: 20),
+                  ElevatedButton(onPressed:(){},// _editProfile, 
+                  child: const Text('Edit')),
+                  const SizedBox(width: 20),
+                  ElevatedButton(onPressed:() {},//_deleteProfile, 
+                  child: const Text('Delete')),
                 ],
               ),
             ],
@@ -256,11 +284,5 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         ),
       ),
     );
-  }
-
-  void _editProfile() {
-  }
-
-  void _deleteProfile() {
   }
 }

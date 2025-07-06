@@ -6,7 +6,7 @@ from flask_cors import CORS
 from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
-from services.staff_pro import CreateStaff, StaffProfileOperation
+from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
 
 import pandas as pd
 app = Flask(__name__)
@@ -91,6 +91,61 @@ def predict():
     sale_df =data_sale(orient = "records")
     return jsonify(sale_df) ,500
 """ 
+
+#Staff Profile CURD funcitons
+@app.route('/services/staff', methods=['POST'])
+def create_staff():
+    data = request.get_json()
+    try:
+        new_staff = CreateStaff(
+            name=data["name"],
+            level=data["level"],
+            gender=data["gender"],
+            age=data["age"],
+            email=data["email"]
+        )
+        result = new_staff.operate()
+        return jsonify({"message": f"Staff created: {result}"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/services/staff/<int:staff_id>', methods=['PUT'])
+def edit_staff(staff_id):
+    updates = request.get_json()
+    try:
+        editor = EditStaff(staff_id=staff_id, updates=updates)
+        result = editor.operate()
+        return jsonify({"message": f"Staff {result} updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
+def delete_staff(staff_id):
+    try:
+        deleter = DeleteStaff(staff_id=staff_id)
+        result = deleter.operate()
+        return jsonify({"message": f"Staff {result} deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/services/staff/search', methods=['GET'])
+def search_staff():
+    term = request.args.get("term")
+    by = request.args.get("by", "ID")
+    try:
+        searcher = SearchStaff(search_term=term, by=by)
+        result = searcher.operate()
+        if result == "error":
+            return jsonify({"message": "Not found"}), 404
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+
     
 if __name__ == '__main__':
     app.run(debug=True)
