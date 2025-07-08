@@ -15,7 +15,7 @@ CORS(app)
 @app.route('/')
 def home():
     return "API Server is Running"
-
+#Route for datily user input dashboard
 @app.route('/user_input', methods=['POST'])
 def save_data():
     data = request.get_json()
@@ -25,23 +25,21 @@ def save_data():
     print(cleaned_names)
     return jsonify({"message": "Data saved successfully"}), 200
 
-@app.route('/services/testing', methods=['POST'])
-def submit_staff():
+# Route for stafflist use in user input dashboard
+@app.route('/staff_list', methods=['GET'])
+def staff_list():
     try:
-        data = request.json
-        name = data.get('name')
-        level = int(data.get('level'))
-        gender = data.get('gender')
-        age = int(data.get('age'))
-        email = data.get('email')
-
-        staff_creator = CreateStaff(name, level, gender, age, email)
-        result = staff_creator.operate()
-
-        return jsonify({'message': f'Staff created: {result}'}), 200
+        staff_df = pd.read_csv("data/staff_dataBase.csv")
+        if "Name" in staff_df.columns:
+            names = staff_df["Name"].dropna().unique().tolist()
+            return jsonify(names)
+        else:
+            return jsonify({"error": "No 'name' column found"}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+    
 
+# Route for shift prediction and create shift page
 @app.route('/shift', methods=['POST'])
 def shift():
     data = request.get_json()
@@ -65,33 +63,6 @@ def shift():
     result_json = result_df.to_dict(orient="records")
     return jsonify(result_json), 200
 
-# @app.route('/staff_list', methods=['GET'])
-# def staff_list():
-#     data_path = "data/staff_data.csv"
-#     staff_df = pd.DataFrame(data_path)
-#     staff_data = staff_df.values()
-#     return jsonify(staff_data)
-@app.route('/staff_list', methods=['GET'])
-def staff_list():
-    try:
-        staff_df = pd.read_csv("data/staff_dataBase.csv")
-        if "Name" in staff_df.columns:
-            names = staff_df["Name"].dropna().unique().tolist()
-            return jsonify(names)
-        else:
-            return jsonify({"error": "No 'name' column found"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-"""   
-# for pre menu
-
-@app.route('/predict', methods=['POST'])
-def predict():
-    data_sale = request.get_json()
-    sale_df =data_sale(orient = "records")
-    return jsonify(sale_df) ,500
-""" 
 
 #Staff Profile CURD funcitons
 @app.route('/services/staff', methods=['POST'])
@@ -147,7 +118,6 @@ def search_staff():
 
 
 
-    
 if __name__ == '__main__':
     app.run(debug=True)
 
