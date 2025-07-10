@@ -1,10 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
-import 'package:multi_select_flutter/util/multi_select_item.dart';
 import 'package:predictor_web/api_services/api_services.dart';
-
 import 'package:predictor_web/widgets/appdrawer.dart';
 
 class StaffProfileScreen extends StatelessWidget {
@@ -32,9 +29,11 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   final TextEditingController searchController = TextEditingController();
 
   String _selectedGender = 'Male';
+  String? _selectedStatus;
+
   final String baseUrl = 'http://127.0.0.1:5000/services/staff';
-  // List<Map<String, dynamic>> staffList = [];
   late Future<List<String>> staffList;
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +48,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         'level': _levelController.text,
         'gender': _selectedGender,
         'email': _emailController.text,
+        'status': _selectedStatus,
       };
 
       try {
@@ -66,7 +66,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         );
         if (response.statusCode == 200) {
           _clearFields();
-          ApiService.fetchStaffList();
+          setState(() {
+            staffList = ApiService.fetchStaffList();
+          });
         }
       } catch (e) {
         if (!mounted) return;
@@ -82,6 +84,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       _levelController.clear();
       _emailController.clear();
       _selectedGender = 'Male';
+      _selectedStatus = null;
     });
   }
 
@@ -89,17 +92,16 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     if (!mounted) return;
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           ),
+        ],
+      ),
     );
   }
 
@@ -111,7 +113,11 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         response.statusCode == 200 ? 'Deleted' : 'Error',
         res['message'] ?? 'No message',
       );
-      if (response.statusCode == 200) ApiService.fetchStaffList();
+      if (response.statusCode == 200) {
+        setState(() {
+          staffList = ApiService.fetchStaffList();
+        });
+      }
     } catch (e) {
       _showMessage('Error', 'Delete failed: $e');
     }
@@ -136,8 +142,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                       labelText: 'Name',
                       border: OutlineInputBorder(),
                     ),
-                    validator:
-                        (value) => value!.isEmpty ? 'Please enter name' : null,
+                    validator: (value) => value!.isEmpty ? 'Please enter name' : null,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
@@ -148,13 +153,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter age';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter age';
                       final age = int.tryParse(value);
-                      if (age == null || age < 18 || age > 100) {
-                        return 'Age must be between 18 and 100';
-                      }
+                      if (age == null || age < 18 || age > 100) return 'Age must be between 18 and 100';
                       return null;
                     },
                   ),
@@ -167,13 +168,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter level';
-                      }
+                      if (value == null || value.isEmpty) return 'Please enter level';
                       final level = int.tryParse(value);
-                      if (level == null || level < 1 || level > 5) {
-                        return 'Level must be 1 to 5';
-                      }
+                      if (level == null || level < 1 || level > 5) return 'Level must be 1 to 5';
                       return null;
                     },
                   ),
@@ -185,11 +182,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                       labelText: 'Email',
                       border: OutlineInputBorder(),
                     ),
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Please enter email'
-                                : null,
+                    validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
@@ -207,6 +200,26 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                         _selectedGender = value!;
                       });
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _selectedStatus,
+                    decoration: const InputDecoration(
+                      labelText: 'Status',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: '高校生', child: Text('高校生')),
+                      DropdownMenuItem(value: '外国人労働者', child: Text('外国人労働者')),
+                      DropdownMenuItem(value: 'フルタイム', child: Text('フルタイム')),
+                      DropdownMenuItem(value: 'パートタイム', child: Text('パートタイム')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedStatus = value;
+                      });
+                    },
+                    validator: (value) => value == null ? 'Please select staff status' : null,
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
@@ -245,12 +258,21 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
-                            
                             children: [
                               Expanded(child: Text(staffList[index])),
-                              Expanded(child: ElevatedButton(onPressed: (){}, child: Text("Edit"))),
-                              SizedBox(width: 20),
-                              Expanded(child: ElevatedButton(onPressed: (){}, child: Text("Delete"))),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: const Text("Edit"),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: const Text("Delete"),
+                                ),
+                              ),
                             ],
                           ),
                         ),
