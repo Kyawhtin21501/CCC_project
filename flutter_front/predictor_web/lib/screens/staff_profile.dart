@@ -210,7 +210,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                     ),
                     items: const [
                       DropdownMenuItem(value: '高校生', child: Text('高校生')),
-                      DropdownMenuItem(value: '外国人労働者', child: Text('外国人労働者')),
+                      DropdownMenuItem(value: '留学生', child: Text('留学生')),
                       DropdownMenuItem(value: 'フルタイム', child: Text('フルタイム')),
                       DropdownMenuItem(value: 'パートタイム', child: Text('パートタイム')),
                     ],
