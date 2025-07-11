@@ -4,15 +4,26 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:5000';
 
-  static Future<List<String>> fetchStaffList() async {
-    final response = await http.get(Uri.parse('$baseUrl/staff_list'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => e.toString()).toList();
-    } else {
-      throw Exception('Failed to load staff list');
-    }
+static Future<List<String>> fetchStaffList() async {
+  final response = await http.get(Uri.parse('$baseUrl/staff_list'));
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.cast<String>();
+  } else {
+    throw Exception('Failed to load staff list');
   }
+}
+
+
+static List<Map<String, String>> _parseStaffList(String responseBody) {
+  final List<dynamic> data = jsonDecode(responseBody);
+  return data.map((e) => {
+    'ID': e['ID'].toString(),
+    'Name': e['Name'].toString(),
+  }).toList();
+}
+
+
 
   static Future<http.Response> postUserInput(Map<String, dynamic> payload) async {
     return await http.post(
