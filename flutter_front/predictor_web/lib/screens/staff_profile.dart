@@ -52,11 +52,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       };
 
       try {
-        final response = await http.post(
-          Uri.parse(baseUrl),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(staffData),
-        );
+        final response = await ApiService.postStaffProfile(staffData);
 
         final res = jsonDecode(response.body);
         if (!mounted) return;
@@ -105,22 +101,73 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     );
   }
 
-  Future<void> _deleteProfileById(String id) async {
-    try {
-      final response = await http.delete(Uri.parse('$baseUrl/$id'));
-      final res = jsonDecode(response.body);
-      _showMessage(
-        response.statusCode == 200 ? 'Deleted' : 'Error',
-        res['message'] ?? 'No message',
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          staffList = ApiService.fetchStaffList();
-        });
-      }
-    } catch (e) {
-      _showMessage('Error', 'Delete failed: $e');
+ Future<void> _deleteProfileById(String id) async {
+  try {
+    final intId = int.tryParse(id);
+    if (intId == null) {
+      _showMessage('Error', 'Invalid ID. Please enter a valid number.');
+      return;
     }
+
+    final response = await ApiService.deleteStaffProfile(intId);
+    final res = jsonDecode(response.body);
+
+    _showMessage(
+      response.statusCode == 200 ? 'Deleted' : 'Error',
+      res['message'] ?? 'No message',
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        staffList = ApiService.fetchStaffList();
+      });
+    }
+  } catch (e) {
+    _showMessage('Error', 'Delete failed: $e');
+  }
+}
+
+  void _confirmDeleteWithIdPrompt(String name) {
+    String enteredId = '';
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Delete $name'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Enter the staff ID to confirm deletion:'),
+            const SizedBox(height: 10),
+            TextField(
+              keyboardType: TextInputType.number,
+              onChanged: (value) => enteredId = value,
+              decoration: const InputDecoration(
+                hintText: 'Staff ID',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (enteredId.isNotEmpty) {
+                _deleteProfileById(enteredId);
+              } else {
+                _showMessage('Error', 'ID is required for deletion.');
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -252,25 +299,28 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   return ListView.builder(
                     itemCount: staffList.length,
                     itemBuilder: (context, index) {
+                      final name = staffList[index];
                       return ListTile(
                         leading: const Icon(Icons.person),
                         title: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Expanded(child: Text(staffList[index])),
+                              Expanded(child: Text(name)),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    // TODO: Add Edit logic
+                                  },
                                   child: const Text("Edit"),
                                 ),
                               ),
                               const SizedBox(width: 20),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {},
-                                  child: const Text("Delete"),
+                                  onPressed: () => _confirmDeleteWithIdPrompt(name),
+                                  style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 244, 121, 112)),
+                                  child: const Text("Delete",selectionColor: Colors.white,),
                                 ),
                               ),
                             ],
