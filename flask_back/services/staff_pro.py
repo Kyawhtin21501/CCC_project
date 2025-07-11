@@ -12,13 +12,15 @@ class StaffProfileOperation:
 
 
 class CreateStaff(StaffProfileOperation):
-    def __init__(self, name, level, gender, age,email, csv_path="data/staff_dataBase.csv"):
+    def __init__(self, name, level, gender, age,email,status ,csv_path="data/staff_dataBase.csv"):
         super().__init__(csv_path)
         self.name = name
         self.level = level
         self.gender = gender
         self.age = age
         self.email = email
+        self.status = status
+        
 
     def _generate_new_id(self):
         df = pd.read_csv(self.csv_path)
@@ -32,7 +34,8 @@ class CreateStaff(StaffProfileOperation):
             "Level": self.level,
             "Gender": self.gender,
             "Age": self.age,
-            "Email" : self.email
+            "Email" : self.email,
+            "status": self.status
         }
 
         df = pd.read_csv(self.csv_path)

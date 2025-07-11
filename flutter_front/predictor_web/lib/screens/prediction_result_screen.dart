@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
 // ignore: must_be_immutable
+
+const String apiUrl = 'http://192.168.0.12:5000/services/sale_prediction_staff_count';
 class PredictionResultScreen extends StatelessWidget {
   // final String predictedSales;
   // final String predictedStaff;

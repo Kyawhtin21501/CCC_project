@@ -1,16 +1,17 @@
 ID,Name,Level,Gender,Age,Email,Assign,status
-1001,Yan Shin Shein,5,Male,24,yanshin@gmail.com,international_student
-1002,Kyaw Htin Hein,5,Male,19,khein@gmail.com,international_student
-1003,Kyi Pyar Hlaing,5,Female,25,kph1234@gmail.com,international_student
-1004,hir,2,Male,21,hir@gmail.com,international_student
-1005,Kyaw ,2,Female,18,kyaw@gmail.com,international_student
-1006,Lisa,5,Female,27,lisa@gmail.com,international_student
-1007,Jenie ,4,Female,27,Jenie@gmail.com,freelance
-1008,Puppy,4,Male,30,puppy@gmail.com,freelance
-1009,aung aung ,2,Male,20,aung@gmail.com,freelance
-1010,Kyaw Kyaw ,3,Male,22, kyawkyaw@gmail.com,freelance
-1011,Zaw Zaw,3,Female,23,zawzaw@gmail.com,freelance
-1012,Ko Ko,2,Male,26,koko@gmail.com,freelance
-1013,Khaing Khine,1,Male,28,kheine@gmail.com,freelance
-1014,Kay To Lay,5,Female,21,kaytolay@gmail.com,high_school_student
-1015,Khalar Lay,3,Male,22,khalarlay@gmail.com,high_school_student
+1001,Yan Shin Shein,5,Male,24,yanshin@gmail.com,international_student,
+1002,Kyaw Htin Hein,5,Male,19,khein@gmail.com,international_student,
+1003,Kyi Pyar Hlaing,5,Female,25,kph1234@gmail.com,international_student,
+1004,hir,2,Male,21,hir@gmail.com,international_student,
+1005,Kyaw ,2,Female,18,kyaw@gmail.com,international_student,
+1006,Lisa,5,Female,27,lisa@gmail.com,international_student,
+1007,Jenie ,4,Female,27,Jenie@gmail.com,freelance,
+1008,Puppy,4,Male,30,puppy@gmail.com,freelance,
+1009,aung aung ,2,Male,20,aung@gmail.com,freelance,
+1010,Kyaw Kyaw ,3,Male,22, kyawkyaw@gmail.com,freelance,
+1011,Zaw Zaw,3,Female,23,zawzaw@gmail.com,freelance,
+1012,Ko Ko,2,Male,26,koko@gmail.com,freelance,
+1013,Khaing Khine,1,Male,28,kheine@gmail.com,freelance,
+1014,Kay To Lay,5,Female,21,kaytolay@gmail.com,high_school_student,
+1015,Khalar Lay,3,Male,22,khalarlay@gmail.com,high_school_student,
+1016,bla bla ,2,Male,20,bla bla@ gmail.com,,
