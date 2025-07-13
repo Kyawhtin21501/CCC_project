@@ -26,17 +26,41 @@ def save_data():
     return jsonify({"message": "Data saved successfully"}), 200
 
 # Route for stafflist use in user input dashboard
+# @app.route('/staff_list', methods=['GET'])
+# def staff_list():
+#     try:
+#         staff_df = pd.read_csv("data/staff_dataBase.csv")
+#         if "Name" in staff_df.columns:
+#             names = staff_df["Name"].dropna().unique().tolist()
+#             return jsonify(names)
+#         else:
+#             return jsonify({"error": "No 'name' column found"}), 400
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
+#updated route for stafflist use in user input dashboard  or not i cannot run --kyipyar hlaing
 @app.route('/staff_list', methods=['GET'])
 def staff_list():
     try:
-        staff_df = pd.read_csv("data/staff_dataBase.csv")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        csv_path = os.path.abspath(csv_path)
+        print(f"Looking for CSV at: {csv_path}")
+
+        staff_df = pd.read_csv(csv_path)
+        print("CSV columns:", staff_df.columns.tolist())
+
         if "Name" in staff_df.columns:
             names = staff_df["Name"].dropna().unique().tolist()
+            print("Names extracted:", names)
             return jsonify(names)
         else:
-            return jsonify({"error": "No 'name' column found"}), 400
+            return jsonify({"error": "No 'Name' column found"}), 400
     except Exception as e:
+        print("Error in /staff_list:", str(e))
         return jsonify({"error": str(e)}), 500
+
     
 
 # Route for shift prediction and create shift page
