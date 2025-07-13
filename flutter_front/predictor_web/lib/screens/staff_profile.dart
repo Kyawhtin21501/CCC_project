@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
+import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
 class StaffProfileScreen extends StatelessWidget {
@@ -22,7 +21,6 @@ class StaffProfileForm extends StatefulWidget {
 
 class _StaffProfileFormState extends State<StaffProfileForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _idController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _levelController = TextEditingController();
@@ -30,30 +28,58 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   final TextEditingController searchController = TextEditingController();
 
   String _selectedGender = 'Male';
-  bool isSearching = false;
-  String searchText = '';
+  String? _selectedStatus;
 
   final String baseUrl = 'http://127.0.0.1:5000/services/staff';
+  late Future<List<String>> staffList;
 
   @override
-  void dispose() {
-    _idController.dispose();
-    _nameController.dispose();
-    _ageController.dispose();
-    _levelController.dispose();
-    _emailController.dispose();
-    searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    staffList = ApiService.fetchStaffList();
+  }
+
+  Future<void> _submitProfile() async {
+    if (_formKey.currentState!.validate()) {
+      final staffData = {
+        'name': _nameController.text,
+        'age': _ageController.text,
+        'level': _levelController.text,
+        'gender': _selectedGender,
+        'email': _emailController.text,
+        'status': _selectedStatus,
+      };
+
+      try {
+        final response = await ApiService.postStaffProfile(staffData);
+
+        final res = jsonDecode(response.body);
+        if (!mounted) return;
+        _showMessage(
+          response.statusCode == 200 ? 'Success' : 'Error',
+          res['message'] ?? 'Unknown response',
+        );
+        if (response.statusCode == 200) {
+          _clearFields();
+          setState(() {
+            staffList = ApiService.fetchStaffList();
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        _showMessage('Error', 'Submit failed: $e');
+      }
+    }
   }
 
   void _clearFields() {
     setState(() {
-      _idController.clear();
       _nameController.clear();
       _ageController.clear();
       _levelController.clear();
       _emailController.clear();
       _selectedGender = 'Male';
+      _selectedStatus = null;
     });
   }
 
@@ -74,213 +100,238 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     );
   }
 
-  Future<void> _submitProfile() async {
-    if (_formKey.currentState!.validate()) {
-      final staffData = {
-        'name': _nameController.text,
-        'age': _ageController.text,
-        'level': _levelController.text,
-        'gender': _selectedGender,
-        'email': _emailController.text,
-      };
-
-      try {
-        final response = await http.post(
-          Uri.parse(baseUrl),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(staffData),
-        );
-
-        final res = jsonDecode(response.body);
-        if (!mounted) return;
-        _showMessage(response.statusCode == 200 ? 'Success' : 'Error', res['message'] ?? 'Unknown response');
-        if (response.statusCode == 200) _clearFields();
-      } catch (e) {
-        if (!mounted) return;
-        _showMessage('Error', 'Submit failed: $e');
-      }
+ Future<void> _deleteProfileById(String id) async {
+  try {
+    final intId = int.tryParse(id);
+    if (intId == null) {
+      _showMessage('Error', 'Invalid ID. Please enter a valid number.');
+      return;
     }
+
+    final response = await ApiService.deleteStaffProfile(intId);
+    final res = jsonDecode(response.body);
+
+    _showMessage(
+      response.statusCode == 200 ? 'Deleted' : 'Error',
+      res['message'] ?? 'No message',
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        staffList = ApiService.fetchStaffList();
+      });
+    }
+  } catch (e) {
+    _showMessage('Error', 'Delete failed: $e');
   }
-//Have some logical error-> Kyipyar Hlaing
-  // Future<void> _editProfile() async {
-  //   if (_formKey.currentState!.validate() && _idController.text.isNotEmpty) {
-  //     final updates = {
-  //       'name': _nameController.text,
-  //       'age': _ageController.text,
-  //       'level': _levelController.text,
-  //       'gender': _selectedGender,
-  //       'email': _emailController.text,
-  //     };
+}
 
-  //     try {
-  //       final response = await http.put(
-  //         Uri.parse('$baseUrl/${_idController.text}'),
-  //         headers: {'Content-Type': 'application/json'},
-  //         body: jsonEncode(updates),
-  //       );
+  void _confirmDeleteWithIdPrompt(String name) {
+    String enteredId = '';
 
-  //       final res = jsonDecode(response.body);
-  //       if (!mounted) return;
-  //       _showMessage(response.statusCode == 200 ? 'Updated' : 'Error', res['message'] ?? 'No message');
-  //     } catch (e) {
-  //       if (!mounted) return;
-  //       _showMessage('Error', 'Edit failed: $e');
-  //     }
-  //   } else {
-  //     _showMessage('Missing ID', 'Enter staff ID to edit.');
-  //   }
-  // }
-
-  // Future<void> _deleteProfile() async {
-  //   if (_idController.text.isEmpty) {
-  //     _showMessage('Missing ID', 'Enter staff ID to delete.');
-  //     return;
-  //   }
-
-  //   try {
-  //     final response = await http.delete(Uri.parse('$baseUrl/${_idController.text}'));
-  //     final res = jsonDecode(response.body);
-  //     if (!mounted) return;
-  //     _showMessage(response.statusCode == 200 ? 'Deleted' : 'Error', res['message'] ?? 'No message');
-  //     if (response.statusCode == 200) _clearFields();
-  //   } catch (e) {
-  //     if (!mounted) return;
-  //     _showMessage('Error', 'Delete failed: $e');
-  //   }
-  // }
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Delete $name'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Enter the staff ID to confirm deletion:'),
+            const SizedBox(height: 10),
+            TextField(
+              keyboardType: TextInputType.number,
+              onChanged: (value) => enteredId = value,
+              decoration: const InputDecoration(
+                hintText: 'Staff ID',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (enteredId.isNotEmpty) {
+                _deleteProfileById(enteredId);
+              } else {
+                _showMessage('Error', 'ID is required for deletion.');
+              }
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: !isSearching
-            ? const Text('Staff Profile')
-            : TextField(
-                controller: searchController,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Search by Name...',
-                  hintStyle: TextStyle(color: Colors.white70),
-                  border: InputBorder.none,
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    searchText = value;
-                  });
-                },
-              ),
-        actions: [
-          IconButton(
-            icon: Icon(isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                if (isSearching) {
-                  searchText = '';
-                  searchController.clear();
-                }
-                isSearching = !isSearching;
-              });
-            },
-          )
-        ],
-      ),
+      appBar: AppBar(title: const Text('Staff Profile')),
       drawer: AppDrawer(),
       body: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // TextFormField(
-              //   controller: _idController,
-              //   keyboardType: TextInputType.number,
-              //   decoration: const InputDecoration(
-              //     labelText: 'Staff ID (for Edit/Delete)',
-              //     border: OutlineInputBorder(),
-              //   ),
-              // ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Please enter name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _ageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter age';
-                  final age = int.tryParse(value);
-                  if (age == null || age < 18 || age > 100) return 'Age must be between 18 and 100';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _levelController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Level (1-5)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter level';
-                  final level = int.tryParse(value);
-                  if (level == null || level < 1 || level > 5) return 'Level must be 1 to 5';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedGender,
-                decoration: const InputDecoration(
-                  labelText: 'Gender',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'Male', child: Text('Male')),
-                  DropdownMenuItem(value: 'Female', child: Text('Female')),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGender = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Form(
+              key: _formKey,
+              child: Column(
                 children: [
-                  ElevatedButton(onPressed: _submitProfile, child: const Text('Submit')),
-                  const SizedBox(width: 20),
-                  ElevatedButton(onPressed:(){},// _editProfile, 
-                  child: const Text('Edit')),
-                  const SizedBox(width: 20),
-                  ElevatedButton(onPressed:() {},//_deleteProfile, 
-                  child: const Text('Delete')),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => value!.isEmpty ? 'Please enter name' : null,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _ageController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Age',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Please enter age';
+                      final age = int.tryParse(value);
+                      if (age == null || age < 18 || age > 100) return 'Age must be between 18 and 100';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _levelController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Level (1-5)',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Please enter level';
+                      final level = int.tryParse(value);
+                      if (level == null || level < 1 || level > 5) return 'Level must be 1 to 5';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _selectedGender,
+                    decoration: const InputDecoration(
+                      labelText: 'Gender',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'Male', child: Text('Male')),
+                      DropdownMenuItem(value: 'Female', child: Text('Female')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedGender = value!;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _selectedStatus,
+                    decoration: const InputDecoration(
+                      labelText: 'Status',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: '高校生', child: Text('高校生')),
+                      DropdownMenuItem(value: '留学生', child: Text('留学生')),
+                      DropdownMenuItem(value: 'フルタイム', child: Text('フルタイム')),
+                      DropdownMenuItem(value: 'パートタイム', child: Text('パートタイム')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedStatus = value;
+                      });
+                    },
+                    validator: (value) => value == null ? 'Please select staff status' : null,
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _submitProfile,
+                    child: const Text('Submit'),
+                  ),
+                  const Divider(height: 30, thickness: 1),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Staff List',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: FutureBuilder<List<String>>(
+                future: staffList,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No staff found.'));
+                  }
+
+                  final staffList = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: staffList.length,
+                    itemBuilder: (context, index) {
+                      final name = staffList[index];
+                      return ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Expanded(child: Text(name)),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    // TODO: Add Edit logic
+                                  },
+                                  child: const Text("Edit"),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => _confirmDeleteWithIdPrompt(name),
+                                  style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 244, 121, 112)),
+                                  child: const Text("Delete",selectionColor: Colors.white,),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
