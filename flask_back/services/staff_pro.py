@@ -43,12 +43,16 @@ class CreateStaff(StaffProfileOperation):
             "Gender": self.gender,
             "Age": self.age,
             "Email" : self.email,
-            "status": self.status
-
-            
-
-        }
-
+            "status": self.status}
+        match staff_data["status"]:
+            case "高校生":
+                staff_data["status"] = "High School"
+            case "留学生":
+                staff_data["status"] = "International Student"
+            case "フルタイム":
+                staff_data["status"] = "Full Time"
+            case "パートタイム":
+                staff_data["status"] = "Part Time"
         df = pd.read_csv(self.csv_path)
         df = pd.concat([df, pd.DataFrame([staff_data])], ignore_index=True)
         df.to_csv(self.csv_path, index=False)
