@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 *.pyc
 __pycache__/
+=======
+__pycache__/
+*.pyc
+>>>>>>> c9aa4b90370b3ac54d2b613839f3d198e7a9474b
