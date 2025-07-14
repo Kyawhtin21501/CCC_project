@@ -7,6 +7,7 @@ from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
+from services.shift_preferences import ShiftPreferences 
 from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
@@ -26,34 +27,17 @@ def save_data():
     return jsonify({"message": "Data saved successfully"}), 200
 
 # Route for stafflist use in user input dashboard
-# @app.route('/staff_list', methods=['GET'])
-# def staff_list():
-#     try:
-#         staff_df = pd.read_csv("data/staff_dataBase.csv")
-#         if "Name" in staff_df.columns:
-#             names = staff_df["Name"].dropna().unique().tolist()
-#             return jsonify(names)
-#         else:
-#             return jsonify({"error": "No 'name' column found"}), 400
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
-#updated route for stafflist use in user input dashboard  or not i cannot run --kyipyar hlaing
 @app.route('/staff_list', methods=['GET'])
 def staff_list():
     try:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
-        csv_path = os.path.abspath(csv_path)
-        print(f"Looking for CSV at: {csv_path}")
-
+        base_dir = os.path.dirname(os.path.abspath(__file__))  # flask_back/
+        csv_path = os.path.join(base_dir, "../data/staff_dataBase.csv")
+        csv_path = os.path.abspath(csv_path)  
         staff_df = pd.read_csv(csv_path)
-        print("CSV columns:", staff_df.columns.tolist())
-
+        if staff_df.empty:
+            return jsonify({"error": "Staff list is empty"}), 404
         if "Name" in staff_df.columns:
             names = staff_df["Name"].dropna().unique().tolist()
-            print("Names extracted:", names)
             return jsonify(names)
         else:
             return jsonify({"error": "No 'Name' column found"}), 400
@@ -88,12 +72,23 @@ def shift():
     return jsonify(result_json), 200
 
 
+# Route for 希望シフトページ
 
-    
-    
+@app.route('/save_shift_preferences', methods=['POST'])
+def desired_shift():
+    data = request.get_json()
+    print(data)
+    try:
+        shift_pref = ShiftPreferences(data)
+        shift_pref.save_to_database()
+        
+        return jsonify({"success"}),200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 #testing stage / predict sale and staff count for dashboard/prediction_result_screen.dart
-@app.route('/services/sale_prediction_staff_count', methods=['POST'])
-def result_log():
+@app.route('/services/sale_prediction_staff_count', methods=['POST'])#Everything seems to be working well with the data and logic. We just need to hook up the send function and it should be good to go
+def result_log():  # Kyaw Htin 
     data = request.get_json()
     if data:
         start_date = date.today()
@@ -174,8 +169,5 @@ def search_staff():
         return jsonify({"error": str(e)}), 400
 
 
-
-
 if __name__ == '__main__':
     app.run(debug=True)
-
