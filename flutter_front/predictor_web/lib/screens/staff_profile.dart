@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 import 'package:http/http.dart' as http;
 >>>>>>> develop
+=======
+>>>>>>> 5263cb6 (Shift UI and link with api service)
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
