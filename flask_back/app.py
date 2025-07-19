@@ -7,7 +7,7 @@ from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
-
+from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
 CORS(app)
@@ -15,7 +15,7 @@ CORS(app)
 @app.route('/')
 def home():
     return "API Server is Running"
-
+#Route for datily user input dashboard
 @app.route('/user_input', methods=['POST'])
 def save_data():
     data = request.get_json()
@@ -25,23 +25,45 @@ def save_data():
     print(cleaned_names)
     return jsonify({"message": "Data saved successfully"}), 200
 
-@app.route('/services/testing', methods=['POST'])
-def submit_staff():
+# Route for stafflist use in user input dashboard
+# @app.route('/staff_list', methods=['GET'])
+# def staff_list():
+#     try:
+#         staff_df = pd.read_csv("data/staff_dataBase.csv")
+#         if "Name" in staff_df.columns:
+#             names = staff_df["Name"].dropna().unique().tolist()
+#             return jsonify(names)
+#         else:
+#             return jsonify({"error": "No 'name' column found"}), 400
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
+#updated route for stafflist use in user input dashboard  or not i cannot run --kyipyar hlaing
+@app.route('/staff_list', methods=['GET'])
+def staff_list():
     try:
-        data = request.json
-        name = data.get('name')
-        level = int(data.get('level'))
-        gender = data.get('gender')
-        age = int(data.get('age'))
-        email = data.get('email')
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        csv_path = os.path.abspath(csv_path)
+        print(f"Looking for CSV at: {csv_path}")
 
-        staff_creator = CreateStaff(name, level, gender, age, email)
-        result = staff_creator.operate()
+        staff_df = pd.read_csv(csv_path)
+        print("CSV columns:", staff_df.columns.tolist())
 
-        return jsonify({'message': f'Staff created: {result}'}), 200
+        if "Name" in staff_df.columns:
+            names = staff_df["Name"].dropna().unique().tolist()
+            print("Names extracted:", names)
+            return jsonify(names)
+        else:
+            return jsonify({"error": "No 'Name' column found"}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print("Error in /staff_list:", str(e))
+        return jsonify({"error": str(e)}), 500
 
+    
+
+# Route for shift prediction and create shift page
 @app.route('/shift', methods=['POST'])
 def shift():
     data = request.get_json()
@@ -65,35 +87,40 @@ def shift():
     result_json = result_df.to_dict(orient="records")
     return jsonify(result_json), 200
 
-# @app.route('/staff_list', methods=['GET'])
-# def staff_list():
-#     data_path = "data/staff_data.csv"
-#     staff_df = pd.DataFrame(data_path)
-#     staff_data = staff_df.values()
-#     return jsonify(staff_data)
-@app.route('/staff_list', methods=['GET'])
-def staff_list():
-    try:
-        staff_df = pd.read_csv("data/staff_dataBase.csv")
-        if "Name" in staff_df.columns:
-            names = staff_df["Name"].dropna().unique().tolist()
-            return jsonify(names)
-        else:
-            return jsonify({"error": "No 'name' column found"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
+
     
-"""   
-# for pre menu
+    
+#testing stage / predict sale and staff count for dashboard/prediction_result_screen.dart
+@app.route('/services/sale_prediction_staff_count', methods=['POST'])
+def result_log():
+    data = request.get_json()
+    if data:
+        start_date = date.today()
+        end_date = start_date + timedelta(days=1)
+        latitude = data.get("latitude", 35.6895)  # Default to Tokyo
+        longitude = data.get("longitude", 139.6917) # Default to Tokyo
+        predator = ShiftCreator(start_date=start_date.strftime("%Y-%m-%d"),
+            end_date=end_date.strftime("%Y-%m-%d"),
+            latitude=latitude,
+            longitude=longitude
+        )
+        start ,end = predator.date_data_from_user()
+        festivals = predator.check_festival_range(start, end)
+        weather_df = predator.weather_data(start, end)
+        pred_df = predator.pred_from_model(start, end, festivals, weather_df)
+        result_df = predator.pred_staff_count(pred_df)
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    data_sale = request.get_json()
-    sale_df =data_sale(orient = "records")
-    return jsonify(sale_df) ,500
-""" 
+        result_json = result_df.to_dict(orient="records")
+        print(result_json)
+        
+        return jsonify(result_json,pred_df), 200
+    else:
+        return jsonify({"error": "No data provided"}), 400
 
-#Staff Profile CURD funcitons
+
+
+#Staff Profile CURD funcitons testing stage
 @app.route('/services/staff', methods=['POST'])
 def create_staff():
     data = request.get_json()
@@ -103,14 +130,15 @@ def create_staff():
             level=data["level"],
             gender=data["gender"],
             age=data["age"],
-            email=data["email"]
+            email=data["email"],
+            status = data["status"],
         )
         result = new_staff.operate()
         return jsonify({"message": f"Staff created: {result}"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
+#testing stage/ staff profile operations
 @app.route('/services/staff/<int:staff_id>', methods=['PUT'])
 def edit_staff(staff_id):
     updates = request.get_json()
@@ -123,9 +151,9 @@ def edit_staff(staff_id):
 
 
 @app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
-def delete_staff(staff_id):
+def delete_staff(staff_id, csv_path="data/staff_dataBase.csv"):
     try:
-        deleter = DeleteStaff(staff_id=staff_id)
+        deleter = DeleteStaff(staff_id=staff_id, csv_path=csv_path)
         result = deleter.operate()
         return jsonify({"message": f"Staff {result} deleted successfully"}), 200
     except Exception as e:
@@ -147,7 +175,7 @@ def search_staff():
 
 
 
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
 

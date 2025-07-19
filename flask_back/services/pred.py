@@ -62,8 +62,12 @@ class ShiftCreator:
             "start_date": start.strftime("%Y-%m-%d"),
             "end_date": end.strftime("%Y-%m-%d")
         }
-   
+
         responses = openmeteo.weather_api(url, params=params)
+        if not responses:
+            print("⚠️ Open-Meteoからデータが返ってきませんでした")
+            print("パラメータ:", params)
+            return pd.DataFrame()
         response = responses[0]
 
         daily = response.Daily()
@@ -142,4 +146,4 @@ class ShiftCreator:
         return sales_preds[["date", "predicted_sales", "predicted_staff_level"]]
 
             
-
+    
