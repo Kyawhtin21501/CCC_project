@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:predictor_web/api_services/api_services.dart';
-import 'package:predictor_web/widgets/appdrawer.dart';
-
 
 class CreatedShiftScreen extends StatefulWidget {
   const CreatedShiftScreen({super.key});
@@ -12,108 +10,111 @@ class CreatedShiftScreen extends StatefulWidget {
 }
 
 class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
-  final TextEditingController _startDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
-  String? _resultMessage;
+  final List<String> shifts = ['morning', 'afternoon', 'night'];
+  List<String> staffList = [];
 
-  Future<void> _selectDate(TextEditingController controller) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
-    );
-    if (picked != null) {
-      setState(() {
-        controller.text = picked.toIso8601String().split("T").first;
-      });
-    }
-  }
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
 
-  Future<void> _submitShiftRequest() async {
-    final start = _startDateController.text;
-    final end = _endDateController.text;
-
-    if (start.isEmpty || end.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('開始日と終了日を選択してください')),
-      );
-      return;
-    }
-
-    try {
-      final response = await ApiService.postShiftRequest({
-        "start_date": start,
-        "end_date": end,
-        "latitude": 35.6895,
-        "longitude": 139.6917
-      });
-
-      if (response.statusCode == 200) {
-        final List result = jsonDecode(response.body);
-        setState(() {
-          _resultMessage =
-              "受信件数：${result.length}\n\n${result.take(5).map((e) => e.toString()).join('\n\n')}";
-        });
-      } else {
-        setState(() {
-          _resultMessage = "エラー: ${response.statusCode}";
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _resultMessage = '通信エラー: $e';
-      });
-    }
-  }
+  Map<DateTime, Map<String, Map<String, bool>>> preferences = {};
+  bool _loading = true;
+  String? _error;
 
   @override
-  void dispose() {
-    _startDateController.dispose();
-    _endDateController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchStaff();
+  }
+
+  Future<void> _fetchStaff() async {
+    try {
+      final data = await ApiService.fetchStaffList();
+      setState(() {
+        staffList = data;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'スタッフ一覧の取得に失敗しました: $e';
+        _loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("シフト期間の選択")),
-     drawer: AppDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(60),
-        child: Column(
-          children: [
-            _buildDateField("開始日", _startDateController),
-            const SizedBox(height: 20),
-            _buildDateField("終了日", _endDateController),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _submitShiftRequest,
-              child: const Text("シフト予測を取得"),
-            ),
-            const SizedBox(height: 20),
-            if (_resultMessage != null)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Text(_resultMessage!, style: const TextStyle(fontSize: 14)),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+    final selectedDate = _selectedDay ?? _focusedDay;
 
-  Widget _buildDateField(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      readOnly: true,
-      decoration: InputDecoration(
-        labelText: label,
-        suffixIcon: const Icon(Icons.calendar_today),
-        border: const OutlineInputBorder(),
-      ),
-      onTap: () => _selectDate(controller),
+    return Scaffold(
+      appBar: AppBar(title: const Text("シフト希望入力")),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text(_error!))
+              : Column(
+                  children: [
+                    TableCalendar(
+                      firstDay: DateTime(2020),
+                      lastDay: DateTime(2030),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      onDaySelected: (selected, focused) {
+                        setState(() {
+                          _selectedDay = selected;
+                          _focusedDay = focused;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "希望日: ${selectedDate.toLocal().toString().split(" ")[0]}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: staffList.length,
+                        itemBuilder: (context, index) {
+                          final staff = staffList[index];
+                          preferences[selectedDate] ??= {};
+                          preferences[selectedDate]![staff] ??= {
+                            for (var shift in shifts) shift: false
+                          };
+
+                          return Card(
+                            margin: const EdgeInsets.all(8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(staff, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: shifts.map((shift) {
+                                      final selected = preferences[selectedDate]![staff]![shift] ?? false;
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                        child: ChoiceChip(
+                                          label: Text(shift[0].toUpperCase() + shift.substring(1)),
+                                          selected: selected,
+                                          onSelected: (val) {
+                                            setState(() {
+                                              preferences[selectedDate]![staff]![shift] = val;
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  ],
+                ),
     );
   }
 }

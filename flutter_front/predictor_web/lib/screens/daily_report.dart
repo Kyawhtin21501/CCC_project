@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/screens/prediction_result_screen.dart';
-
 import 'package:predictor_web/widgets/appdrawer.dart';
-
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,10 +19,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController salesController = TextEditingController();
   final TextEditingController customerController = TextEditingController();
   final TextEditingController staffCountController = TextEditingController();
-  List<String> selectedStaffNames = [];
-  String? festivalStatus;
 
   List<String> availableStaffNames = [];
+  List<String> selectedStaffNames = [];
+  String? festivalStatus;
 
   @override
   void initState() {
@@ -238,10 +236,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
-        const Text('スタッフ名を選択（複数選択可）'),
+        const Text('スタッフを選択（複数選択可）'),
         MultiSelectDialogField<String>(
           items: availableStaffNames.map((name) => MultiSelectItem<String>(name, name)).toList(),
-          title: const Text("スタッフ名"),
+          title: const Text("スタッフ"),
           selectedColor: Colors.blueAccent,
           buttonText: const Text("スタッフを選択"),
           initialValue: selectedStaffNames,
@@ -251,6 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             });
           },
           chipDisplay: MultiSelectChipDisplay(
+            items: selectedStaffNames.map((name) => MultiSelectItem<String>(name, name)).toList(),
             onTap: (value) {
               setState(() {
                 selectedStaffNames.remove(value);
