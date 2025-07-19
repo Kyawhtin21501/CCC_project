@@ -4,7 +4,13 @@
 2025-07-08,False,25000,250,3,"['Yan Shin Shein', 'Kyaw Htin Hein', 'Kyi Pyar Hlaing']",15
 2025-07-08,False,20000,200,3,"['Kyaw', 'Kyi Pyar Hlaing', 'Jenie']",5
 2025-07-11,False,230000,180,3,"['Kyaw Htin Hein', 'Kyi Pyar Hlaing', 'Kyaw']",10
+<<<<<<< HEAD
+2025-07-11,False,250000,250,4,"['Kyi Pyar Hlaing', 'Hir', 'Kyaw', 'Lisa']",10
+=======
 2025-07-11,True,1230000,120,1,"[""Puppy""]",4
 2025-07-12,False,240000,120,2,"['Puppy', 'Jenie']",4
 2025-07-13,False,129806,231,3,"['Lisa', 'Jenie', 'Puppy']",9
 2025-07-12,False,220000,220,2,"['Puppy', 'Lisa']",9
+>>>>>>> origin/develop
+2025-07-12,False,210000,194,3,"['Yss', 'Kph', 'Khh']",0
+2025-07-16,False,230000,180,3,"['Yss', 'Kph', 'Khh']",0

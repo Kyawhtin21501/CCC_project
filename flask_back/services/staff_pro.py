@@ -1,4 +1,3 @@
-
 import pandas as pd
 import os
 
@@ -17,13 +16,19 @@ class StaffProfileOperation:
 
 
 class CreateStaff(StaffProfileOperation):
-    def __init__(self, name, level, gender, age, email, csv_path=None):
+
+    def __init__(self, name, level, gender, age,email,status ,csv_path="data/staff_dataBase.csv"):
+
+   
+
         super().__init__(csv_path)
         self.name = name
         self.level = level
         self.gender = gender
         self.age = age
         self.email = email
+        self.status = status
+        
 
     def _generate_new_id(self):
         df = pd.read_csv(self.csv_path)
@@ -37,9 +42,17 @@ class CreateStaff(StaffProfileOperation):
             "Level": self.level,
             "Gender": self.gender,
             "Age": self.age,
-            "Email": self.email
-        }
-
+            "Email" : self.email,
+            "status": self.status}
+        match staff_data["status"]:
+            case "高校生":
+                staff_data["status"] = "High School"
+            case "留学生":
+                staff_data["status"] = "International Student"
+            case "フルタイム":
+                staff_data["status"] = "Full Time"
+            case "パートタイム":
+                staff_data["status"] = "Part Time"
         df = pd.read_csv(self.csv_path)
         df = pd.concat([df, pd.DataFrame([staff_data])], ignore_index=True)
         df.to_csv(self.csv_path, index=False)
@@ -72,12 +85,12 @@ class DeleteStaff(StaffProfileOperation):
 
     def operate(self):
         df = pd.read_csv(self.csv_path)
-        if self.staff_id in df['ID'].values:
-            df = df[df['ID'] != self.staff_id]
+        if self.staff_id in df["ID"].values:
+            df = df.drop(df[df["ID"] == self.staff_id].index)
             df.to_csv(self.csv_path, index=False)
             return f"{self.staff_id}"
         else:
-            return f"{self.staff_id}"
+            return f"{self.staff_id} not found"
 
 
 class SearchStaff(StaffProfileOperation):
