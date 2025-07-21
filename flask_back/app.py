@@ -88,22 +88,7 @@ def shift():
     return jsonify(result_json), 200
 
 
-#Staff Profile CURD funcitons testing stage
-@app.route('/services/staff', methods=['POST'])
-def create_staff():
-    data = request.get_json()
-    try:
-        new_staff = CreateStaff(
-            name=data["name"],
-            level=data["level"],
-            gender=data["gender"],
-            age=data["age"],
-            email=data["email"]
-        )
-        result = new_staff.operate()
-        return jsonify({"message": f"Staff created: {result}"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+
     
     
 #testing stage / predict sale and staff count for dashboard/prediction_result_screen.dart
@@ -128,13 +113,30 @@ def result_log():
 
         result_json = result_df.to_dict(orient="records")
         print(result_json)
-        return jsonify(result_json), 200
+        
+        return jsonify(result_json,pred_df), 200
     else:
         return jsonify({"error": "No data provided"}), 400
 
 
 
-
+#Staff Profile CURD funcitons testing stage
+@app.route('/services/staff', methods=['POST'])
+def create_staff():
+    data = request.get_json()
+    try:
+        new_staff = CreateStaff(
+            name=data["name"],
+            level=data["level"],
+            gender=data["gender"],
+            age=data["age"],
+            email=data["email"],
+            status = data["status"],
+        )
+        result = new_staff.operate()
+        return jsonify({"message": f"Staff created: {result}"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 #testing stage/ staff profile operations
 @app.route('/services/staff/<int:staff_id>', methods=['PUT'])
@@ -149,9 +151,9 @@ def edit_staff(staff_id):
 
 
 @app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
-def delete_staff(staff_id):
+def delete_staff(staff_id, csv_path="data/staff_dataBase.csv"):
     try:
-        deleter = DeleteStaff(staff_id=staff_id)
+        deleter = DeleteStaff(staff_id=staff_id, csv_path=csv_path)
         result = deleter.operate()
         return jsonify({"message": f"Staff {result} deleted successfully"}), 200
     except Exception as e:
