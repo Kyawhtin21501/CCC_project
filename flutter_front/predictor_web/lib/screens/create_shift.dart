@@ -62,6 +62,11 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("$staff さんの希望を保存しました")));
+    setState(() {
+      preferences[selectedDate]![staff] = {
+        for (var shift in shifts) shift: false,
+      };
+    });
     } catch (e) {
       ScaffoldMessenger.of(
         context,
