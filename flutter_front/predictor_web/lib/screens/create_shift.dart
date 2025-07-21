@@ -61,7 +61,7 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
       await ApiService.saveShiftPreferences(data);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("$staff さんの希望を保存しました ✅")));
+      ).showSnackBar(SnackBar(content: Text("$staff さんの希望を保存しました")));
     } catch (e) {
       ScaffoldMessenger.of(
         context,
