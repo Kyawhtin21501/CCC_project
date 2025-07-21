@@ -7,7 +7,7 @@ class ApiService {
 
   // GET /staff_list completed -->kyipyar hlaing
   static Future<List<String>> fetchStaffList() async {
-    final response = await http.get(Uri.parse('$baseUrl/staff_list'));
+    final response = await http.get(Uri.parse('$baseUrl/staff_list'));//check this url -->kyaw Htin Hein
     // print("########## [ApiService] Status: ${response.statusCode} ##########");
     // print("########## [ApiService] /staff_list response: ${response.body}");
 
@@ -56,14 +56,18 @@ class ApiService {
     );
   }
 
-  // POST /shift
-  static Future<http.Response> postShiftRequest(Map<String, dynamic> payload) async {
-    return await http.post(
-      Uri.parse('$baseUrl/shift'),
+  // POST /shift from staff with id like-- Kyi Pyar Hlaing IDnum Moring -False,Lunch-False, Night-True
+  static Future<void> saveShiftPreferences(Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/save_shift_preferences'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
+      body: jsonEncode(data),
     );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to save preferences');
+    }
   }
+
 
   //PUT /services/staff/{id}
   static Future<http.Response> updateStaffProfile(int id, Map<String, dynamic> updates) async {
@@ -86,4 +90,5 @@ class ApiService {
     final url = Uri.parse('$baseUrl/services/staff/search?term=$term&by=$by');
     return await http.get(url);
   }
+
 }

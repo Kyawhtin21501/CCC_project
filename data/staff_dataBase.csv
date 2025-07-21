@@ -1,4 +1,4 @@
-ID,Name,Level,Gender,Age,Email,status
-1001,khh,3,Male,24,khh@gmail.com,留学生
-1002,kph,3,Female,24,kph,留学生
-1003,yss,3,Male,24,yss@gmail.com,International Student
+ID,Name,Level,Gender,Age,Email,Assign,status
+1001,A,1,Male,20,a@gmail.com,,High School
+1002,B,2,Male,20,b@gmail.com,,Full Time
+1003,C,3,Female,25,C@gmail.com,,International Student
