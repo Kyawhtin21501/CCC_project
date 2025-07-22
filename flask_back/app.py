@@ -62,6 +62,8 @@ def staff_list():
         return jsonify({"error": str(e)}), 500
 
     
+#route for shift preference page
+@app.route('/shift_preference', methods=['POST'])
 
 # Route for shift prediction and create shift page
 @app.route('/shift', methods=['POST'])
