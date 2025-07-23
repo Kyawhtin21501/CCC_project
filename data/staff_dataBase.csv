@@ -1,4 +1,5 @@
 ID,Name,Level,Gender,Age,Email,Assign,status
+<<<<<<< HEAD
 1001,Yan Shin Shein,5,Male,24,yanshin@gmail.com,international_student,
 1002,Kyaw Htin Hein,5,Male,19,khein@gmail.com,international_student,
 1004,hir,2,Male,21,hir@gmail.com,international_student,
@@ -17,3 +18,8 @@ ID,Name,Level,Gender,Age,Email,Assign,status
 1019,Ariana,5,Female,32,aria@gmail.com,,
 1020,Kyipyar Hlaing,3,Female,25,kyipyar@gmail.com,,
 1021,ok,2,Male,21,ok@gmail.com,,Full Time
+=======
+1001,A,1,Male,20,a@gmail.com,,High School
+1002,B,2,Male,20,b@gmail.com,,Full Time
+1003,C,3,Female,25,C@gmail.com,,International Student
+>>>>>>> 82920e422ac3d05d88350ef4f217d5af56ae300c

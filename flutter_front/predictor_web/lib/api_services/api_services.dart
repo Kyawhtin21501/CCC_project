@@ -7,7 +7,7 @@ class ApiService {
 
   // GET /staff_list completed -->kyipyar hlaing
   static Future<List<String>> fetchStaffList() async {
-    final response = await http.get(Uri.parse('$baseUrl/staff_list'));
+    final response = await http.get(Uri.parse('$baseUrl/staff_list'));//check this url -->kyaw Htin Hein
     // print("########## [ApiService] Status: ${response.statusCode} ##########");
     // print("########## [ApiService] /staff_list response: ${response.body}");
 
@@ -58,12 +58,22 @@ class ApiService {
 
   // POST /shift from staff with id like-- Kyi Pyar Hlaing IDnum Moring -False,Lunch-False, Night-True
   static Future<void> saveShiftPreferences(Map<String, dynamic> data) async {
+<<<<<<< HEAD
     final response = await http.post(
+=======
+    print("========================${data.toString()}= in api_service.dart ===========================");
+    final response = await http.post(
+      
+>>>>>>> 82920e422ac3d05d88350ef4f217d5af56ae300c
       Uri.parse('$baseUrl/save_shift_preferences'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(data),
     );
     if (response.statusCode != 200) {
+<<<<<<< HEAD
+=======
+      print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^${response.statusCode}^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+>>>>>>> 82920e422ac3d05d88350ef4f217d5af56ae300c
       throw Exception('Failed to save preferences');
     }
   }

@@ -9,7 +9,8 @@ class UserInputHandler:
         if csv_path is None:
             base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services
             csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'user_input.csv'))
-
+        if not os.path.exists(csv_path):
+            pd.DataFrame(columns=['date', 'is_festival', 'sales', 'guests', 'staff_count', 'assigned_staff', 'total_staff_level']).to_csv(csv_path, index=False)
         self.csv_path = csv_path
         print(f"[UserInputHandler] Writing to: {self.csv_path}")
 
