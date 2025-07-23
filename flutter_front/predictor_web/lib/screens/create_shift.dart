@@ -12,7 +12,6 @@ class CreatedShiftScreen extends StatefulWidget {
 class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
   final List<String> shifts = ['morning', 'afternoon', 'night'];
   List<String> staffList = [];
-
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
@@ -41,80 +40,141 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
     }
   }
 
+  Future<void> _saveShiftPreferences(String staff) async {
+    final selectedDate = _selectedDay ?? _focusedDay;
+    final formattedDate = selectedDate.toLocal().toString().split(" ")[0];
+
+    final shiftsForStaff = preferences[selectedDate]?[staff] ?? {};
+
+    final data = {
+      'date': formattedDate,
+      'preferences': {
+        staff: {
+          'morning': shiftsForStaff['morning'],
+          'afternoon': shiftsForStaff['afternoon'],
+          'night': shiftsForStaff['night'],
+        },
+      },
+    };
+
+    try {
+      await ApiService.saveShiftPreferences(data);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("$staff さんの希望を保存しました")));
+    setState(() {
+      preferences[selectedDate]![staff] = {
+        for (var shift in shifts) shift: false,
+      };
+    });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("エラー: $e")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedDate = _selectedDay ?? _focusedDay;
 
     return Scaffold(
       appBar: AppBar(title: const Text("シフト希望入力")),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
+      body:
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
               ? Center(child: Text(_error!))
               : Column(
-                  children: [
-                    TableCalendar(
-                      firstDay: DateTime(2020),
-                      lastDay: DateTime(2030),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                      onDaySelected: (selected, focused) {
-                        setState(() {
-                          _selectedDay = selected;
-                          _focusedDay = focused;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
+                children: [
+                  TableCalendar(
+                    firstDay: DateTime(2020),
+                    lastDay: DateTime(2030),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selected, focused) {
+                      setState(() {
+                        _selectedDay = selected;
+                        _focusedDay = focused;
+                      });
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
                       "希望日: ${selectedDate.toLocal().toString().split(" ")[0]}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: staffList.length,
-                        itemBuilder: (context, index) {
-                          final staff = staffList[index];
-                          preferences[selectedDate] ??= {};
-                          preferences[selectedDate]![staff] ??= {
-                            for (var shift in shifts) shift: false
-                          };
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: staffList.length,
+                      itemBuilder: (context, index) {
+                        final staff = staffList[index];
 
-                          return Card(
-                            margin: const EdgeInsets.all(8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(staff, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: shifts.map((shift) {
-                                      final selected = preferences[selectedDate]![staff]![shift] ?? false;
+                        preferences[selectedDate] ??= {};
+                        preferences[selectedDate]![staff] ??= {
+                          for (var shift in shifts) shift: false,
+                        };
+
+                        return Card(
+                          color: const Color.fromARGB(255, 150, 202, 245),
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              staff,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children:
+                                    shifts.map((shift) {
                                       return Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                                        child: ChoiceChip(
-                                          label: Text(shift[0].toUpperCase() + shift.substring(1)),
-                                          selected: selected,
-                                          onSelected: (val) {
-                                            setState(() {
-                                              preferences[selectedDate]![staff]![shift] = val;
-                                            });
-                                          },
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(shift),
+                                            Checkbox(
+                                              value:
+                                                  preferences[selectedDate]![staff]![shift]!,
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  preferences[selectedDate]![staff]![shift] =
+                                                      val!;
+                                                });
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       );
                                     }).toList(),
-                                  )
-                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    )
-                  ],
-                ),
+
+                            trailing: ElevatedButton(
+                              onPressed: () => _saveShiftPreferences(staff),
+                              child: const Text("保存"),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 }

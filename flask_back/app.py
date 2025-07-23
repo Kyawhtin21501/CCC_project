@@ -61,6 +61,33 @@ def staff_list():
         print("Error in /staff_list:", str(e))
         return jsonify({"error": str(e)}), 500
 
+#create shift by each user with their own id --kyipyar hlaing
+@app.route('/save_shift_preferences', methods=['POST'])
+def save_shift_preferences():
+    try:
+        data = request.get_json()
+        date_str = data.get("date")
+        preferences = data.get("preferences")
+
+        if not date_str or not preferences:
+            return jsonify({"error": "Invalid data"}), 400
+
+        # 保存先のCSVファイルパス
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'shift_preferences.csv')
+
+        # データを整形して保存
+        df = pd.DataFrame.from_dict(preferences, orient='index').reset_index()
+        df.rename(columns={'index': 'staff'}, inplace=True)
+        df["date"] = date_str
+
+        # 追記モードで保存
+        df.to_csv(csv_path, mode='a', header=not os.path.exists(csv_path), index=False, encoding='utf-8-sig')
+
+        return jsonify({"message": "Shift preferences saved"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     
 
 # Route for shift prediction and create shift page
@@ -174,8 +201,5 @@ def search_staff():
         return jsonify({"error": str(e)}), 400
 
 
-
-
 if __name__ == '__main__':
     app.run(debug=True)
-
