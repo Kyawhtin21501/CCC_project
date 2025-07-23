@@ -76,15 +76,21 @@ def shift():
 
 @app.route('/save_shift_preferences', methods=['POST'])
 def desired_shift():
-    data = request.get_json()
-    print(data)
     try:
+        data = request.get_json()
+        print(data)
+
         shift_pref = ShiftPreferences(data)
         shift_pref.save_to_database()
         
-        return jsonify({"success"}),200
+        print(f"----------------------------{data}------From app.py---------------------------------------")
+        
+        return jsonify({"message": "Shift preferences saved successfully"}), 200
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 400
+
+    
 
 #testing stage / predict sale and staff count for dashboard/prediction_result_screen.dart
 @app.route('/services/sale_prediction_staff_count', methods=['POST'])#Everything seems to be working well with the data and logic. We just need to hook up the send function and it should be good to go

@@ -58,12 +58,15 @@ class ApiService {
 
   // POST /shift from staff with id like-- Kyi Pyar Hlaing IDnum Moring -False,Lunch-False, Night-True
   static Future<void> saveShiftPreferences(Map<String, dynamic> data) async {
+    print("========================${data.toString()}= in api_service.dart ===========================");
     final response = await http.post(
+      
       Uri.parse('$baseUrl/save_shift_preferences'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(data),
     );
     if (response.statusCode != 200) {
+      print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^${response.statusCode}^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
       throw Exception('Failed to save preferences');
     }
   }
