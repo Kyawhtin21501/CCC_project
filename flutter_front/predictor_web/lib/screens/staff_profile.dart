@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-=======
+
+
 import 'package:http/http.dart' as http;
->>>>>>> develop
+
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
