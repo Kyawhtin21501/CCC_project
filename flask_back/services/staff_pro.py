@@ -9,6 +9,7 @@ class StaffProfileOperation:
         self.csv_path = csv_path
 
         if not os.path.exists(csv_path):
+          
             pd.DataFrame(columns=["ID", "Name", "Level", "Gender", "Age", "Email"]).to_csv(csv_path, index=False)
 
     def operate(self):
@@ -16,8 +17,10 @@ class StaffProfileOperation:
 
 
 class CreateStaff(StaffProfileOperation):
-
-    def __init__(self, name, level, gender, age,email,status ,csv_path="data/staff_dataBase.csv"):
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services
+    csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'staff_dataBase.csv'))
+    
+    def __init__(self, name, level, gender, age,email,status ,csv_path=csv_path):
 
    
 
@@ -39,9 +42,9 @@ class CreateStaff(StaffProfileOperation):
         staff_data = {
             "ID": new_id,
             "Name": self.name,
-            "Level": self.level,
+            "Level": int(self.level),
             "Gender": self.gender,
-            "Age": self.age,
+            "Age": int(self.age),
             "Email" : self.email,
             "status": self.status}
         match staff_data["status"]:
@@ -56,6 +59,7 @@ class CreateStaff(StaffProfileOperation):
         df = pd.read_csv(self.csv_path)
         df = pd.concat([df, pd.DataFrame([staff_data])], ignore_index=True)
         df.to_csv(self.csv_path, index=False)
+        print(f"from staff manager class {df}")
         return f"{new_id} {self.name}"
 
 
@@ -79,7 +83,10 @@ class EditStaff(StaffProfileOperation):
 
 
 class DeleteStaff(StaffProfileOperation):
-    def __init__(self, staff_id, csv_path=None):
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services
+    csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'staff_dataBase.csv'))
+    
+    def __init__(self, staff_id, csv_path=csv_path):
         super().__init__(csv_path)
         self.staff_id = staff_id
 

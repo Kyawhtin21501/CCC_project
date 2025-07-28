@@ -45,6 +45,37 @@ def staff_list():
         print("Error in /staff_list:", str(e))
         return jsonify({"error": str(e)}), 500
 
+
+
+
+
+#create shift by each user with their own id --kyipyar hlaing
+@app.route('/save_shift_preferences', methods=['POST'])
+def save_shift_preferences():
+    try:
+        data = request.get_json()
+        date_str = data.get("date")
+        preferences = data.get("preferences")
+
+        if not date_str or not preferences:
+            return jsonify({"error": "Invalid data"}), 400
+
+        # 保存先のCSVファイルパス
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'shift_preferences.csv')
+
+        # データを整形して保存
+        df = pd.DataFrame.from_dict(preferences, orient='index').reset_index()
+        df.rename(columns={'index': 'staff'}, inplace=True)
+        df["date"] = date_str
+
+        # 追記モードで保存
+        df.to_csv(csv_path, mode='a', header=not os.path.exists(csv_path), index=False, encoding='utf-8-sig')
+
+        return jsonify({"message": "Shift preferences saved"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     
 
 # Route for shift prediction and create shift page
@@ -114,24 +145,26 @@ def result_log():  # Kyaw Htin
         return jsonify({"error": "No data provided"}), 400
 
 
-
-#Staff Profile CURD funcitons testing stage
 @app.route('/services/staff', methods=['POST'])
 def create_staff():
     data = request.get_json()
+    print(f"Received JSON: {data}")  # Debug
+
     try:
         new_staff = CreateStaff(
-            name=data["name"],
-            level=data["level"],
-            gender=data["gender"],
-            age=data["age"],
-            email=data["email"],
-            status = data["status"],
+            name=data["Name"],
+            level=int(data["Level"]),
+            gender=data["Gender"],
+            age=int(data["Age"]),
+            email=data["Email"],
+            status=data.get("status") or data.get("Status") or "",
         )
         result = new_staff.operate()
         return jsonify({"message": f"Staff created: {result}"}), 200
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
+
 
 #testing stage/ staff profile operations
 @app.route('/services/staff/<int:staff_id>', methods=['PUT'])
@@ -146,8 +179,13 @@ def edit_staff(staff_id):
 
 
 @app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
+      
 def delete_staff(staff_id, csv_path="data/staff_dataBase.csv"):
     try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        csv_path = os.path.abspath(csv_path)
+        print(f"Looking for CSV at: {csv_path}")
         deleter = DeleteStaff(staff_id=staff_id, csv_path=csv_path)
         result = deleter.operate()
         return jsonify({"message": f"Staff {result} deleted successfully"}), 200
@@ -167,6 +205,8 @@ def search_staff():
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
 
 
 if __name__ == '__main__':
