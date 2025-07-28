@@ -1,12 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-
-
-
-import 'package:http/http.dart' as http;
-
-
-
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 
@@ -28,49 +21,52 @@ class StaffProfileForm extends StatefulWidget {
 
 class _StaffProfileFormState extends State<StaffProfileForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _levelController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController searchController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _levelController = TextEditingController();
+  final _emailController = TextEditingController();
 
   String _selectedGender = 'Male';
   String? _selectedStatus;
-
-  final String baseUrl = 'http://127.0.0.1:5000/services/staff';
-  late Future<List<String>> staffList;
+  late Future<List<String>> _staffList;
 
   @override
   void initState() {
     super.initState();
-    staffList = ApiService.fetchStaffList();
+    _loadStaffList();
+  }
+
+  void _loadStaffList() {
+    setState(() {
+      _staffList = ApiService.fetchStaffList();
+    });
   }
 
   Future<void> _submitProfile() async {
     if (_formKey.currentState!.validate()) {
       final staffData = {
-        'name': _nameController.text,
-        'age': _ageController.text,
-        'level': _levelController.text,
-        'gender': _selectedGender,
-        'email': _emailController.text,
-        'status': _selectedStatus,
-      };
+  'ID': null,  // 新規登録の場合はnullやサーバーで自動採番かもしれません
+  'Name': _nameController.text,
+  'Age': int.parse(_ageController.text),
+  'Level': int.parse(_levelController.text),
+  'Gender': _selectedGender,
+  'Email': _emailController.text,
+  'status': _convertStatusToEnglish(_selectedStatus), // 日本語→英語変換関数を作る
+};
 
       try {
         final response = await ApiService.postStaffProfile(staffData);
-
         final res = jsonDecode(response.body);
+
         if (!mounted) return;
         _showMessage(
           response.statusCode == 200 ? 'Success' : 'Error',
           res['message'] ?? 'Unknown response',
         );
+
         if (response.statusCode == 200) {
           _clearFields();
-          setState(() {
-            staffList = ApiService.fetchStaffList();
-          });
+          _loadStaffList();
         }
       } catch (e) {
         if (!mounted) return;
@@ -78,13 +74,21 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       }
     }
   }
-
+String _convertStatusToEnglish(String? status) {
+  switch(status) {
+    case '高校生': return 'high_school_student';
+    case '留学生': return 'international_student';
+    case 'フルタイム': return 'Full Time';
+    case 'パートタイム': return 'Part Time';
+    default: return 'unknown';
+  }
+}
   void _clearFields() {
+    _nameController.clear();
+    _ageController.clear();
+    _levelController.clear();
+    _emailController.clear();
     setState(() {
-      _nameController.clear();
-      _ageController.clear();
-      _levelController.clear();
-      _emailController.clear();
       _selectedGender = 'Male';
       _selectedStatus = null;
     });
@@ -107,31 +111,29 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     );
   }
 
- Future<void> _deleteProfileById(String id) async {
-  try {
+  Future<void> _deleteProfileById(String id) async {
     final intId = int.tryParse(id);
     if (intId == null) {
       _showMessage('Error', 'Invalid ID. Please enter a valid number.');
       return;
     }
 
-    final response = await ApiService.deleteStaffProfile(intId);
-    final res = jsonDecode(response.body);
+    try {
+      final response = await ApiService.deleteStaffProfile(intId);
+      final res = jsonDecode(response.body);
 
-    _showMessage(
-      response.statusCode == 200 ? 'Deleted' : 'Error',
-      res['message'] ?? 'No message',
-    );
+      _showMessage(
+        response.statusCode == 200 ? 'Deleted' : 'Error',
+        res['message'] ?? 'No message',
+      );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        staffList = ApiService.fetchStaffList();
-      });
+      if (response.statusCode == 200) {
+        _loadStaffList();
+      }
+    } catch (e) {
+      _showMessage('Error', 'Delete failed: $e');
     }
-  } catch (e) {
-    _showMessage('Error', 'Delete failed: $e');
   }
-}
 
   void _confirmDeleteWithIdPrompt(String name) {
     String enteredId = '';
@@ -143,7 +145,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Enter the staff ID to confirm deletion:'),
+            const Text('Enter the staff ID to confirm deletion:'),
             const SizedBox(height: 10),
             TextField(
               keyboardType: TextInputType.number,
@@ -189,109 +191,29 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) => value!.isEmpty ? 'Please enter name' : null,
-                  ),
+                  _buildTextField(_nameController, 'Name'),
                   const SizedBox(height: 10),
-                  TextFormField(
-                    controller: _ageController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Age',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter age';
-                      final age = int.tryParse(value);
-                      if (age == null || age < 18 || age > 100) return 'Age must be between 18 and 100';
-                      return null;
-                    },
-                  ),
+                  _buildNumberField(_ageController, 'Age', 18, 100),
                   const SizedBox(height: 10),
-                  TextFormField(
-                    controller: _levelController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Level (1-5)',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please enter level';
-                      final level = int.tryParse(value);
-                      if (level == null || level < 1 || level > 5) return 'Level must be 1 to 5';
-                      return null;
-                    },
-                  ),
+                  _buildNumberField(_levelController, 'Level (1-5)', 1, 5),
                   const SizedBox(height: 10),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
-                  ),
+                  _buildTextField(_emailController, 'Email', isEmail: true),
                   const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: _selectedGender,
-                    decoration: const InputDecoration(
-                      labelText: 'Gender',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'Male', child: Text('Male')),
-                      DropdownMenuItem(value: 'Female', child: Text('Female')),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedGender = value!;
-                      });
-                    },
-                  ),
+                  _buildGenderDropdown(),
                   const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    value: _selectedStatus,
-                    decoration: const InputDecoration(
-                      labelText: 'Status',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: '高校生', child: Text('高校生')),
-                      DropdownMenuItem(value: '留学生', child: Text('留学生')),
-                      DropdownMenuItem(value: 'フルタイム', child: Text('フルタイム')),
-                      DropdownMenuItem(value: 'パートタイム', child: Text('パートタイム')),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedStatus = value;
-                      });
-                    },
-                    validator: (value) => value == null ? 'Please select staff status' : null,
-                  ),
+                  _buildStatusDropdown(),
                   const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _submitProfile,
-                    child: const Text('Submit'),
-                  ),
+                  ElevatedButton(onPressed: _submitProfile, child: const Text('Submit')),
                   const Divider(height: 30, thickness: 1),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Staff List',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const Text('Staff List', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Expanded(
               child: FutureBuilder<List<String>>(
-                future: staffList,
+                future: _staffList,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -301,36 +223,28 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                     return const Center(child: Text('No staff found.'));
                   }
 
-                  final staffList = snapshot.data!;
+                  final staffNames = snapshot.data!;
                   return ListView.builder(
-                    itemCount: staffList.length,
+                    itemCount: staffNames.length,
                     itemBuilder: (context, index) {
-                      final name = staffList[index];
+                      final name = staffNames[index];
                       return ListTile(
                         leading: const Icon(Icons.person),
-                        title: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Expanded(child: Text(name)),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    // TODO: Add Edit logic
-                                  },
-                                  child: const Text("Edit"),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => _confirmDeleteWithIdPrompt(name),
-                                  style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 244, 121, 112)),
-                                  child: const Text("Delete",selectionColor: Colors.white,),
-                                ),
-                              ),
-                            ],
-                          ),
+                        title: Text(name),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {}, // TODO: Implement Edit
+                              child: const Text('Edit'),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () => _confirmDeleteWithIdPrompt(name),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -341,6 +255,56 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, {bool isEmail = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+      decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+      validator: (value) => value == null || value.isEmpty ? 'Please enter $label' : null,
+    );
+  }
+
+  Widget _buildNumberField(TextEditingController controller, String label, int min, int max) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Please enter $label';
+        final number = int.tryParse(value);
+        if (number == null || number < min || number > max) return '$label must be between $min and $max';
+        return null;
+      },
+    );
+  }
+
+  Widget _buildGenderDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedGender,
+      decoration: const InputDecoration(labelText: 'Gender', border: OutlineInputBorder()),
+      items: const [
+        DropdownMenuItem(value: 'Male', child: Text('Male')),
+        DropdownMenuItem(value: 'Female', child: Text('Female')),
+      ],
+      onChanged: (value) => setState(() => _selectedGender = value!),
+    );
+  }
+
+  Widget _buildStatusDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedStatus,
+      decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
+      items: const [
+        DropdownMenuItem(value: '高校生', child: Text('高校生')),
+        DropdownMenuItem(value: '留学生', child: Text('留学生')),
+        DropdownMenuItem(value: 'フルタイム', child: Text('フルタイム')),
+        DropdownMenuItem(value: 'パートタイム', child: Text('パートタイム')),
+      ],
+      onChanged: (value) => setState(() => _selectedStatus = value),
+      validator: (value) => value == null ? 'Please select staff status' : null,
     );
   }
 }

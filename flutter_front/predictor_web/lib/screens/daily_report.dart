@@ -30,18 +30,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadStaffList();
   }
 
-  Future<void> _loadStaffList() async {
-    try {
-      final staffList = await ApiService.fetchStaffList();
-      setState(() {
-        availableStaffNames = staffList;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('スタッフリスト取得エラー: $e')),
-      );
-    }
+Future<void> _loadStaffList() async {
+  try {
+    final staffList = await ApiService.fetchStaffList();
+    setState(() {
+      availableStaffNames = staffList.map((e) => e.toString()).toList();
+    });
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('スタッフリスト取得エラー: $e')),
+    );
   }
+}
 
   Map<String, dynamic> _buildPayload() {
     return {

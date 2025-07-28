@@ -26,20 +26,6 @@ def save_data():
     return jsonify({"message": "Data saved successfully"}), 200
 
 # Route for stafflist use in user input dashboard
-# @app.route('/staff_list', methods=['GET'])
-# def staff_list():
-#     try:
-#         staff_df = pd.read_csv("data/staff_dataBase.csv")
-#         if "Name" in staff_df.columns:
-#             names = staff_df["Name"].dropna().unique().tolist()
-#             return jsonify(names)
-#         else:
-#             return jsonify({"error": "No 'name' column found"}), 400
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
-#updated route for stafflist use in user input dashboard  or not i cannot run --kyipyar hlaing
 @app.route('/staff_list', methods=['GET'])
 def staff_list():
     try:
@@ -48,8 +34,22 @@ def staff_list():
         csv_path = os.path.abspath(csv_path)
         print(f"Looking for CSV at: {csv_path}")
 
-        staff_df = pd.read_csv(csv_path)
+        # Load CSV
+        staff_df = pd.read_csv(csv_path,on_bad_lines='skip')
+
+        # # Correct the header order if necessary
+        expected_columns = ['ID', 'Name', 'Level', 'Gender', 'Age', 'Email', 'status']
+        if list(staff_df.columns[:7]) != expected_columns:
+            print("Reassigning correct headers due to incorrect column order...")
+            staff_df.columns = expected_columns
+
+        # Strip whitespace from headers and data
+        staff_df.columns = staff_df.columns.str.strip()
+        staff_df["Name"] = staff_df["Name"].astype(str).str.strip()
+
         print("CSV columns:", staff_df.columns.tolist())
+        print("First few rows of CSV:")
+        print(staff_df.head())
 
         if "Name" in staff_df.columns:
             names = staff_df["Name"].dropna().unique().tolist()
@@ -60,6 +60,10 @@ def staff_list():
     except Exception as e:
         print("Error in /staff_list:", str(e))
         return jsonify({"error": str(e)}), 500
+
+
+
+
 
 #create shift by each user with their own id --kyipyar hlaing
 @app.route('/save_shift_preferences', methods=['POST'])
@@ -146,24 +150,26 @@ def result_log():
         return jsonify({"error": "No data provided"}), 400
 
 
-
-#Staff Profile CURD funcitons testing stage
 @app.route('/services/staff', methods=['POST'])
 def create_staff():
     data = request.get_json()
+    print(f"Received JSON: {data}")  # Debug
+
     try:
         new_staff = CreateStaff(
-            name=data["name"],
-            level=data["level"],
-            gender=data["gender"],
-            age=data["age"],
-            email=data["email"],
-            status = data["status"],
+            name=data["Name"],
+            level=int(data["Level"]),
+            gender=data["Gender"],
+            age=int(data["Age"]),
+            email=data["Email"],
+            status=data.get("status") or data.get("Status") or "",
         )
         result = new_staff.operate()
         return jsonify({"message": f"Staff created: {result}"}), 200
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
+
 
 #testing stage/ staff profile operations
 @app.route('/services/staff/<int:staff_id>', methods=['PUT'])
@@ -178,8 +184,13 @@ def edit_staff(staff_id):
 
 
 @app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
+      
 def delete_staff(staff_id, csv_path="data/staff_dataBase.csv"):
     try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        csv_path = os.path.abspath(csv_path)
+        print(f"Looking for CSV at: {csv_path}")
         deleter = DeleteStaff(staff_id=staff_id, csv_path=csv_path)
         result = deleter.operate()
         return jsonify({"message": f"Staff {result} deleted successfully"}), 200
@@ -199,7 +210,5 @@ def search_staff():
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-
 if __name__ == '__main__':
     app.run(debug=True)

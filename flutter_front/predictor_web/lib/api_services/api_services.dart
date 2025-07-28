@@ -5,7 +5,7 @@ class ApiService {
   // Set this to your backend address. Replace with actual IP or domain in production.
   static const String baseUrl = 'http://127.0.0.1:5000';
 
-  // GET /staff_list completed -->kyipyar hlaing
+ // GET /staff_list completed -->kyipyar hlaing
   static Future<List<String>> fetchStaffList() async {
     final response = await http.get(Uri.parse('$baseUrl/staff_list'));
     // print("########## [ApiService] Status: ${response.statusCode} ##########");
@@ -13,11 +13,13 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.cast<String>();
+      return data.map((name) => name.toString()).toList();
     } else {
       throw Exception('Failed to load staff list');
     }
   }
+
+
 
   // Optional parser (if backend returns full profiles with ID/Name/etc.)
   static List<Map<String, String>> _parseStaffList(String responseBody) {
@@ -30,7 +32,7 @@ class ApiService {
 
   // POST /user_input completed -->kyipyar hlaing
   static Future<http.Response> postUserInput(Map<String, dynamic> payload) async {
-  //  print("####################################Post User Input${payload.toString()}##################################################");
+   print("####################################Post User Input${payload.toString()}##################################################");
     return await http.post(
       Uri.parse('$baseUrl/user_input'),
       headers: {"Content-Type": "application/json"},
@@ -49,6 +51,7 @@ class ApiService {
 
   //  POST /services/staff (create) completed-->kyipyar hlaing
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
+    print("####################################Post User Input${payload.toString()}#######Post Staff profile###########################################");
     return await http.post(
       Uri.parse('$baseUrl/services/staff'),
       headers: {'Content-Type': 'application/json'},

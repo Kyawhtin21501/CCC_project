@@ -3,7 +3,7 @@ import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/daily_report.dart';
 import 'package:predictor_web/screens/prediction_result_screen.dart';
 
-import 'package:predictor_web/screens/staff_profile.dart';
+import 'package:predictor_web/screens/staff_profile.dart' hide CreatedShiftScreen;
 
 
 class AppDrawer extends StatelessWidget {
@@ -57,7 +57,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const StaffProfileScreen()),
+                MaterialPageRoute(builder: (context) =>StaffProfileForm() ),
               );
             },
           ),
@@ -66,3 +66,4 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
+
