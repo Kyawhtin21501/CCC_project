@@ -230,40 +230,40 @@ Future<void> _loadStaffList() async {
       },
     );
   }
-
-  Widget _buildStaffMultiSelect() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        const Text('スタッフを選択（複数選択可）'),
-        MultiSelectDialogField<String>(
-          items: availableStaffNames.map((name) => MultiSelectItem<String>(name, name)).toList(),
-          title: const Text("スタッフ"),
-          selectedColor: Colors.blueAccent,
-          buttonText: const Text("スタッフを選択"),
-          initialValue: selectedStaffNames,
-          onConfirm: (values) {
+Widget _buildStaffMultiSelect() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 16),
+      const Text('スタッフを選択（複数選択可）'),
+      MultiSelectDialogField<String>(
+        items: availableStaffNames.map((name) => MultiSelectItem<String>(name.toString(), name.toString())).toList(),
+        title: const Text("スタッフ"),
+        selectedColor: Colors.blueAccent,
+        buttonText: const Text("スタッフを選択"),
+        initialValue: selectedStaffNames.map((e) => e.toString()).toList(),
+        onConfirm: (values) {
+          setState(() {
+            selectedStaffNames = values.map((e) => e.toString()).toList();
+          });
+        },
+        chipDisplay: MultiSelectChipDisplay(
+          items: selectedStaffNames.map((name) => MultiSelectItem<String>(name.toString(), name.toString())).toList(),
+          onTap: (value) {
             setState(() {
-              selectedStaffNames = List<String>.from(values);
+              selectedStaffNames.remove(value);
             });
           },
-          chipDisplay: MultiSelectChipDisplay(
-            items: selectedStaffNames.map((name) => MultiSelectItem<String>(name, name)).toList(),
-            onTap: (value) {
-              setState(() {
-                selectedStaffNames.remove(value);
-              });
-            },
-          ),
-          validator: (values) {
-            if (values == null || values.isEmpty) {
-              return 'スタッフを1人以上選んでください';
-            }
-            return null;
-          },
         ),
-      ],
-    );
-  }
+        validator: (values) {
+          if (values == null || values.isEmpty) {
+            return 'スタッフを1人以上選んでください';
+          }
+          return null;
+        },
+      ),
+    ],
+  );
+}
+
 }
