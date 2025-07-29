@@ -21,14 +21,17 @@ class ApiService {
 
 
 
-  // Optional parser (if backend returns full profiles with ID/Name/etc.)
-  static List<Map<String, String>> _parseStaffList(String responseBody) {
-    final List<dynamic> data = jsonDecode(responseBody);
-    return data.map((e) => {
-      'ID': e['ID'].toString(),
-      'Name': e['Name'].toString(),
-    }).toList();
+  // Optional parser (if backend returns full profiles with ID
+static Future<Map<String, dynamic>> fetchStaffById(int id) async {
+  final response = await http.get(Uri.parse('$baseUrl/services/staff/$id'));
+  print("DEBUG: GET request to $baseUrl/services/staff/$id");
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Failed to fetch staff: ${response.body}');
   }
+}
 
   // POST /user_input completed -->kyipyar hlaing
   static Future<http.Response> postUserInput(Map<String, dynamic> payload) async {

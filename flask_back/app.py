@@ -192,15 +192,75 @@ def create_staff():
 # ---------------------------------------
 # Edit existing staff info by ID
 # ---------------------------------------
+# @app.route('/services/staff/<int:staff_id>', methods=['PUT'])
+# def edit_staff(staff_id):
+#     updates = request.get_json()
+#     try:
+#         editor = EditStaff(staff_id=staff_id, updates=updates)
+#         result = editor.operate()
+#         return jsonify({"message": f"Staff {result} updated successfully"}), 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 400
+
+
+# ---------------------------------------
+# Edit existing staff info by ID  -->kyipyar hlaing
+# ---------------------------------------
 @app.route('/services/staff/<int:staff_id>', methods=['PUT'])
-def edit_staff(staff_id):
-    updates = request.get_json()
+def update_staff_by_id(staff_id):
     try:
-        editor = EditStaff(staff_id=staff_id, updates=updates)
-        result = editor.operate()
-        return jsonify({"message": f"Staff {result} updated successfully"}), 200
+        updates = request.get_json()
+
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.abspath(os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv'))
+
+        df = pd.read_csv(csv_path)
+
+        # Check if staff exists
+        if staff_id not in df['ID'].values:
+            return jsonify({'error': 'Staff not found'}), 404
+
+        # Update the fields
+        df.loc[df['ID'] == staff_id, updates.keys()] = list(updates.values())
+
+        # Save the updated CSV
+        df.to_csv(csv_path, index=False)
+
+        return jsonify({'message': 'Staff updated successfully'}), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({'error': str(e)}), 500
+
+# -------------------------------
+# GET Route for /services/staff/<int:staff_id> kyipyar hlaing
+# -------------------------------
+
+@app.route('/services/staff/<int:staff_id>', methods=['GET'])
+def get_staff_by_id(staff_id):
+    try:
+        # Load staff CSV path
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.abspath(os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv'))
+
+        df = pd.read_csv(csv_path)
+
+        # Find staff by ID
+        staff = df[df['ID'] == staff_id]
+
+        if staff.empty:
+            return jsonify({"error": "Staff not found"}), 404
+
+        # Convert single-row DataFrame to dict
+        staff_dict = staff.iloc[0].to_dict()
+        return jsonify(staff_dict), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
+
+
+
 
 # ---------------------------------------
 # Delete staff record by ID
