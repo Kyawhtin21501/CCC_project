@@ -466,8 +466,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       validator: (value) {
         if (value == null || value.isEmpty) return 'Please enter $label';
         final number = int.tryParse(value);
-        if (number == null || number < min || number > max)
+        if (number == null || number < min || number > max) {
           return '$label must be between $min and $max';
+        }
         return null;
       },
     );
@@ -531,8 +532,9 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       ),
       validator: (value) {
         final number = int.tryParse(value ?? '');
-        if (number == null || number < min || number > max)
+        if (number == null || number < min || number > max) {
           return '$label must be between $min and $max';
+        }
         return null;
       },
     );

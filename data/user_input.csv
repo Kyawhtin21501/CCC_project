@@ -15,3 +15,5 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-07-16,False,230000,180,3,"['Yss', 'Kph', 'Khh']",0
 2025-07-22,False,250000,250,3,"['Kyaw', 'Lisa', 'Jenie']",5
 2025-07-28,False,123123,123,3,"['Yan Shin Shein', 'Kyaw Htin Hein', 'Hir']",10
+2025-07-31,False,234500,201,4,"['Augustin', 'Kyipyar Hlaing', 'Puppy', 'Jenie']",12
+2025-08-05,False,234567,231,3,"['Jenie', 'Lisa', 'Puppy']",9

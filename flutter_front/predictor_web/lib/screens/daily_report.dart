@@ -30,18 +30,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadStaffList();
   }
 
-Future<void> _loadStaffList() async {
-  try {
-    final staffList = await ApiService.fetchStaffList();
-    setState(() {
-      availableStaffNames = staffList.map((e) => e.toString()).toList();
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('スタッフリスト取得エラー: $e')),
-    );
+  Future<void> _loadStaffList() async {
+    try {
+      final staffList = await ApiService.fetchStaffList();
+      setState(() {
+        availableStaffNames = staffList.map((e) => e.toString()).toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('スタッフリスト取得エラー: $e')),
+      );
+    }
   }
-}
 
   Map<String, dynamic> _buildPayload() {
     return {
@@ -90,47 +90,6 @@ Future<void> _loadStaffList() async {
     }
   }
 
-  Future<void> _submitAndShowPrediction() async {
-    if (_formKey.currentState!.validate() && _selectedDate != null && festivalStatus != null) {
-      if (!_validateStaffCountMatchesNames()) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('スタッフ数とスタッフ名の数が一致していません')),
-        );
-        return;
-      }
-      final payload = _buildPayload();
-
-      try {
-        final response = await ApiService.postPrediction(payload);
-        if (response.statusCode == 200) {
-          final resultData = jsonDecode(response.body);
-          if (!mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PredictionResultScreen(
-                predictedSales: resultData['predicted_sales'].toString(),
-                predictedStaff: resultData['predicted_staff'].toString(),
-              ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('予測エラー (${response.statusCode})')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('通信エラー: $e')),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('全ての項目を正しく入力してください')),
-      );
-    }
-  }
-
   void _clearForm() {
     setState(() {
       _selectedDate = null;
@@ -153,117 +112,201 @@ Future<void> _loadStaffList() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('売上・スタッフ予測ダッシュボード')),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+      ),
       drawer: AppDrawer(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(60),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const Text(
-                '売上・スタッフ数・祭り情報の入力',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2b5797)),
-              ),
-              const SizedBox(height: 24),
-              ListTile(
-                title: const Text("日付"),
-                subtitle: Text(
-                  _selectedDate == null
-                      ? '日付を選択'
-                      : '${_selectedDate!.year}/${_selectedDate!.month}/${_selectedDate!.day}',
+      body: Container(
+        color: Colors.white,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(40),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'Daily Report',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) setState(() => _selectedDate = date);
-                  },
+                const SizedBox(height: 32),
+                Wrap(
+                  spacing: 20,
+                  runSpacing: 20,
+                  children: [
+                    _buildDatePicker(),
+                    _buildNumberField(salesController, 'Sale'),
+                    _buildNumberField(customerController, 'Customer'),
+                    _buildNumberField(staffCountController, 'Numbers of Staff'),
+                    _buildStaffMultiSelect(),
+                    _buildEventDropdown(),
+                  ],
                 ),
-              ),
-              _buildNumberField(salesController, '売上（円）', allowNegative: false),
-              _buildNumberField(customerController, '客数'),
-              _buildNumberField(staffCountController, 'スタッフ数'),
-              _buildStaffMultiSelect(),
-              DropdownButtonFormField<String>(
-                value: festivalStatus,
-                decoration: const InputDecoration(labelText: '祭りの有無'),
-                items: const [
-                  DropdownMenuItem(value: '1', child: Text('あり')),
-                  DropdownMenuItem(value: '0', child: Text('なし')),
-                ],
-                onChanged: (value) => setState(() => festivalStatus = value),
-                validator: (value) => value == null ? '祭りの有無を選択してください' : null,
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.save),
-                  label: const Text('保存のみ'),
-                  onPressed: _saveDataOnly,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[700], foregroundColor: Colors.white),
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    OutlinedButton(
+                      onPressed: _clearForm,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        child: Text('Clear'),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    ElevatedButton(
+                      
+                      onPressed: _saveDataOnly,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Save'),
+                    ),
+                    
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNumberField(TextEditingController controller, String label, {bool allowNegative = true}) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(labelText: label),
-      validator: (value) {
-        if (value == null || value.isEmpty) return '$label を入力してください';
-        final number = int.tryParse(value);
-        if (number == null) return '数値を入力してください';
-        if (!allowNegative && number < 0) return '0以上の値を入力してください';
-        return null;
-      },
+  Widget _buildDatePicker() {
+    return SizedBox(
+      width: 350,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Date'),
+          const SizedBox(height: 5),
+          TextFormField(
+            readOnly: true,
+            controller: TextEditingController(
+              text: _selectedDate == null
+                  ? ''
+                  : '${_selectedDate!.year}/${_selectedDate!.month}/${_selectedDate!.day}',
+            ),
+            decoration: InputDecoration(
+              hintText: 'mm/dd/yyyy',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.grey.shade200,
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2030),
+                  );
+                  if (date != null) setState(() => _selectedDate = date);
+                },
+              ),
+            ),
+            validator: (value) => _selectedDate == null ? 'Please select a date' : null,
+          ),
+        ],
+      ),
     );
   }
-Widget _buildStaffMultiSelect() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SizedBox(height: 16),
-      const Text('スタッフを選択（複数選択可）'),
-      MultiSelectDialogField<String>(
-        items: availableStaffNames.map((name) => MultiSelectItem<String>(name.toString(), name.toString())).toList(),
-        title: const Text("スタッフ"),
-        selectedColor: Colors.blueAccent,
-        buttonText: const Text("スタッフを選択"),
-        initialValue: selectedStaffNames.map((e) => e.toString()).toList(),
-        onConfirm: (values) {
-          setState(() {
-            selectedStaffNames = values.map((e) => e.toString()).toList();
-          });
-        },
-        chipDisplay: MultiSelectChipDisplay(
-          items: selectedStaffNames.map((name) => MultiSelectItem<String>(name.toString(), name.toString())).toList(),
-          onTap: (value) {
-            setState(() {
-              selectedStaffNames.remove(value);
-            });
-          },
-        ),
-        validator: (values) {
-          if (values == null || values.isEmpty) {
-            return 'スタッフを1人以上選んでください';
-          }
-          return null;
-        },
-      ),
-    ],
-  );
-}
 
+  Widget _buildNumberField(TextEditingController controller, String label) {
+    return SizedBox(
+      width: 350,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label),
+          const SizedBox(height: 5),
+          TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: 'Value',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.grey.shade200,
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) return '$label is required';
+              if (int.tryParse(value) == null) return 'Enter a valid number';
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStaffMultiSelect() {
+    return SizedBox(
+      width: 350,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Staff'),
+          const SizedBox(height: 5),
+          MultiSelectDialogField<String>(
+            items: availableStaffNames.map((name) => MultiSelectItem<String>(name, name)).toList(),
+            title: const Text("Select Staff"),
+            selectedColor: Colors.blueAccent,
+            buttonText: const Text("Select"),
+            initialValue: selectedStaffNames,
+            onConfirm: (values) {
+              setState(() {
+                selectedStaffNames = values;
+              });
+            },
+            chipDisplay: MultiSelectChipDisplay(
+              items: selectedStaffNames.map((name) => MultiSelectItem<String>(name, name)).toList(),
+              onTap: (value) {
+                setState(() {
+                  selectedStaffNames.remove(value);
+                });
+              },
+            ),
+            validator: (values) {
+              if (values == null || values.isEmpty) {
+                return 'Please select at least one staff';
+              }
+              return null;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventDropdown() {
+    return SizedBox(
+      width: 350,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Event'),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String>(
+            value: festivalStatus,
+            decoration: InputDecoration(
+              hintText: 'Select option',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.grey.shade200,
+            ),
+            items: const [
+              DropdownMenuItem(value: '1', child: Text('あり')),
+              DropdownMenuItem(value: '0', child: Text('なし')),
+            ],
+            onChanged: (value) => setState(() => festivalStatus = value),
+            validator: (value) => value == null ? 'Please select event status' : null,
+          ),
+        ],
+      ),
+    );
+  }
 }

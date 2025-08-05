@@ -13,7 +13,7 @@ class ShiftAIApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ShiftAI Dashboard',
-      theme: ThemeData(fontFamily: 'Segoe UI'),
+      theme: ThemeData(fontFamily: 'JosefinSans'),
       home: const DashboardScreen(),
       debugShowCheckedModeBanner: false,
     );
