@@ -119,3 +119,4 @@ class ShiftOperator:
         ).reset_index()
 
         return pivot_table
+
