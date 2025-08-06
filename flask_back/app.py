@@ -13,6 +13,8 @@ from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
+from services.shifting_operator import ShiftOperator
+from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
@@ -28,6 +30,7 @@ def home():
 
 # ---------------------------------------
 # Save user input (e.g. sales, staff count)
+# add retrain model start point
 # ---------------------------------------
 @app.route('/user_input', methods=['POST'])
 def save_data():
@@ -40,6 +43,10 @@ def save_data():
     cleaned_names = handler.process_and_save()
 
     print(cleaned_names)  # For debug
+    
+    # Check if retraining is needed
+    
+    
     return jsonify({"message": "Data saved successfully"}), 200
 
 # Route for stafflist use in user input dashboard
@@ -104,7 +111,29 @@ def save_shift_preferences():
 # ---------------------------------------
 # Predict sales and assign shifts based on input dates and location
 # ---------------------------------------
-@app.route('/shift', methods=['POST'])
+
+"""
+[
+  {
+    "date": "2025-08-06",
+    "shift": "morning",
+    "name_level": "Kyaw Htin Hein (Lv5), Lisa (Lv4)"
+  },
+  {
+    "date": "2025-08-06",
+    "shift": "afternoon",
+    "name_level": "Yan Shin Shein (Lv5)"
+  },
+  {
+    "date": "2025-08-06",
+    "shift": "night",
+    "name_level": "Kyaw Htin Hein (Lv5), Kyi Pyar (Lv3)"
+  }
+]
+example response of shift assignment and sale prediction 
+
+"""
+@app.route('/shift', methods=['POST', 'GET'])
 def shift():
     data = request.get_json()
     start_date = data.get("start_date")
@@ -135,9 +164,9 @@ def shift():
         required_level=result_df
     )
     shift_schedule = shift_operator.assign_shifts()
-
+    print(shift_schedule)  # Debug output
     # Step 4: Return assigned schedule as JSON
-    return jsonify(shift_schedule.to_dict(orient="records")), 200
+    return jsonify(shift_schedule.to_dict(orient="records"),pred_df), 200
 
 # ---------------------------------------
 # Predict sales and staff count for tomorrow (used in dashboard preload)
@@ -276,3 +305,4 @@ def search_staff():
 # ---------------------------------------
 if __name__ == '__main__':
     app.run(debug=True)
+
