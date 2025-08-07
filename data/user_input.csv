@@ -106,3 +106,4 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 
 
 2025-08-07,False,12390,234,3,"['Yan Shin Shein', 'Kyaw Htin Hein', 'Hir']",10
+2025-08-07,True,190000,185,4,"['Kyaw Htin Hein', 'Yan Shin Shein', 'Kyaw', 'Lisa']",15

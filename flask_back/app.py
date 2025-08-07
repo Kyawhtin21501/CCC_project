@@ -14,6 +14,7 @@ from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
 from services.shifting_operator import ShiftOperator
+from services.shift_preferences import ShiftPreferences
 #from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
@@ -86,28 +87,39 @@ def staff_list():
 #create shift by each user with their own id --kyipyar hlaing
 @app.route('/save_shift_preferences', methods=['POST'])
 def save_shift_preferences():
+    """
+    Endpoint to receive shift preferences from the frontend and save them to a CSV file.
+    
+    """
     try:
+        # Step 1: Parse JSON data from request
         data = request.get_json()
         date_str = data.get("date")
         preferences = data.get("preferences")
 
-        if not date_str or not preferences:
-            return jsonify({"error": "Invalid data"}), 400
+        # Debug print to verify incoming data
+        print(f"Received date: {date_str}, preferences: {preferences}")
 
-        # Convert preference dictionary to DataFrame
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data', 'shift_preferences.csv')
-
+        # Step 2: Convert preferences dictionary into a DataFrame
         df = pd.DataFrame.from_dict(preferences, orient='index').reset_index()
         df.rename(columns={'index': 'staff'}, inplace=True)
         df["date"] = date_str
 
-        # Append to CSV (create header if file doesn't exist)
-        df.to_csv(csv_path, mode='a', header=not os.path.exists(csv_path), index=False, encoding='utf-8-sig')
-        return jsonify({"message": "Shift preferences saved"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # Debug print the first few rows of the DataFrame
+        print(df)
 
+        # Step 3: Save the DataFrame to CSV using the ShiftPreferences class
+        save_path = os.path.join(app.root_path, '../data', 'shift_preferences.csv')
+        saver = ShiftPreferences(df, save_path)
+        saver.save_to_database()
+
+        # Step 4: Return success response
+        return jsonify({"message": "Shift preferences saved"}), 200
+
+    except Exception as e:
+        # Print error details for debugging
+        print(e)
+        return jsonify({"error": str(e)}), 500
 # ---------------------------------------
 # Predict sales and assign shifts based on input dates and location
 # ---------------------------------------
@@ -358,6 +370,6 @@ def search_staff():
 # ---------------------------------------
 # Run the Flask app
 # ---------------------------------------
+
 if __name__ == '__main__':
     app.run(debug=True)
-
