@@ -96,5 +96,35 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
     final url = Uri.parse('$baseUrl/services/staff/search?term=$term&by=$by');
     return await http.get(url);
   }
+//shift_staff_pre.dart 
+  static Future<Map<String, dynamic>?> fetchShiftData({
+    required String startDate,
+    required String endDate,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/shift'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "start_date": startDate,
+          "end_date": endDate,
+          "latitude": latitude,
+          "longitude": longitude
+        }),
+      );
+print("==================================${response.body}=====in api_service file ============================================");
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        print('Failed to load shift data: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching shift data: $e');
+      return null;
+    }
+  }
 
 }

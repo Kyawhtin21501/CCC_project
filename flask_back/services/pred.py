@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from datetime import datetime, timedelta
 import requests
@@ -37,8 +38,18 @@ class ShiftCreator:
         Load festival dates from CSV and extract month-day format (MM-DD).
         Returns a set of festival MM-DD strings.
         """
-        file_path = "data/project.csv"
+        # file_path = "data/project.csv"
+        # festival_data = pd.read_csv(file_path)
+        #kyipyar hlaing
+        base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services
+        file_path = os.path.join(base_dir, "../../data/project.csv")  # go up 2 levels
+        file_path = os.path.normpath(file_path)
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Festival CSV not found at {file_path}")
+
         festival_data = pd.read_csv(file_path)
+        #kyipyar hlaing
         festival_data['month_day'] = pd.to_datetime(festival_data['date']).dt.strftime("%m-%d")
         festival_md = festival_data[festival_data['is_festival'] == True]['month_day'].tolist()
         return set(festival_md)
@@ -137,7 +148,13 @@ class ShiftCreator:
                 return "autumn"
 
         df["season"] = df["month"].apply(assign_season)
-        season_encoder = joblib.load("model/season_encoder.pkl")
+       # season_encoder = joblib.load("model/season_encoder.pkl")
+        #kyipyar hlaing
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+        model_path = os.path.join(base_dir, 'model', 'season_encoder.pkl')
+        season_encoder = joblib.load(model_path)
+        #kyipyar hlaing
         df["season"] = season_encoder.transform(df["season"])
 
         # Merge with weather data

@@ -14,7 +14,7 @@ from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
 from services.shifting_operator import ShiftOperator
-from services.retrain import reTrain_model
+#from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
@@ -133,6 +133,69 @@ def save_shift_preferences():
 example response of shift assignment and sale prediction 
 
 """
+# @app.route('/shift', methods=['POST', 'GET'])
+# def shift():
+#     data = request.get_json()
+#     start_date = data.get("start_date")
+#     end_date = data.get("end_date")
+#     latitude = data.get("latitude")
+#     longitude = data.get("longitude")
+
+#     # Step 1: Use ShiftCreator to predict staff level needed
+#     creator = ShiftCreator(start_date, end_date, latitude, longitude)
+#     start, end = creator.date_data_from_user()
+
+#     if not start or not end:
+#         return jsonify({"error": "Invalid date format"}), 400
+
+#     festivals = creator.check_festival_range(start, end)
+#     weather_df = creator.weather_data(start, end)
+#     pred_df = creator.pred_from_model(start, end, festivals, weather_df)
+#     result_df = creator.pred_staff_count(pred_df)
+
+#     # Step 2: Load staff preferences and profiles
+#     shift_pre_df = pd.read_csv("../data/shift_preferences.csv")
+#     staff_db_df = pd.read_csv("../data/staff_dataBase.csv")
+
+#     # Step 3: Assign shifts using LP optimization
+#     shift_operator = ShiftOperator(
+#         shift_preferences=shift_pre_df,
+#         staff_dataBase=staff_db_df,
+#         required_level=result_df
+#     )
+#     shift_schedule = shift_operator.assign_shifts()
+#     print(shift_schedule)  # Debug output
+#     # Step 4: Return assigned schedule as JSON
+#     return jsonify(shift_schedule.to_dict(orient="records"),pred_df), 200
+
+# # ---------------------------------------
+# # Predict sales and staff count for tomorrow (used in dashboard preload)
+# # ---------------------------------------
+# @app.route('/services/sale_prediction_staff_count', methods=['POST'])
+# def result_log():
+#     data = request.get_json()
+#     if data:
+#         start_date = date.today()
+#         end_date = start_date + timedelta(days=1)
+
+#         predator = ShiftCreator(
+#             start_date=start_date.strftime("%Y-%m-%d"),
+#             end_date=end_date.strftime("%Y-%m-%d"),
+#             latitude=data.get("latitude", 35.6895),  # Default: Tokyo
+#             longitude=data.get("longitude", 139.6917)
+#         )
+
+#         start, end = predator.date_data_from_user()
+#         festivals = predator.check_festival_range(start, end)
+#         weather_df = predator.weather_data(start, end)
+#         pred_df = predator.pred_from_model(start, end, festivals, weather_df)
+#         result_df = predator.pred_staff_count(pred_df)
+
+#         return jsonify(result_df.to_dict(orient="records")), 200
+#     else:
+#         return jsonify({"error": "No data provided"}), 400
+
+#kyipyar hlaing
 @app.route('/shift', methods=['POST', 'GET'])
 def shift():
     data = request.get_json()
@@ -164,36 +227,28 @@ def shift():
         required_level=result_df
     )
     shift_schedule = shift_operator.assign_shifts()
-    print(shift_schedule)  # Debug output
-    # Step 4: Return assigned schedule as JSON
-    return jsonify(shift_schedule.to_dict(orient="records"),pred_df), 200
+    print(f"********************************{shift_schedule_list}*********in app.py file*************************************")
 
-# ---------------------------------------
-# Predict sales and staff count for tomorrow (used in dashboard preload)
-# ---------------------------------------
-@app.route('/services/sale_prediction_staff_count', methods=['POST'])
-def result_log():
-    data = request.get_json()
-    if data:
-        start_date = date.today()
-        end_date = start_date + timedelta(days=1)
+    # --- CHANGE #1 ---
+    # In your original code you had:
+    # return jsonify(shift_schedule.to_dict(orient="records"), pred_df), 200
+    #
+    # This caused two issues:
+    #   1. jsonify() only accepts ONE object, not two separate arguments.
+    #   2. pred_df is a Pandas DataFrame, which is not JSON serializable.
+    #
+    # FIX: Convert both DataFrames to JSON-friendly Python lists.
+    shift_schedule_list = shift_schedule.to_dict(orient="records")
+    pred_list = pred_df.to_dict(orient="records")  # <-- CHANGED
 
-        predator = ShiftCreator(
-            start_date=start_date.strftime("%Y-%m-%d"),
-            end_date=end_date.strftime("%Y-%m-%d"),
-            latitude=data.get("latitude", 35.6895),  # Default: Tokyo
-            longitude=data.get("longitude", 139.6917)
-        )
+    # --- CHANGE #2 ---
+    # Wrap both results into ONE dictionary so jsonify() works.
+    # This also makes it easier for Flutter to parse the API response.
+    return jsonify({
+        "shift_schedule": shift_schedule_list,  # <-- CHANGED: clean list
+        "prediction": pred_list                 # <-- CHANGED: clean list
+    }), 200
 
-        start, end = predator.date_data_from_user()
-        festivals = predator.check_festival_range(start, end)
-        weather_df = predator.weather_data(start, end)
-        pred_df = predator.pred_from_model(start, end, festivals, weather_df)
-        result_df = predator.pred_staff_count(pred_df)
-
-        return jsonify(result_df.to_dict(orient="records")), 200
-    else:
-        return jsonify({"error": "No data provided"}), 400
 
 # ---------------------------------------
 # Create a new staff profile (from StaffProfile screen)
