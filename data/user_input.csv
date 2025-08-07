@@ -19,7 +19,6 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-08-02,False,137661,206,3,"['Lisa', 'Kyi Pyar Hlaing', 'Hir']",15
 2025-08-03,True,638572,202,2,"['Yss', 'Hir']",5
 2025-08-04,False,1207200,207,4,"['Puppy', 'Ko Ko', 'Kyaw Htin Hein', 'Kph']",10
-date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-07-03,True,210000,156,3,"['Kyaw Htin Hein', 'Yan Shin Shein', 'Kyi Pyar Hlaing']",15
 2025-07-03,False,20000,200,2,"['Kyaw Htin Hein', 'Yan Shin Shein']",10
 2025-07-08,False,250000,190,3,"['Lisa', 'Kyaw Htin Hein', 'Yan Shin Shein']",15
@@ -40,7 +39,6 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-08-02,False,137661,206,3,"['Lisa', 'Kyi Pyar Hlaing', 'Hir']",15
 2025-08-03,True,638572,202,2,"['Yss', 'Hir']",5
 2025-08-04,False,1207200,207,4,"['Puppy', 'Ko Ko', 'Kyaw Htin Hein', 'Kph']",10
-date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-07-03,True,210000,156,3,"['Kyaw Htin Hein', 'Yan Shin Shein', 'Kyi Pyar Hlaing']",15
 2025-07-03,False,20000,200,2,"['Kyaw Htin Hein', 'Yan Shin Shein']",10
 2025-07-08,False,250000,190,3,"['Lisa', 'Kyaw Htin Hein', 'Yan Shin Shein']",15
@@ -61,7 +59,6 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-08-02,False,137661,206,3,"['Lisa', 'Kyi Pyar Hlaing', 'Hir']",15
 2025-08-03,True,638572,202,2,"['Yss', 'Hir']",5
 2025-08-04,False,1207200,207,4,"['Puppy', 'Ko Ko', 'Kyaw Htin Hein', 'Kph']",10
-date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-07-03,True,210000,156,3,"['Kyaw Htin Hein', 'Yan Shin Shein', 'Kyi Pyar Hlaing']",15
 2025-07-03,False,20000,200,2,"['Kyaw Htin Hein', 'Yan Shin Shein']",10
 2025-07-08,False,250000,190,3,"['Lisa', 'Kyaw Htin Hein', 'Yan Shin Shein']",15
@@ -82,7 +79,6 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-08-02,False,137661,206,3,"['Lisa', 'Kyi Pyar Hlaing', 'Hir']",15
 2025-08-03,True,638572,202,2,"['Yss', 'Hir']",5
 2025-08-04,False,1207200,207,4,"['Puppy', 'Ko Ko', 'Kyaw Htin Hein', 'Kph']",10
-date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-07-03,True,210000,156,3,"['Kyaw Htin Hein', 'Yan Shin Shein', 'Kyi Pyar Hlaing']",15
 2025-07-03,False,20000,200,2,"['Kyaw Htin Hein', 'Yan Shin Shein']",10
 2025-07-08,False,250000,190,3,"['Lisa', 'Kyaw Htin Hein', 'Yan Shin Shein']",15
