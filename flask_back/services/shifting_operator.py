@@ -1,7 +1,7 @@
 from pulp import LpProblem, LpVariable, LpMaximize, lpSum
 import pandas as pd
 import os
-
+from pprint import pprint
 class ShiftOperator:
     def __init__(self, shift_preferences: pd.DataFrame, staff_dataBase: pd.DataFrame, required_level: dict):
         self.shift_preferences = shift_preferences  # Staff shift preferences (from UI)
@@ -23,10 +23,12 @@ class ShiftOperator:
         if self.shift_preferences.empty or self.staff_dataBase.empty:
             print(" No shift preferences or staff database provided.")
             return pd.DataFrame()
-
+        print(self.shift_preferences)
+        print(self.staff_dataBase)
         # Merge preference and staff profile info using ID
         final_df = pd.merge(self.shift_preferences, self.staff_dataBase, on="ID", how="left")
-
+        
+        print(final_df)
         # Define Linear Programming problem
         model = LpProblem("Basic_Shift_Assignment", LpMaximize)
 
@@ -98,25 +100,23 @@ class ShiftOperator:
                     (final_df["ID"] == int(staff_id)) & (final_df["date"] == date)
                 ].iloc[0]
                 results.append({
+                    "staff_id": staff_id,
                     "date": date,
                     "shift": shift,
-                    "staff_id": staff_id,
-                    "name": match_row["Name"],
+                    
+                    #"name": match_row["Name_x"],
                     "level": match_row["Level"],
-                    "status": match_row["status"]
+                    #"status": match_row["status"]
                 })
 
         # Create result DataFrame and sort by shift priority
-        result_df = pd.DataFrame(results)
-        result_df = result_df.sort_values(by=["date", "shift", "level"], ascending=[True, True, False])
-        result_df["name_level"] = result_df["name"] + " (Lv" + result_df["level"].astype(str) + ")"
+        
+        pprint(results)
+        #result_df = result_df.sort_values(by=["staff_id","date", "shift", "level"], ascending=[True, True, False])
+        #result_df["name_level"] = result_df["name"] + " (Lv" + result_df["level"].astype(str) + ")"
 
         # Pivot the table to show shift assignments clearly
-        pivot_table = result_df.pivot_table(
-            index=["date", "shift"],
-            values="name_level",
-            aggfunc=lambda x: ', '.join(x)
-        ).reset_index()
 
-        return pivot_table
+
+        return results
 
