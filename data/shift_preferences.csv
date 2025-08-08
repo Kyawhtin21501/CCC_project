@@ -9,10 +9,6 @@ Puppy,True,False,False,2025-08-07,1008
 aung aung ,False,True,True,2025-08-07,1009
 Kyaw Kyaw ,True,False,True,2025-08-07,1010
 Kyaw Htin Hein,False,True,False,2025-08-08,1002
-hir,False,True,False,2025-08-08,1004
-Kyaw ,True,False,True,2025-08-08,1005
-Lisa,False,True,False,2025-08-08,1006
-Jenie ,True,False,True,2025-08-08,1007
 Puppy,False,True,True,2025-08-08,1008
 aung aung ,True,False,False,2025-08-08,1009
 Kyaw Kyaw ,False,True,False,2025-08-08,1010
@@ -35,3 +31,7 @@ Puppy,False,True,True,2025-08-10,1008
 aung aung ,True,False,False,2025-08-10,1009
 Kyaw Kyaw ,False,True,False,2025-08-10,1010
 Yan Shin Shein,True,True,True,2025-08-08,1001
+Jenie ,False,True,True,2025-08-08,1007
+Lisa,True,True,False,2025-08-08,1006
+Kyaw ,False,True,False,2025-08-08,1005
+hir,True,False,True,2025-08-08,1004

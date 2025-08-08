@@ -88,12 +88,16 @@ class ShiftOperator:
                         if key in variables:
                             model += variables[key] == 0  # No night shifts after 10 PM
         
+        
         # Solve the optimization problem
         model.solve()
 
+        
         # Collect results from solved variables
         results = []
         for key, var in variables.items():
+            #print(f"{key}: {var.value()}")
+            #print(f"var: {var}")
             if var.value() == 1:  # Assigned
                 _, staff_id, date, shift = key.split("_", 3)
                 match_row = final_df[
@@ -103,20 +107,27 @@ class ShiftOperator:
                     "staff_id": staff_id,
                     "date": date,
                     "shift": shift,
+                    "not_enough_staff":False,
                     
-                    #"name": match_row["Name_x"],
                     "level": match_row["Level"],
-                    #"status": match_row["status"]
+              
                 })
 
-        # Create result DataFrame and sort by shift priority
-        
+      
+
         pprint(results)
+        return results
+          
+                
+
+        # Create result DataFrame and sort by shift priority
+
+    
         #result_df = result_df.sort_values(by=["staff_id","date", "shift", "level"], ascending=[True, True, False])
         #result_df["name_level"] = result_df["name"] + " (Lv" + result_df["level"].astype(str) + ")"
 
         # Pivot the table to show shift assignments clearly
 
 
-        return results
+  
 

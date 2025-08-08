@@ -217,24 +217,24 @@ def create_staff():
 # Edit existing staff info by ID
 # ---------------------------------------
 # Khh ok 
-@app.route('/services/staff/<int:staff_id>', methods=['PUT'])
+@app.route('/services/staff/<int:staff_id>', methods=['GET'])
 def update_staff_by_id(staff_id):
     try:
         updates = request.get_json()
-    
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.abspath(os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv'))
-        editor = EditStaff(staff_id = staff_id,updates=updates)
+        editor = EditStaff(staff_id=staff_id, **updates)
         result = editor.operate()
-        return jsonify({"message": f"Staff {result} updated successfully"}), 200
-
+        
+        if not result:
+            return jsonify({"error": "Staff ID not found or no updates made"}), 404
+        print(f"Received updates for staff ID {staff_id}: {updates}")
+        return jsonify({"message": f"Staff {updates} updated successfully"}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 # -------------------------------
 # GET Route for /services/staff/<int:staff_id> kyipyar hlaing
 # -------------------------------
-
+"""
 @app.route('/services/staff/<int:staff_id>', methods=['GET'])
 def get_staff_by_id(staff_id):
     try:
@@ -256,8 +256,8 @@ def get_staff_by_id(staff_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-    
+"""
+
 
 
 
@@ -267,13 +267,13 @@ def get_staff_by_id(staff_id):
 # ---------------------------------------
 @app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
       
-def delete_staff(staff_id, csv_path="data/staff_dataBase.csv"):
+def delete_staff(staff_id):
     try:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
-        csv_path = os.path.abspath(csv_path)
-        print(f"Looking for CSV at: {csv_path}")
-        deleter = DeleteStaff(staff_id=staff_id, csv_path=csv_path)
+        #base_dir = os.path.dirname(os.path.abspath(__file__))
+        #csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        #csv_path = os.path.abspath(csv_path)
+        #print(f"Looking for CSV at: {csv_path}")
+        deleter = DeleteStaff(staff_id=staff_id)
         result = deleter.operate()
         return jsonify({"message": f"Staff {result} deleted successfully"}), 200
     except Exception as e:
@@ -301,3 +301,4 @@ def search_staff():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
