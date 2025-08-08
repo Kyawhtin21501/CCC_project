@@ -4,8 +4,19 @@ from datetime import date, timedelta
 import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+# Get project root (one folder above flask_back)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Add the parent directory to sys.path so that we can import custom modules from /services
+# Centralize CSV paths here
+# PATHS = {
+#     "shift_preferences": os.path.join(BASE_DIR, "data", "shift_preferences.csv"),
+#     "shift_data_base": os.path.join(BASE_DIR, "data", "shift_data_base.csv"),
+#     "staff_database": os.path.join(BASE_DIR, "data", "staff_dataBase.csv"),
+#     "user_input": os.path.join(BASE_DIR, "data", "user_input.csv"),
+#     "project": os.path.join(BASE_DIR, "data", "project.csv")
+# }
+
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import all necessary service modules
@@ -160,9 +171,13 @@ def shift():
 
     # --- Step 2: Load staff preferences and staff profile info ---
     # Find the path to the CSVs relative to the current file
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_path_preferences = os.path.normpath(os.path.join(base_dir, '../../data/shift_preferences.csv'))
-    data_path_staff_db    = os.path.normpath(os.path.join(base_dir, '../../data/staff_database.csv'))
+    # base_dir = os.path.dirname(os.path.abspath(__file__))
+    # data_path_preferences = os.path.normpath(os.path.join(base_dir, '../../data/shift_preferences.csv'))
+    # data_path_staff_db    = os.path.normpath(os.path.join(base_dir, '../../data/staff_database.csv'))
+    base_dir = os.path.dirname(os.path.dirname(__file__))  # one folder up from flask_back
+    data_path_preferences = os.path.join(base_dir, "data", "shift_preferences.csv")
+    data_path_staff_db = os.path.join(base_dir, "data", "staff_database.csv")
+   
 
     # Load CSVs
     shift_preferences_df = pd.read_csv(data_path_preferences)
@@ -184,7 +199,7 @@ def shift():
     pred_df_final_end_point = pred_df.to_dict(orient="records")
 
     # Return both shift schedule and prediction to frontend
-    return ({
+    return jsonify({
         "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
         "prediction": pred_df_final_end_point                        # Staff requirement prediction
     }), 200

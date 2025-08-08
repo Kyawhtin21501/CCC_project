@@ -249,86 +249,126 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       appBar: AppBar(title: const Text('Staff Profile')),
       drawer: AppDrawer(),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  _buildTextField(_nameController, 'Name'),
-                  const SizedBox(height: 10),
-                  _buildNumberField(_ageController, 'Age', 18, 100),
-                  const SizedBox(height: 10),
-                  _buildNumberField(_levelController, 'Level (1-5)', 1, 5),
-                  const SizedBox(height: 10),
-                  _buildTextField(_emailController, 'Email', isEmail: true),
-                  const SizedBox(height: 10),
-                  _buildGenderDropdown(),
-                  const SizedBox(height: 10),
-                  _buildStatusDropdown(),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _submitProfile,
-                    child: const Text('Submit'),
-                  ),
-                  const Divider(height: 30, thickness: 1),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Staff List',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: FutureBuilder<List<String>>(
-                future: _staffList,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No staff found.'));
-                  }
-
-                  final staffNames = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: staffNames.length,
-                    itemBuilder: (context, index) {
-                      final name = staffNames[index];
-                      return ListTile(
-                        leading: const Icon(Icons.person),
-                        title: Text(name),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => _showEditDialog(),
-                              child: const Text('Edit'),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              onPressed: () => _confirmDeleteWithIdPrompt(name),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                              ),
-                              child: const Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
+        padding: const EdgeInsets.all(32.0),
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+               
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        _buildTextField(_nameController, 'Name'),
+                        const SizedBox(height: 10),
+                        _buildNumberField(_ageController, 'Age', 18, 100),
+                        const SizedBox(height: 10),
+                        _buildNumberField(_levelController, 'Level (1-5)', 1, 5),
+                        const SizedBox(height: 10),
+                        _buildTextField(_emailController, 'Email', isEmail: true),
+                        const SizedBox(height: 10),
+                        _buildGenderDropdown(),
+                        const SizedBox(height: 10),
+                        _buildStatusDropdown(),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: _submitProfile,
+                           style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
                         ),
-                      );
-                    },
-                  );
-                },
+                          child: const Text('Submit'),
+                        ),
+                       
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              const Text(
+                'Staff List',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: FutureBuilder<List<String>>(
+                  future: _staffList,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No staff found.'));
+                    }
+          
+                    final staffNames = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: staffNames.length,
+                      itemBuilder: (context, index) {
+                        final name = staffNames[index];
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 2,
+                                color: Colors.white,
+                            child: ListTile(
+                              leading: const Icon(Icons.person),
+                              title: Text(name),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                                              ),
+                                    onPressed: () => _showEditDialog(),
+                                    child: const Text('Edit'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () => _confirmDeleteWithIdPrompt(name),
+                                   style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                                              ),
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
