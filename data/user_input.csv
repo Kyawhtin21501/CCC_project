@@ -98,3 +98,9 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-08-07,False,12390,234,3,"['Yan Shin Shein', 'Kyaw Htin Hein', 'Hir']",10
 2025-08-07,True,190000,185,4,"['Kyaw Htin Hein', 'Yan Shin Shein', 'Kyaw', 'Lisa']",15
 2025-08-07,False,150000,230,3,"['Kyaw', 'Lisa', 'Jenie']",5
+2025-08-08,False,200000,120,6,"['Yan Shin Shein', 'Kyaw Htin Hein', 'Hir', 'Kyaw', 'Lisa', 'Jenie']",15
+2025-08-07,False,239000,120,3,"['Augustin', 'Kyipyar Hlaing', 'Khalar Lay']",11
+2025-08-06,True,234000,100,4,"['Puppy', 'Lisa', 'Jenie', 'Aung Aung']",9
+2025-08-05,False,230000,202,3,"['Ko Ko', 'Khaing Khine', 'Zaw Zaw']",6
+2025-08-03,False,324560,222,5,"['Kyaw Kyaw', 'Zaw Zaw', 'Ko Ko', 'Khaing Khine', 'Kay To Lay']",11
+2025-08-09,False,345678,200,4,"['Yan Shin Shein', 'Kyaw Htin Hein', 'Kyaw', 'Hir']",10

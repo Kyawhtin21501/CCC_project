@@ -42,19 +42,23 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
       body: jsonEncode(payload),
     );
   }
-
-  // POST /services/sale_prediction_staff_count
-  static Future<http.Response> postPrediction(Map<String, dynamic> payload) async {
-    return await http.post(
-      Uri.parse('$baseUrl/services/sale_prediction_staff_count'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(payload),
-    );
+//post /fetch prediction for dashboard -->kyipyar hlaing
+static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic> payload) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/shift'),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(payload),
+  );
+ print("####################################fetched prediction${response.body}#######in api_service.dart###########################################");
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Failed to fetch shift data: ${response.statusCode}');
   }
-
+}
   //  POST /services/staff (create) completed-->kyipyar hlaing
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
-    print("####################################Post User Input${payload.toString()}#######Post Staff profile###########################################");
+    print("####################################Post User Input${payload.toString()}#######Post Staff profile form api_service.dart###########################################");
     return await http.post(
       Uri.parse('$baseUrl/services/staff'),
       headers: {'Content-Type': 'application/json'},
@@ -96,35 +100,6 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
     final url = Uri.parse('$baseUrl/services/staff/search?term=$term&by=$by');
     return await http.get(url);
   }
-//shift_staff_pre.dart 
-  static Future<Map<String, dynamic>?> fetchShiftData({
-    required String startDate,
-    required String endDate,
-    required double latitude,
-    required double longitude,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/shift'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "start_date": startDate,
-          "end_date": endDate,
-          "latitude": latitude,
-          "longitude": longitude
-        }),
-      );
-print("==================================${response.body}=====in api_service file ============================================");
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      } else {
-        print('Failed to load shift data: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching shift data: $e');
-      return null;
-    }
-  }
+
 
 }
