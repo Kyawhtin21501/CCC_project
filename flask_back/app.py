@@ -233,49 +233,41 @@ def create_staff():
 # ---------------------------------------
 # Khh ok 
 
-@app.route('/services/staff/<int:staff_id>', methods=['PUT'])
+@app.route('/services/staff/<int:staff_id>', methods=['PUT','GET','POST'])
 def update_staff_by_id(staff_id):
     try:
-        updates = request.get_json()
-        editor = EditStaff(staff_id=staff_id,updates=updates)
-        result = editor.operate()
-        if result:
-            print(request.json)
-        if not result:
-            return jsonify({"error": "Staff ID not found or no updates made"}), 404
-        print(f"Received updates for staff ID {staff_id}: {updates}")
-        return jsonify({"message": f"Staff {updates} updated successfully"}), 200
+        if request.method == 'PUT':
+            if not request.is_json:
+                return jsonify({"error": "Content-Type must be application/json"}), 415
+            updates = request.get_json(silent=True) or {}
+            if not isinstance(updates, dict) or not updates:
+                return jsonify({"error": "Request body must be a non-empty JSON object"}), 400
+            if 'ID' in updates:
+                return jsonify({"error": "ID cannot be updated"}), 400
+
+            editor = EditStaff(staff_id=staff_id, updates=updates)
+            ok = editor.operate()
+            if not ok:
+                return jsonify({"error": "Staff ID not found or no updates made"}), 404
+            return jsonify({"message": f"Staff {staff_id} updated successfully"}), 200
+
+        elif request.method in ('GET', 'POST'):  # ← POST をGET扱いにするなら明示
+            DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '..', 'data', 'staff_dataBase.csv')
+            csv_path = os.path.abspath(DATA_PATH)
+            df = pd.read_csv(csv_path, dtype={'ID': str})  # 型そろえる
+            staff = df[df['ID'] == str(staff_id)]
+            if staff.empty:
+                return jsonify({"error": "Staff not found"}), 404
+            return jsonify(staff.iloc[0].to_dict()), 200
+
+        # 明示的にガード
+        return jsonify({"error": "Method not allowed"}), 405
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
 
 # -------------------------------
-# GET Route for /services/staff/<int:staff_id> kyipyar hlaing
-# -------------------------------
-"""
-@app.route('/services/staff/<int:staff_id>', methods=['GET'])
-def get_staff_by_id(staff_id):
-    try:
-        # Load staff CSV path
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.abspath(os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv'))
-
-        df = pd.read_csv(csv_path)
-
-        # Find staff by ID
-        staff = df[df['ID'] == staff_id]
-
-        if staff.empty:
-            return jsonify({"error": "Staff not found"}), 404
-
-        # Convert single-row DataFrame to dict
-        staff_dict = staff.iloc[0].to_dict()
-        return jsonify(staff_dict), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-"""
-
 
 
 
