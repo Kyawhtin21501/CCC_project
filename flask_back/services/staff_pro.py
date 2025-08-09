@@ -97,13 +97,9 @@ class EditStaff(StaffProfileOperation):
         self.updates = updates
 
     def operate(self):
-        if "ID" in self.updates:
-            return ""  # Prevent changing ID
-
         df = pd.read_csv(self.csv_path)
 
         if self.staff_id in df['ID'].values:
-            # Update only the specified fields
             df.loc[df['ID'] == self.staff_id, list(self.updates.keys())] = list(self.updates.values())
             df.to_csv(self.csv_path, index=False)
             return f"{self.staff_id}"

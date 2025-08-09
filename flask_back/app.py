@@ -98,7 +98,7 @@ def save_shift_preferences():
         preferences = data.get("preferences")
 
         # Debug print to verify incoming data
-        print(f"Received date: {date_str}, preferences: {preferences}")
+        #print(f"Received date: {date_str}, preferences: {preferences}")
 
         # Step 2: Convert preferences dictionary into a DataFrame
         df = pd.DataFrame.from_dict(preferences, orient='index').reset_index()
@@ -106,7 +106,7 @@ def save_shift_preferences():
         df["date"] = date_str
 
         # Debug print the first few rows of the DataFrame
-        print(df)
+        #print(df)
 
         # Step 3: Save the DataFrame to CSV using the ShiftPreferences class
         save_path = os.path.join(app.root_path, '../data', 'shift_preferences.csv')
@@ -232,19 +232,22 @@ def create_staff():
 # Edit existing staff info by ID
 # ---------------------------------------
 # Khh ok 
-@app.route('/services/staff/<int:staff_id>', methods=['GET'])
+
+@app.route('/services/staff/<int:staff_id>', methods=['PUT'])
 def update_staff_by_id(staff_id):
     try:
         updates = request.get_json()
-        editor = EditStaff(staff_id=staff_id, **updates)
+        editor = EditStaff(staff_id=staff_id,updates=updates)
         result = editor.operate()
-        
+        if result:
+            print(request.json)
         if not result:
             return jsonify({"error": "Staff ID not found or no updates made"}), 404
         print(f"Received updates for staff ID {staff_id}: {updates}")
         return jsonify({"message": f"Staff {updates} updated successfully"}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
 
 # -------------------------------
 # GET Route for /services/staff/<int:staff_id> kyipyar hlaing

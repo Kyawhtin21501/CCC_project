@@ -115,7 +115,7 @@ class ShiftOperator:
 
       
 
-        pprint(results)
+        #pprint(results)
         return results
           
                 
