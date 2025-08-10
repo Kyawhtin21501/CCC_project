@@ -193,6 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final predictions = (predicted_reponse?["prediction"] as List?) ?? [];
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(backgroundColor: Colors.white),
       drawer: AppDrawer(),
       body:

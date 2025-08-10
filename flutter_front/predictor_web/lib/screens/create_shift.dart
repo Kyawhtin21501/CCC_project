@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:predictor_web/api_services/api_services.dart';
 
@@ -79,101 +80,114 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
     final selectedDate = _selectedDay ?? _focusedDay;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("シフト希望入力")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(backgroundColor: Colors.white,),
+      drawer: AppDrawer(),
       body:
           _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
               ? Center(child: Text(_error!))
-              : Column(
-                children: [
-                  TableCalendar(
-                    firstDay: DateTime(2020),
-                    lastDay: DateTime(2030),
-                    focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                    onDaySelected: (selected, focused) {
-                      setState(() {
-                        _selectedDay = selected;
-                        _focusedDay = focused;
-                      });
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "希望日: ${selectedDate.toLocal().toString().split(" ")[0]}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: staffList.length,
-                      itemBuilder: (context, index) {
-                        final staff = staffList[index];
-
-                        preferences[selectedDate] ??= {};
-                        preferences[selectedDate]![staff] ??= {
-                          for (var shift in shifts) shift: false,
-                        };
-
-                        return Card(
-                          color: const Color.fromARGB(255, 150, 202, 245),
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          child: ListTile(
-                            title: Text(
-                              staff,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children:
-                                    shifts.map((shift) {
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0,
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(shift),
-                                            Checkbox(
-                                              value:
-                                                  preferences[selectedDate]![staff]![shift]!,
-                                              onChanged: (val) {
-                                                setState(() {
-                                                  preferences[selectedDate]![staff]![shift] =
-                                                      val!;
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                              ),
-                            ),
-
-                            trailing: ElevatedButton(
-                              onPressed: () => _saveShiftPreferences(staff),
-                              child: const Text("保存"),
-                            ),
-                          ),
-                        );
+              : Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    TableCalendar(
+                      firstDay: DateTime(2020),
+                      lastDay: DateTime(2030),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      onDaySelected: (selected, focused) {
+                        setState(() {
+                          _selectedDay = selected;
+                          _focusedDay = focused;
+                        });
                       },
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "希望日: ${selectedDate.toLocal().toString().split(" ")[0]}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: staffList.length,
+                        itemBuilder: (context, index) {
+                          final staff = staffList[index];
+                
+                          preferences[selectedDate] ??= {};
+                          preferences[selectedDate]![staff] ??= {
+                            for (var shift in shifts) shift: false,
+                          };
+                
+                          return Card(
+                            color: const Color.fromARGB(255, 150, 202, 245),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                staff,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children:
+                                      shifts.map((shift) {
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8.0,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(shift),
+                                              Checkbox(
+                                                value:
+                                                    preferences[selectedDate]![staff]![shift]!,
+                                                onChanged: (val) {
+                                                  setState(() {
+                                                    preferences[selectedDate]![staff]![shift] =
+                                                        val!;
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                ),
+                              ),
+                
+                              trailing: ElevatedButton(
+                                onPressed: () => _saveShiftPreferences(staff),
+                                style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                    ),
+                                child: const Text("保存"),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
     );
   }

@@ -35,7 +35,7 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
 
   // POST /user_input completed -->kyipyar hlaing
   static Future<http.Response> postUserInput(Map<String, dynamic> payload) async {
-   print("####################################Post User Input${payload.toString()}##################################################");
+  // print("####################################Post User Input${payload.toString()}##################################################");
     return await http.post(
       Uri.parse('$baseUrl/user_input'),
       headers: {"Content-Type": "application/json"},
@@ -49,7 +49,7 @@ static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic>
     headers: {"Content-Type": "application/json"},
     body: jsonEncode(payload),
   );
- print("####################################fetched prediction${response.body}#######in api_service.dart###########################################");
+ //print("####################################fetched prediction${response.body}#######in api_service.dart###########################################");
   if (response.statusCode == 200) {
     return jsonDecode(response.body);
   } else {
@@ -58,7 +58,7 @@ static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic>
 }
   //  POST /services/staff (create) completed-->kyipyar hlaing
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
-    print("####################################Post User Input${payload.toString()}#######Post Staff profile form api_service.dart###########################################");
+   // print("####################################Post User Input${payload.toString()}#######Post Staff profile form api_service.dart###########################################");
     return await http.post(
       Uri.parse('$baseUrl/services/staff'),
       headers: {'Content-Type': 'application/json'},
@@ -79,13 +79,16 @@ static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic>
   }
 
 
-  //PUT /services/staff/{id}
+  //PUT /services/staff/{id} completed -->kyipyar hlaing
   static Future<http.Response> updateStaffProfile(int id, Map<String, dynamic> updates) async {
+   // print("---------------------------------------${updates.toString()}----------for updating staff profile-------------------------------------------------");
     return await http.put(
       Uri.parse('$baseUrl/services/staff/$id'),
       headers: {'Content-Type': 'application/json'},
+      
       body: jsonEncode(updates),
     );
+    
   }
 
   // DELETE /services/staff/{id} completed -->kyipyar hlaing
@@ -95,7 +98,7 @@ static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic>
     );
   }
 
-  // GET /services/staff/search?term={term}&by={ID|Name}
+  //Optional GET /services/staff/search?term={term}&by={ID|Name}
   static Future<http.Response> searchStaff(String term, {String by = "ID"}) async {
     final url = Uri.parse('$baseUrl/services/staff/search?term=$term&by=$by');
     return await http.get(url);

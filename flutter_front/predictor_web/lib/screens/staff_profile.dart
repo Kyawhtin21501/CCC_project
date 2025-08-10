@@ -246,7 +246,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Staff Profile')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(backgroundColor: Colors.white,),
       drawer: AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -263,7 +264,14 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   child: Form(
                     key: _formKey,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                'New Staff',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+               const SizedBox(height: 20),
+              
                         _buildTextField(_nameController, 'Name'),
                         const SizedBox(height: 10),
                         _buildNumberField(_ageController, 'Age', 18, 100),
@@ -275,7 +283,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                         _buildGenderDropdown(),
                         const SizedBox(height: 10),
                         _buildStatusDropdown(),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: _submitProfile,
                            style: ElevatedButton.styleFrom(
@@ -294,10 +302,10 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
+              const SizedBox(height: 30),
+                 const Text(
                 'Staff List',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               Expanded(
