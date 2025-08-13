@@ -4,10 +4,11 @@ import os
 from pprint import pprint
 class ShiftOperator:
     def __init__(self, shift_preferences: pd.DataFrame, staff_dataBase: pd.DataFrame, required_level: dict):
+        
         self.shift_preferences = shift_preferences  # Staff shift preferences (from UI)
         self.staff_dataBase = staff_dataBase        # Staff profile data (e.g., level, status)
         self.required_level = required_level        # Required staff level per shift (predicted)
-
+      
         # Define shift time ranges
         self.time_map = {
             "morning": list(range(9, 14)),      # 9:00 to 13:59
@@ -107,14 +108,38 @@ class ShiftOperator:
                     "staff_id": staff_id,
                     "date": date,
                     "shift": shift,
-                    "not_enough_staff":False,
+                    #"not_enough_staff":False,
                     
                     "level": match_row["Level"],
               
                 })
+        
+        results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
 
+        try:
+            base_dir = os.path.dirname(os.path.abspath(__file__))                
+            data_dir = os.path.abspath(os.path.join(base_dir, "../../", "data"))     
+            os.makedirs(data_dir, exist_ok=True)
+            out_path = os.path.join(data_dir, "temporary_shift_database_for_dashboard.csv")
+
+  
+            exists = os.path.exists(out_path)
+            results_df.to_csv(
+                out_path,
+                mode="a",                         
+                header=not exists,                 
+                index=False,
+                encoding="utf-8"
+    )
+        except Exception as e:
+            print(f"Failed to save CSV: {e}")
+
+        #return results_df
+        
+            
+        
       
-
+        
         #pprint(results)
         return results
           
@@ -123,8 +148,6 @@ class ShiftOperator:
         # Create result DataFrame and sort by shift priority
 
     
-        #result_df = result_df.sort_values(by=["staff_id","date", "shift", "level"], ascending=[True, True, False])
-        #result_df["name_level"] = result_df["name"] + " (Lv" + result_df["level"].astype(str) + ")"
 
         # Pivot the table to show shift assignments clearly
 

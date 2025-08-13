@@ -160,34 +160,38 @@ def shift():
     # Get start/end date objects
     start, end = creator.date_data_from_user()
     if not start or not end:
-        return jsonify({"error": "Invalid date range"}), 400
+        return ({"error": "Invalid date range"})
     # Get external data
     festivals = creator.check_festival_range(start, end)  # Check if each day has a festival
     weather_df = creator.weather_data(start, end)         # Get weather data for each day
 
     # Predict sales and required staff levels
     pred_df = creator.pred_from_model(start, end, festivals, weather_df)
-    result_df = creator.pred_staff_count(pred_df)  # Get required staff level by hour for each day
-
+    result_df = creator.pred_staff_count(pred_df)
+    # Get required staff level by hour for each day
+    print("----------------------------pred_df----------------------------")
+    #pprint(type(result_df))
     # --- Step 2: Load staff preferences and staff profile info ---
-    # Find the path to the CSVs relative to the current file
-    # base_dir = os.path.dirname(os.path.abspath(__file__))
-    # data_path_preferences = os.path.normpath(os.path.join(base_dir, '../../data/shift_preferences.csv'))
-    # data_path_staff_db    = os.path.normpath(os.path.join(base_dir, '../../data/staff_database.csv'))
+  
     base_dir = os.path.dirname(os.path.dirname(__file__))  # one folder up from flask_back
-    data_path_preferences = os.path.join(base_dir, "data", "shift_preferences.csv")
-    data_path_staff_db = os.path.join(base_dir, "data", "staff_database.csv")
-   
-
+    data_path_preferences = os.path.join(base_dir, "../data", "shift_preferences.csv")
+    data_path_staff_db = os.path.join(base_dir, "../data", "staff_database.csv")
+    #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
+    # Check if files exist
+    if not os.path.exists(data_path_preferences) or not os.path.exists(data_path_staff_db):
+        return {"error": "Required data files not found."}
+    
     # Load CSVs
     shift_preferences_df = pd.read_csv(data_path_preferences)
     staff_database_df = pd.read_csv(data_path_staff_db)
-
+      # Convert to DataFrame for easier manipulation
+    
+    #pprint(result_df["predicted_staff_level"])
     # --- Step 3: Run shift optimization (LP) ---
     shift_operator = ShiftOperator(
         shift_preferences=shift_preferences_df,
         staff_dataBase=staff_database_df,
-        required_level=result_df
+        required_level=result_df[["predicted_staff_level"]]# Convert to dict for easy access
     )
     shift_schedule = shift_operator.assign_shifts()
 
@@ -202,7 +206,8 @@ def shift():
     return jsonify({
         "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
         "prediction": pred_df_final_end_point                        # Staff requirement prediction
-    }), 200
+    }),400
+
 
 
 # ---------------------------------------
@@ -261,7 +266,7 @@ def update_staff_by_id(staff_id):
                 return jsonify({"error": "Staff not found"}), 404
             return jsonify(staff.iloc[0].to_dict()), 200
 
-        # 明示的にガード
+    
         return jsonify({"error": "Method not allowed"}), 405
 
     except Exception as e:

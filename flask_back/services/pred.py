@@ -161,6 +161,7 @@ class ShiftCreator:
         input_df = sales_preds[["predicted_sales"]].rename(columns={"predicted_sales": "sales"})
         staff_levels = model.predict(input_df)
         sales_preds["predicted_staff_level"] = staff_levels
+        
 
         print(sales_preds[["date", "predicted_sales", "predicted_staff_level"]])
-        return sales_preds[["date", "predicted_sales", "predicted_staff_level"]].to_dict(orient="records")
+        return sales_preds[["date", "predicted_sales", "predicted_staff_level"]]

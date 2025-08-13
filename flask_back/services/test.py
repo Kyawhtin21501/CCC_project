@@ -3,7 +3,7 @@ from shifting_operator import ShiftOperator
 from datetime import date, timedelta
 import pandas as pd
 import os
-
+from pprint import pprint
 def shift():
     #data = request.get_json()
     start_date = date.today().strftime("%Y-%m-%d")  # Default to today
@@ -14,70 +14,61 @@ def shift():
 
     # Step 1: Use ShiftCreator to predict staff level needed
     creator = ShiftCreator(start_date, end_date, latitude, longitude)
+
+    # Get start/end date objects
     start, end = creator.date_data_from_user()
-
     if not start or not end:
-        return  400
+        return ({"error": "Invalid date range"})
+    # Get external data
+    festivals = creator.check_festival_range(start, end)  # Check if each day has a festival
+    weather_df = creator.weather_data(start, end)         # Get weather data for each day
 
-    festivals = creator.check_festival_range(start, end)#festivals data from in range 14 days
-    weather_df = creator.weather_data(start, end)
-    pred_df = creator.pred_from_model(start, end, festivals, weather_df)#needed staff level per day
+    # Predict sales and required staff levels
+    pred_df = creator.pred_from_model(start, end, festivals, weather_df)
     result_df = creator.pred_staff_count(pred_df)
-    #print(result_df)
-    #print(type(result_df))
-
-    # Step 2: Load staff preferences and profiles
-    # Step 2: Load staff preferences and profiles
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # test.py のあるディレクトリ
-    data_path_preferences = os.path.normpath(os.path.join(base_dir, '../../data/shift_preferences.csv'))
-    data_path_staff_db = os.path.normpath(os.path.join(base_dir, '../../data/staff_database.csv'))
-
-    # 読み込み（これが必要！）
+    # Get required staff level by hour for each day
+    print("----------------------------pred_df----------------------------")
+    pprint(type(result_df))
+    # --- Step 2: Load staff preferences and staff profile info ---
+  
+    base_dir = os.path.dirname(os.path.dirname(__file__))  # one folder up from flask_back
+    data_path_preferences = os.path.join(base_dir, "../data", "shift_preferences.csv")
+    data_path_staff_db = os.path.join(base_dir, "../data", "staff_database.csv")
+    #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
+    # Check if files exist
+    if not os.path.exists(data_path_preferences) or not os.path.exists(data_path_staff_db):
+        return {"error": "Required data files not found."}
+    
+    # Load CSVs
     shift_preferences_df = pd.read_csv(data_path_preferences)
     staff_database_df = pd.read_csv(data_path_staff_db)
-
-
+      # Convert to DataFrame for easier manipulation
     
-
-    # Step 3: Assign shifts using LP optimization
+    #pprint(result_df["predicted_staff_level"])
+    # --- Step 3: Run shift optimization (LP) ---
     shift_operator = ShiftOperator(
-        shift_preferences= shift_preferences_df,
-        staff_dataBase= staff_database_df,
-        required_level=result_df
+        shift_preferences=shift_preferences_df,
+        staff_dataBase=staff_database_df,
+        required_level=result_df[["predicted_staff_level"]]# Convert to dict for easy access
     )
     shift_schedule = shift_operator.assign_shifts()
+
+    # Convert result to DataFrame for easier formatting
     shift_schedule = pd.DataFrame(shift_schedule)
-    #print(shift_schedule.head())
-    #print(shift_schedule.columns)
 
-    
-
-    # --- CHANGE #1 ---
-    # In your original code you had:
-    # return jsonify(shift_schedule.to_dict(orient="records"), pred_df), 200
-    #
-    # This caused two issues:
-    #   1. jsonify() only accepts ONE object, not two separate arguments.
-    #   2. pred_df is a Pandas DataFrame, which is not JSON serializable.
-    #
-    # FIX: Convert both DataFrames to JSON-friendly Python lists.
-    #shift_schedule_list = shift_schedule.to_dict(orient="records")
-    #print(pred_df) # <-- CHANGED
-
-    # --- CHANGE #2 ---
-    # Wrap both results into ONE dictionary so jsonify() works.
-    # This also makes it easier for Flutter to parse the API response.
-    pred_df_final_end_point = pred_df.to_dict(orient="records")  # Convert to list of dicts
-
+    # --- Step 4: Return results as JSON-like dict ---
+    # Convert predicted staff level (from ML model) to list of dicts
+    pred_df_final_end_point = pred_df.to_dict(orient="records")
+    pprint("----------------------------pred_df_final_end_point----------------------------")
+    pprint(pred_df_final_end_point)
+    pprint("----------------------------shift_schedule----------------------------")
+    pprint(shift_schedule)
+    # Return both shift schedule and prediction to frontend
     return ({
-        "shift_schedule": shift_schedule,  # <-- CHANGED: clean list
-        "prediction": pred_df_final_end_point                # <-- CHANGED: clean list
-    }), 200
+        "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
+        "prediction": pred_df_final_end_point                        # Staff requirement prediction
+    })
 
 
-try:
-    shift()
-except Exception as e:
-    import traceback
-    traceback.print_exc()
- #Call the function to execute the logic
+
+shift()
