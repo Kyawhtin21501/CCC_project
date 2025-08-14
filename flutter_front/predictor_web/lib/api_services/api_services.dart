@@ -45,7 +45,7 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
 //post /fetch prediction for dashboard -->kyipyar hlaing
 static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic> payload) async {
   final response = await http.post(
-    Uri.parse('$baseUrl/shift'),
+    Uri.parse('$baseUrl/shift_table/dashboard'),
     headers: {"Content-Type": "application/json"},
     body: jsonEncode(payload),
   );

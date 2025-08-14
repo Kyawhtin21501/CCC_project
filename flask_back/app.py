@@ -43,7 +43,11 @@ def home():
 # ---------------------------------------
 # Save user input (e.g. sales, staff count)
 # add retrain model start point
-# ---------------------------------------
+# --------------------------------------
+
+#-------------------------------------------data end point for dashboard----------------------------------
+
+
 @app.route('/user_input', methods=['POST'])
 def save_data():
     # Get the data submitted by the frontend (usually from Dashboard)
@@ -62,6 +66,74 @@ def save_data():
     return jsonify({"message": "Data saved successfully"}), 200
 
 
+#/////data end point for shift table in dashboard
+# ---------------------------------------
+"""
+[
+  {
+    "date": "2025-08-06",
+    "shift": "morning",
+    "name_level": "Kyaw Htin Hein (Lv5), Lisa (Lv4)"
+  },
+  {
+    "date": "2025-08-06",
+    "shift": "afternoon",
+    "name_level": "Yan Shin Shein (Lv5)"
+  },
+  {
+    "date": "2025-08-06",
+    "shift": "night",
+    "name_level": "Kyaw Htin Hein (Lv5), Kyi Pyar (Lv3)"
+  }
+]
+example response of shift assignment and sale prediction 
+
+"""
+@app.route('/shift_table/dashboard', methods=['GET' or 'POST'])
+def get_shift_table_dashboard():
+    """
+    Endpoint to retrieve the shift table for the dashboard.
+    Returns a JSON response with the shift assignments.
+    """
+    try:
+        # Load the CSV file containing shift assignments
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'temporary_shift_database_for_dashboard.csv')
+        csv_path = os.path.abspath(csv_path)
+        
+
+        # Read the CSV into a DataFrame
+        df = pd.read_csv(csv_path)
+
+        # Convert DataFrame to a list of dictionaries for JSON response
+        shift_data = df.to_dict(orient='records')
+        #print(shift_data)
+        return jsonify(shift_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+#////data end point for pred_sale in dashboard
+@app.route('/pred_sale/dashboard', methods=['GET' or 'POST'])
+def get_pred_sale_dashboard():
+    """
+    Endpoint to retrieve the predicted sales data for the dashboard.
+    Returns a JSON response with the predicted sales.
+    """
+    try:
+        # Load the CSV file containing predicted sales
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'predicted_sales.csv')
+        csv_path = os.path.abspath(csv_path)
+
+        # Read the CSV into a DataFrame
+        df = pd.read_csv(csv_path)
+
+        # Convert DataFrame to a list of dictionaries for JSON response
+        pred_data = df.to_dict(orient='records')
+        
+        return jsonify(pred_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 #updated route for stafflist use in user input dashboard  or not i cannot run --kyipyar hlaing
@@ -123,28 +195,6 @@ def save_shift_preferences():
 # ---------------------------------------
 # Predict sales and assign shifts based on input dates and location
 # ---------------------------------------
-
-"""
-[
-  {
-    "date": "2025-08-06",
-    "shift": "morning",
-    "name_level": "Kyaw Htin Hein (Lv5), Lisa (Lv4)"
-  },
-  {
-    "date": "2025-08-06",
-    "shift": "afternoon",
-    "name_level": "Yan Shin Shein (Lv5)"
-  },
-  {
-    "date": "2025-08-06",
-    "shift": "night",
-    "name_level": "Kyaw Htin Hein (Lv5), Kyi Pyar (Lv3)"
-  }
-]
-example response of shift assignment and sale prediction 
-
-"""
 
 @app.route('/shift', methods=['POST', 'GET'])
 def shift():

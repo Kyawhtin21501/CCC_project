@@ -6,7 +6,7 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 import joblib
-
+from pathlib import Path
 class ShiftCreator:
     """
     This class handles the prediction of daily sales and staff levels
@@ -148,6 +148,20 @@ class ShiftCreator:
         model = joblib.load(sales_model_path)
 
         df["predicted_sales"] = model.predict(model_input)
+        try:
+            base_dir = Path(__file__).resolve().parent             
+            data_dir = (base_dir / "../../data/data_for_dashboard").resolve()          
+            data_dir.mkdir(parents=True, exist_ok=True)
+
+            out_path = data_dir / "predicted_sales.csv"
+
+            
+            df[["date","predicted_sales"]].to_csv(out_path, index=False)    
+               
+        except Exception as e:
+            print(f"Failed to save CSV: {e}")
+        
+        
         print(df[["date", "predicted_sales"]])
         return df[["date", "predicted_sales"]]
 

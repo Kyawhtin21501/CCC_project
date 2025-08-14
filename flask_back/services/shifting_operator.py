@@ -2,6 +2,7 @@ from pulp import LpProblem, LpVariable, LpMaximize, lpSum
 import pandas as pd
 import os
 from pprint import pprint
+from pathlib import Path
 class ShiftOperator:
     def __init__(self, shift_preferences: pd.DataFrame, staff_dataBase: pd.DataFrame, required_level: dict):
         
@@ -117,20 +118,15 @@ class ShiftOperator:
         results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
 
         try:
-            base_dir = os.path.dirname(os.path.abspath(__file__))                
-            data_dir = os.path.abspath(os.path.join(base_dir, "../../", "data"))     
-            os.makedirs(data_dir, exist_ok=True)
-            out_path = os.path.join(data_dir, "temporary_shift_database_for_dashboard.csv")
+            base_dir = Path(__file__).resolve().parent              # .../flask_back/services
+            data_dir = (base_dir / "../../data/data_for_dashboard/").resolve()          # .../data
+            data_dir.mkdir(parents=True, exist_ok=True)
 
-  
-            exists = os.path.exists(out_path)
-            results_df.to_csv(
-                out_path,
-                mode="a",                         
-                header=not exists,                 
-                index=False,
-                encoding="utf-8"
-    )
+            out_path = data_dir / "temporary_shift_database_for_dashboard.csv"
+
+            
+            results_df.to_csv(out_path, index=False)    
+               
         except Exception as e:
             print(f"Failed to save CSV: {e}")
 
