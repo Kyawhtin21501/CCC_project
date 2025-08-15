@@ -44,6 +44,34 @@ def home():
 # Save user input (e.g. sales, staff count)
 # add retrain model start point
 # --------------------------------------
+#_________________________________________staff list for user list show off__________________________
+@app.route('/staff_list', methods=['GET'])
+def staff_list():
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        csv_path = os.path.abspath(csv_path)
+        print(f"Looking for CSV at: {csv_path}")
+
+        staff_df = pd.read_csv(csv_path)
+        print("CSV columns:", staff_df.columns.tolist())
+
+        if "Name" in staff_df.columns:
+            names = staff_df["Name"].dropna().unique().tolist()
+            return jsonify(names)
+        else:
+            return jsonify({"error": "No 'Name' column found"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 
 #-------------------------------------------data end point for dashboard----------------------------------
 
@@ -135,28 +163,14 @@ def get_pred_sale_dashboard():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#------------------------------------------------------------------------------------------------------------------------------------
 
-#updated route for stafflist use in user input dashboard  or not i cannot run --kyipyar hlaing
-@app.route('/staff_list', methods=['GET'])
-def staff_list():
-    try:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
-        csv_path = os.path.abspath(csv_path)
-        print(f"Looking for CSV at: {csv_path}")
 
-        staff_df = pd.read_csv(csv_path)
-        print("CSV columns:", staff_df.columns.tolist())
 
-        if "Name" in staff_df.columns:
-            names = staff_df["Name"].dropna().unique().tolist()
-            return jsonify(names)
-        else:
-            return jsonify({"error": "No 'Name' column found"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-#create shift by each user with their own id --kyipyar hlaing
+# ---------------------------------------Save shift preferences to CSV file for create shift screen ----------------------------------------
+# This endpoint receives shift preferences from the frontend and saves them to a CSV file.
+# The preferences are expected to be in a specific format, and the date is also provided.
+# The CSV file is saved in the 'data' directory of the Flask application.
 @app.route('/save_shift_preferences', methods=['POST'])
 def save_shift_preferences():
     """
@@ -192,6 +206,8 @@ def save_shift_preferences():
         # Print error details for debugging
         print(e)
         return jsonify({"error": str(e)}), 500
+    
+
 # ---------------------------------------
 # Predict sales and assign shifts based on input dates and location
 # ---------------------------------------
@@ -260,6 +276,19 @@ def shift():
 
 
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------Staff profile operations (CRUD)----------------------------------------
 # ---------------------------------------
 # Create a new staff profile (from StaffProfile screen)
 # ---------------------------------------
@@ -363,6 +392,7 @@ def search_staff():
 # ---------------------------------------
 # Run the Flask app
 # ---------------------------------------
+
 
 if __name__ == '__main__':
     app.run(debug=True)
