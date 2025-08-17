@@ -135,7 +135,7 @@ def get_shift_table_dashboard():
 
         # Convert DataFrame to a list of dictionaries for JSON response
         shift_data = df.to_dict(orient='records')
-        #print(shift_data)
+        print(shift_data)
         return jsonify(shift_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -162,6 +162,8 @@ def get_pred_sale_dashboard():
         return jsonify(pred_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
 
 #------------------------------------------------------------------------------------------------------------------------------------
 

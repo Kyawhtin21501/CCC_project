@@ -42,20 +42,53 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
       body: jsonEncode(payload),
     );
   }
-//post /fetch prediction for dashboard -->kyipyar hlaing
-static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic> payload) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/shift_table/dashboard'),
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode(payload),
-  );
- //print("####################################fetched prediction${response.body}#######in api_service.dart###########################################");
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  } else {
-    throw Exception('Failed to fetch shift data: ${response.statusCode}');
+//post /fetch prediction for dashboard -->kyipyar hlaing -------->old version
+// static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic> payload) async {
+//   final response = await http.post(
+//     Uri.parse('$baseUrl/shift_table/dashboard'),
+//     headers: {"Content-Type": "application/json"},
+//     body: jsonEncode(payload),
+//   );
+//  //print("####################################fetched prediction${response.body}#######in api_service.dart###########################################");
+//   if (response.statusCode == 200) {
+//     return jsonDecode(response.body);
+//   } else {
+//     throw Exception('Failed to fetch shift data: ${response.statusCode}');
+//   }
+// }
+
+//updated shift prediction for  usage in dashboard
+  static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
+    final url = Uri.parse("$baseUrl/shift_table/dashboard");
+    final response = await http.get(url);
+print("####################################fetched shift prediction${response.statusCode}#####${response.body}##in api_service.dart###########################################");
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+      return data.map((e) => e as Map<String, dynamic>).toList();
+    } else {
+      throw Exception("Failed to load shift table");
+    }
   }
-}
+
+  // ---- Fetch predicted sales for dashboard ----
+  static Future<List<Map<String, dynamic>>> getPredSales() async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
+print("####################################fetched sale prediction${response.statusCode}#####${response.body}##in api_service.dart ###########################################");
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception("Failed to fetch predicted sales: ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Error fetching predicted sales: $e");
+    }
+  }
+
+
+
+
   //  POST /services/staff (create) completed-->kyipyar hlaing
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
    // print("####################################Post User Input${payload.toString()}#######Post Staff profile form api_service.dart###########################################");
