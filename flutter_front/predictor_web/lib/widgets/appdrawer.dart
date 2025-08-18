@@ -29,17 +29,17 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.trending_up),
-            title: const Text('予測を実行'),
-            onTap: () {
-              Navigator.pop(context);
-             Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ShiftDashboardScreen()
-              ));
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.trending_up),
+          //   title: const Text('予測を実行'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //    Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => DashboardEdScreen()
+          //     ));
+          //   },
+          // ),
           ListTile(
             leading: const Icon(Icons.work_history),
             title: const Text('シフト作成'),

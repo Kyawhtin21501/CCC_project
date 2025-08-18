@@ -27,15 +27,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = false;
   String? error;
 
-  late Future<List<Map<String, dynamic>>> predictedResponse;
-  late Future<List<Map<String, dynamic>>> salesPredResponse;
+  List<Map<String, dynamic>>? _shiftScheduleCache;
+  List<Map<String, dynamic>>? _salesDataCache;
 
   @override
   void initState() {
     super.initState();
     _loadStaffList();
-    predictedResponse = ApiService.fetchShiftTableDashboard();
-    salesPredResponse = ApiService.getPredSales();  // <-- fetch sales predictions
+    _loadChartData();
   }
 
   Future<void> _loadStaffList() async {
@@ -47,6 +46,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('スタッフリスト取得エラー: $e')));
+    }
+  }
+
+  Future<void> _loadChartData() async {
+    try {
+      final shiftData = await ApiService.fetchShiftTableDashboard();
+      final salesData = await ApiService.getPredSales();
+      setState(() {
+        _shiftScheduleCache = shiftData;
+        _salesDataCache = salesData;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+      });
     }
   }
 
@@ -91,6 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         _clearForm();
+        await _loadChartData();
 
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('データが保存され、最新シフトが取得されました')));
@@ -131,213 +146,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: AppDrawer(),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Container(
-              color: Colors.white70,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  children: [
-                    _buildDashboardForm(),
-                    const SizedBox(height: 40),
-                    if (error != null)
-                      Text(
-                        'Error: $error',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    FutureBuilder<List<Map<String, dynamic>>>(
-                      future: predictedResponse,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text(
-                              'Error loading shifts: ${snapshot.error}');
-                        } else if (!snapshot.hasData ||
-                            snapshot.data!.isEmpty) {
-                          return const Text('No shift data available');
-                        }
-
-                        final shiftSchedule = snapshot.data!;
-                        return _buildShiftChart(shiftSchedule);
-                      },
-                    ),
-                    SizedBox(height: 20,),
-                    FutureBuilder<List<Map<String, dynamic>>>(
-  future: salesPredResponse,
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const CircularProgressIndicator();
-    } else if (snapshot.hasError) {
-      return Text('Error loading sales predictions: ${snapshot.error}');
-    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-      return const Text('No sales prediction data available');
-    }
-
-    final salesData = snapshot.data!;
-    return _buildSalesPredictionChart(salesData);
-  },
-),
-
-                  ],
-                ),
-              ),
+          : ListView(
+              padding: const EdgeInsets.all(32),
+              children: [
+                _buildDashboardForm(),
+                const SizedBox(height: 40),
+                if (error != null)
+                  Text(
+                    'Error: $error',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                if (_shiftScheduleCache != null)
+                  ShiftChartWidget(shiftSchedule: _shiftScheduleCache!),
+                const SizedBox(height: 20),
+                if (_salesDataCache != null)
+                  SalesPredictionChartWidget(salesData: _salesDataCache!),
+              ],
             ),
     );
   }
-
-  Widget _buildShiftChart(List<dynamic> shiftSchedule) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Shift Schedule",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 250,
-              child: BarChart(
-                BarChartData(
-                  minY: 6,
-                  maxY: 24,
-                  gridData: FlGridData(show: true, horizontalInterval: 2),
-                  titlesData: FlTitlesData(
-                    topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 2,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) =>
-                            Text('${value.toInt()}:00'),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) {
-                          int index = value.toInt();
-                          if (index >= 0 && index < shiftSchedule.length) {
-                            DateTime date =
-                                DateTime.parse(shiftSchedule[index]["date"]);
-                            return Text("${date.month}/${date.day}");
-                          }
-                          return const SizedBox(width: 30);
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: List.generate(shiftSchedule.length, (index) {
-                    final shift = shiftSchedule[index]["shift"];
-                    double startHour = shift == "morning"
-                        ? 8
-                        : shift == "afternoon"
-                            ? 13
-                            : 18;
-                    double endHour = startHour + 4;
-                    return BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          fromY: startHour,
-                          toY: endHour,
-                          width: 20,
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  Widget _buildSalesPredictionChart(List<Map<String, dynamic>> salesData) {
-  return Card(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    elevation: 2,
-    color: Colors.white,
-    child: Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Predicted Sales",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 250,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(show: true, horizontalInterval: 100),
-                titlesData: FlTitlesData(
-                  topTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      getTitlesWidget: (value, meta) =>
-                          Text(value.toInt().toString()),
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 50,
-                      getTitlesWidget: (value, meta) {
-                        int index = value.toInt();
-                        if (index >= 0 && index < salesData.length) {
-                          DateTime date =
-                              DateTime.parse(salesData[index]["date"]);
-                          return Text("${date.month}/${date.day}");
-                        }
-                        return const SizedBox(width: 30);
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: true),
-                lineBarsData: [
-                  LineChartBarData(
-                    isCurved: true,
-                    spots: List.generate(salesData.length, (index) {
-                      final sales = salesData[index]["predicted_sales"] ?? 0;
-                      return FlSpot(index.toDouble(), sales.toDouble());
-                    }),
-                    color: Colors.redAccent,
-                    dotData: FlDotData(show: true),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 
   Widget _buildDashboardForm() {
     return Card(
@@ -545,6 +372,177 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 value == null ? 'Please select event status' : null,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// =======================
+// Separate Widgets for Charts
+// =======================
+
+class ShiftChartWidget extends StatelessWidget {
+  final List<Map<String, dynamic>> shiftSchedule;
+  const ShiftChartWidget({super.key, required this.shiftSchedule});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Shift Schedule",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 250,
+              child: BarChart(
+                BarChartData(
+                  minY: 6,
+                  maxY: 24,
+                  gridData: FlGridData(show: true, horizontalInterval: 2),
+                  titlesData: FlTitlesData(
+                    topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 2,
+                        reservedSize: 40,
+                        getTitlesWidget: (value, meta) =>
+                            Text('${value.toInt()}:00'),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        getTitlesWidget: (value, meta) {
+                          int index = value.toInt();
+                          if (index >= 0 && index < shiftSchedule.length) {
+                            DateTime date =
+                                DateTime.parse(shiftSchedule[index]["date"]);
+                            return Text("${date.month}/${date.day}");
+                          }
+                          return const SizedBox(width: 30);
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: List.generate(shiftSchedule.length, (index) {
+                    final shift = shiftSchedule[index]["shift"];
+                    double startHour = shift == "morning"
+                        ? 8
+                        : shift == "afternoon"
+                            ? 13
+                            : 18;
+                    double endHour = startHour + 4;
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          fromY: startHour,
+                          toY: endHour,
+                          width: 16,
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SalesPredictionChartWidget extends StatelessWidget {
+  final List<Map<String, dynamic>> salesData;
+  const SalesPredictionChartWidget({super.key, required this.salesData});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Predicted Sales",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 250,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(show: true, horizontalInterval: 100),
+                  titlesData: FlTitlesData(
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 40,
+                        getTitlesWidget: (value, meta) =>
+                            Text(value.toInt().toString()),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        getTitlesWidget: (value, meta) {
+                          int index = value.toInt();
+                          if (index >= 0 && index < salesData.length) {
+                            DateTime date =
+                                DateTime.parse(salesData[index]["date"]);
+                            return Text("${date.month}/${date.day}");
+                          }
+                          return const SizedBox(width: 30);
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: true),
+                  lineBarsData: [
+                    LineChartBarData(
+                      isCurved: true,
+                      spots: List.generate(salesData.length, (index) {
+                        final sales =
+                            salesData[index]["predicted_sales"] ?? 0;
+                        return FlSpot(index.toDouble(), sales.toDouble());
+                      }),
+                      color: Colors.redAccent,
+                      dotData: FlDotData(show: false),
+                      isStrokeCapRound: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

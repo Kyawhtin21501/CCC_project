@@ -100,3 +100,4 @@ date,is_event,sales,customers,staff_count,staff_names,shift_hours
 2025-08-07,False,150000,230,3,"['Kyaw', 'Lisa', 'Jenie']",5
 2025-08-08,False,200000,230,4,"['Puppy', 'Aung Aung', 'Kyaw Kyaw', 'Zaw Zaw']",7
 2025-08-15,False,12345,99,4,"['Kyaw Htin', 'Yan Shin Shein', 'Hir', 'Kyaw']",10
+2025-08-19,False,320000,120,5,"['Yan Shin Shein', 'Kyaw Htin', 'Hir', 'Kyaw', 'Lisa']",15

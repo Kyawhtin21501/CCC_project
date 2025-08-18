@@ -1,199 +1,157 @@
-// import 'package:flutter/material.dart';
-// import 'package:predictor_web/api_services/api_services.dart';
-
-
-// class ShiftDashboardScreen extends StatefulWidget {
-//   const ShiftDashboardScreen({super.key});
-
-//   @override
-//   State<ShiftDashboardScreen> createState() => _ShiftDashboardScreenState();
-// }
-
-// class _ShiftDashboardScreenState extends State<ShiftDashboardScreen> {
-//   late Future<List<Map<String, dynamic>>> _shiftData;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _shiftData = ApiService.fetchShiftTableDashboard();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Shift Dashboard")),
-//       body: FutureBuilder<List<Map<String, dynamic>>>(
-//         future: _shiftData,
-//         builder: (context, snapshot) {
-//           if (snapshot.connectionState == ConnectionState.waiting) {
-//             return const Center(child: CircularProgressIndicator());
-//           } else if (snapshot.hasError) {
-//             return Center(child: Text("Error: ${snapshot.error}"));
-//           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-//             return const Center(child: Text("No data available"));
-//           }
-
-//           final data = snapshot.data!;
-//           final columns = data.first.keys.toList();
-
-//           return SingleChildScrollView(
-//             scrollDirection: Axis.horizontal,
-//             child: DataTable(
-//               columns: columns
-//                   .map((col) => DataColumn(label: Text(col)))
-//                   .toList(),
-//               rows: data
-//                   .map((row) => DataRow(
-//                         cells: columns
-//                             .map((col) =>
-//                                 DataCell(Text(row[col]?.toString() ?? "")))
-//                             .toList(),
-//                       ))
-//                   .toList(),
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:predictor_web/api_services/api_services.dart';
+import 'package:predictor_web/widgets/appdrawer.dart';
 
-class ShiftDashboardScreen extends StatefulWidget {
-  const ShiftDashboardScreen({super.key});
+class DashboardEdScreen extends StatefulWidget {
+  const DashboardEdScreen({super.key});
 
   @override
-  State<ShiftDashboardScreen> createState() => _ShiftDashboardScreenState();
+  State<DashboardEdScreen> createState() => _DashboardEdScreenState();
 }
 
-class _ShiftDashboardScreenState extends State<ShiftDashboardScreen> {
-  late Future<List<Map<String, dynamic>>> _shiftData;
+class _DashboardEdScreenState extends State<DashboardEdScreen> {
+  List<Map<String, dynamic>> _shiftCache = [];
+  List<Map<String, dynamic>> _salesCache = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _shiftData = ApiService.fetchShiftTableDashboard();
+    _loadData();
+  }
+
+  /// filter to keep only the next 7 days
+  List<Map<String, dynamic>> filterNextWeek(List<Map<String, dynamic>> data) {
+    final today = DateTime.now();
+    final nextWeek = today.add(const Duration(days: 7));
+
+    return data.where((entry) {
+      final date = DateTime.parse(entry['date']); // must be "YYYY-MM-DD"
+      return date.isAfter(today.subtract(const Duration(days: 1))) &&
+             date.isBefore(nextWeek.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final results = await Future.wait([
+        ApiService.fetchShiftTableDashboard(),
+        ApiService.getPredSales(),
+      ]);
+
+      final shiftData = results[0] as List<Map<String, dynamic>>;
+      final salesData = results[1] as List<Map<String, dynamic>>;
+
+      setState(() {
+        _shiftCache = filterNextWeek(shiftData);
+        _salesCache = filterNextWeek(salesData);
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() => _loading = false);
+      debugPrint("Error loading data: $e");
+    }
+  }
+
+  /// build line chart for sales
+  Widget _buildSalesChart() {
+    if (_salesCache.isEmpty) {
+      return const Center(child: Text("No sales data for next week"));
+    }
+
+    return LineChart(
+      LineChartData(
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                int index = value.toInt();
+                if (index >= 0 && index < _salesCache.length) {
+                  return Text(_salesCache[index]['date'].toString().substring(5));
+                }
+                return const Text("");
+              },
+            ),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: _salesCache.asMap().entries.map((e) {
+              return FlSpot(e.key.toDouble(), (e.value['predicted_sales'] as num).toDouble());
+            }).toList(),
+            isCurved: true,
+            dotData: FlDotData(show: true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// build bar chart for shifts
+  Widget _buildShiftChart() {
+    if (_shiftCache.isEmpty) {
+      return const Center(child: Text("No shift data for next week"));
+    }
+
+    return BarChart(
+      BarChartData(
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                int index = value.toInt();
+                if (index >= 0 && index < _shiftCache.length) {
+                  return Text(_shiftCache[index]['date'].toString().substring(5));
+                }
+                return const Text("");
+              },
+            ),
+          ),
+        ),
+        barGroups: _shiftCache.asMap().entries.map((e) {
+          return BarChartGroupData(
+            x: e.key,
+            barRods: [
+              BarChartRodData(
+                toY: (e.value['staff_count'] as num).toDouble(),
+                width: 18,
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Shift Dashboard")),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _shiftData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("No data available"));
-          }
-
-          final data = snapshot.data!;
-
-          // Build bar groups for the chart
-          final barGroups = <BarChartGroupData>[];
-          for (int i = 0; i < data.length; i++) {
-            final row = data[i];
-            final start = double.tryParse(row['start_time'].toString()) ?? 0;
-            final end = double.tryParse(row['end_time'].toString()) ?? 0;
-
-            barGroups.add(
-              BarChartGroupData(
-                x: i,
-                barRods: [
-                  BarChartRodData(
-                    fromY: start,
-                    toY: end,
-                    width: 18,
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text("Dashboard"),
+      ),
+      drawer: AppDrawer(),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Shift Schedule",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: BarChart(
-                        BarChartData(
-                          alignment: BarChartAlignment.spaceBetween,
-                          gridData: FlGridData(
-                            show: true,
-                            drawHorizontalLine: true,
-                            drawVerticalLine: true,
-                            horizontalInterval: 2,
-                            verticalInterval: 1,
-                          ),
-                          borderData: FlBorderData(show: false),
-                          titlesData: FlTitlesData(
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                reservedSize: 40,
-                                getTitlesWidget: (value, meta) {
-                                  // Show in 2-hour increments
-                                  if (value % 2 == 0) {
-                                    return Text("${value.toInt()}:00");
-                                  }
-                                  return const SizedBox();
-                                },
-                              ),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  if (value.toInt() >= 0 &&
-                                      value.toInt() < data.length) {
-                                    return Text(
-                                      data[value.toInt()]['staff_id'].toString(),
-                                      style: const TextStyle(fontSize: 10),
-                                    );
-                                  }
-                                  return const SizedBox();
-                                },
-                              ),
-                            ),
-                            topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
-                          ),
-                          minY: 6, // earliest shift hour
-                          maxY: 24, // latest shift hour
-                          barGroups: barGroups,
-                        ),
-                      ),
-                    ),
+                    const Text("📈 Predicted Sales (Next 7 Days)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 250, child: _buildSalesChart()),
+                    const SizedBox(height: 32),
+                    const Text("👥 Staff Shifts (Next 7 Days)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 250, child: _buildShiftChart()),
                   ],
                 ),
               ),
             ),
-          );
-        },
-      ),
     );
   }
 }
