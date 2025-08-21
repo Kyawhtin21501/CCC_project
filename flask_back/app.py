@@ -80,7 +80,7 @@ def staff_list():
 def save_data():
     # Get the data submitted by the frontend (usually from Dashboard)
     data = request.get_json()
-
+    
     # Use helper classes to clean/process and save the data
     staff_manager = StaffManager()
     handler = UserInputHandler(data, staff_manager)
@@ -117,7 +117,7 @@ def save_data():
 example response of shift assignment and sale prediction 
 
 """
-@app.route('/shift_table/dashboard', methods=['GET' or 'POST'])
+@app.route('/shift_table/dashboard', methods=['GET' , 'POST'])
 def get_shift_table_dashboard():
     """
     Endpoint to retrieve the shift table for the dashboard.
@@ -274,7 +274,7 @@ def shift():
     return jsonify({
         "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
         "prediction": pred_df_final_end_point                        # Staff requirement prediction
-    }),400
+    }),200
 
 
 
@@ -337,11 +337,11 @@ def update_staff_by_id(staff_id):
                 return jsonify({"error": "Staff ID not found or no updates made"}), 404
             return jsonify({"message": f"Staff {staff_id} updated successfully"}), 200
 
-        elif request.method in ('GET', 'POST'):  # ← POST をGET扱いにするなら明示
+        elif request.method in ('GET', 'POST'): 
             DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '..', 'data', 'staff_dataBase.csv')
             csv_path = os.path.abspath(DATA_PATH)
-            df = pd.read_csv(csv_path, dtype={'ID': str})  # 型そろえる
+            df = pd.read_csv(csv_path, dtype={'ID': str})
             staff = df[df['ID'] == str(staff_id)]
             if staff.empty:
                 return jsonify({"error": "Staff not found"}), 404

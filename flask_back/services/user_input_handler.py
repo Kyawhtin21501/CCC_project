@@ -7,7 +7,7 @@ class UserInputHandler:
     cleans the assigned staff names, calculates total staff level, and saves the record to CSV.
     """
 
-    def __init__(self, input_data, staff_manager, csv_path=None):
+    def __init__(self, input_data,staff_manager, csv_path=None):
         """
         Constructor: accepts user input dict, a StaffManager instance, and an optional CSV path.
         """
@@ -18,8 +18,8 @@ class UserInputHandler:
         if csv_path is None:
             base_dir = os.path.dirname(os.path.abspath(__file__))  # e.g., /flask_back/services/
             csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'user_input.csv'))
-        if not os.path.exists(csv_path):
-            pd.DataFrame(columns=['date', 'is_festival', 'sales', 'guests', 'staff_count', 'assigned_staff', 'total_staff_level']).to_csv(csv_path, index=False)
+        #if not os.path.exists(csv_path):
+            #pd.DataFrame(columns=['date', 'is_festival', 'sales', 'guests', 'staff_count', 'assigned_staff', 'total_staff_level']).to_csv(csv_path, index=False)
         self.csv_path = csv_path
         print(f"[UserInputHandler] Writing to: {self.csv_path}")
 
@@ -38,20 +38,39 @@ class UserInputHandler:
             'staff_count': self.data.get('staff_count'),         # Number of assigned staff
             'assigned_staff': self.data.get('staff_names'),      # List of staff names
         }
-
+        
+        
+        
+        
         # Clean and normalize names (e.g., full-width to half-width, remove extra spaces)
         cleaned_names = self.staff_manager.clean_names(input_row['assigned_staff'])
-
+        
         # Calculate total staff level from cleaned names
         input_row['assigned_staff'] = cleaned_names
         input_row['total_staff_level'] = self.staff_manager.calculate_total_level(cleaned_names)
 
         # Create a DataFrame with just one row
         df = pd.DataFrame([input_row])
-
+        season_map = {
+            'summer': range(6, 9),  # June to August
+            'winter': range(12, 3),  # December to February
+            'spring': range(3, 6),   # March to May
+            'autumn': range(9, 12)   # September to November
+          
+        }
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df["year"] = df["date"].dt.isocalendar().year
+        df["month"] = df["date"].dt.month
+        df["day"] = df["date"].dt.day
+        df["weekday"] = df["date"].dt.weekday
+        df["weekofyear"] = df["date"].dt.isocalendar().week
+        df['season'] = df['month'].apply(lambda x : next((season for season, months in season_map.items() if x in months), 'unknown'))
         # Save to CSV in append mode. Add header only if file doesn't already exist
+        print(df)
+        columns = df.columns.tolist()
+        print(columns)
         file_exists = os.path.isfile(self.csv_path)
-        df.to_csv(self.csv_path, mode="a", index=False, header=not file_exists)
+        df.to_csv(self.csv_path, mode="a", header=not file_exists,index=False, columns=columns)
 
         return cleaned_names
 
