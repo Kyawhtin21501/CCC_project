@@ -377,16 +377,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// =======================
-// Separate Widgets for Charts
-// =======================
-
 class ShiftChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> shiftSchedule;
   const ShiftChartWidget({super.key, required this.shiftSchedule});
 
   @override
   Widget build(BuildContext context) {
+    // Assume each item in shiftSchedule looks like:
+    // { "date": "2025-08-07", "staff": "Alice", "shift": "morning" }
+    // You can extend to include custom startHour / endHour if backend provides.
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
@@ -402,64 +402,75 @@ class ShiftChartWidget extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             SizedBox(
-              height: 250,
+              height: 300,
               child: BarChart(
                 BarChartData(
-                  minY: 6,
-                  maxY: 24,
-                  gridData: FlGridData(show: true, horizontalInterval: 2),
+                  alignment: BarChartAlignment.spaceAround,
+                  gridData: FlGridData(show: true, horizontalInterval: 1),
+                  // minY: 6,
+                  // maxY: 24,
+                  
                   titlesData: FlTitlesData(
-                    topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
+                      axisNameWidget: const Text("Date"),
                       sideTitles: SideTitles(
                         showTitles: true,
-                        interval: 2,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) =>
-                            Text('${value.toInt()}:00'),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
+                        reservedSize: 80,
                         getTitlesWidget: (value, meta) {
                           int index = value.toInt();
                           if (index >= 0 && index < shiftSchedule.length) {
-                            DateTime date =
-                                DateTime.parse(shiftSchedule[index]["date"]);
-                            return Text("${date.month}/${date.day}");
+                            return Text(shiftSchedule[index]["date"]);
                           }
-                          return const SizedBox(width: 30);
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),
+                    bottomTitles: AxisTitles(
+  axisNameWidget: const Text("Hour"),
+  sideTitles: SideTitles(
+    showTitles: true,
+    interval: 1, // show every hour
+    getTitlesWidget: (value, meta) {
+      // Ensure we only show integer hours
+      if (value % 1 == 0) {
+        int hour = value.toInt();
+        if (hour >= 0 && hour <= 24) {
+          return Text('${hour.toString()}:00',
+              style: const TextStyle(fontSize: 10));
+        }
+      }
+      return const SizedBox.shrink();
+    },
+  ),
+),
+
                   ),
                   borderData: FlBorderData(show: false),
-                  barGroups: List.generate(shiftSchedule.length, (index) {
-                    final shift = shiftSchedule[index]["shift"];
-                    double startHour = shift == "morning"
-                        ? 8
-                        : shift == "afternoon"
-                            ? 13
-                            : 18;
-                    double endHour = startHour + 4;
-                    return BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          fromY: startHour,
-                          toY: endHour,
-                          width: 16,
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.zero,
-                        ),
-                      ],
-                    );
-                  }),
+                  barGroups: _buildBarGroups(),
+barTouchData: BarTouchData(
+  enabled: true,
+  touchTooltipData: BarTouchTooltipData(
+    tooltipPadding: const EdgeInsets.all(8),
+    tooltipMargin: 8,
+    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+      final staff = shiftSchedule[groupIndex]["staff_id"];
+      return BarTooltipItem(
+        'Staff: $staff',
+        const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    },
+   // tooltipBgColor: Colors.black87, // works in most versions
+  ),
+),
+
+
                 ),
               ),
             ),
@@ -468,7 +479,149 @@ class ShiftChartWidget extends StatelessWidget {
       ),
     );
   }
+
+List<BarChartGroupData> _buildBarGroups() {
+  List<BarChartGroupData> groups = [];
+
+  // Predefined list of colors (you can customize)
+  final colors = [
+    
+    Colors.green,
+    Colors.blue,
+    Colors.orange,
+   
+    
+  ];
+
+  for (int i = 0; i < shiftSchedule.length; i++) {
+    final shift = shiftSchedule[i];
+
+    // Example mapping for shift hours
+    double startHour = shift["shift"] == "morning"
+        ? 9
+        : shift["shift"] == "afternoon"
+            ? 14
+            : 19;
+    double endHour = startHour + 5;
+
+    groups.add(
+      BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            
+            fromY: startHour,
+            toY: endHour,
+            width: startHour+endHour,
+            color: colors[i % colors.length], // assign different color per rod
+            borderRadius: BorderRadius.zero,
+          ),
+         
+        ],
+        
+       // showingTooltipIndicators: [0],
+      ),
+    );
+  }
+
+  return groups;
 }
+
+}
+
+
+// // =======================
+// // Separate Widgets for Charts
+// // =======================
+
+// class ShiftChartWidget extends StatelessWidget {
+//   final List<Map<String, dynamic>> shiftSchedule;
+//   const ShiftChartWidget({super.key, required this.shiftSchedule});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Card(
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//       elevation: 2,
+//       color: Colors.white,
+//       child: Padding(
+//         padding: const EdgeInsets.all(32.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             const Text(
+//               "Shift Schedule",
+//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//             ),
+//             const SizedBox(height: 10),
+//             SizedBox(
+//               height: 250,
+//               child: BarChart(
+//                 BarChartData(
+//                   minY: 6,
+//                   maxY: 24,
+//                   gridData: FlGridData(show: true, horizontalInterval: 2),
+//                   titlesData: FlTitlesData(
+//                     topTitles: AxisTitles(
+//                         sideTitles: SideTitles(showTitles: false)),
+//                     rightTitles: AxisTitles(
+//                         sideTitles: SideTitles(showTitles: false)),
+//                     leftTitles: AxisTitles(
+//                       sideTitles: SideTitles(
+//                         showTitles: true,
+//                         interval: 2,
+//                         reservedSize: 40,
+//                         getTitlesWidget: (value, meta) =>
+//                             Text('${value.toInt()}:00'),
+//                       ),
+//                     ),
+//                     bottomTitles: AxisTitles(
+//                       sideTitles: SideTitles(
+//                         showTitles: true,
+//                         reservedSize: 50,
+//                         getTitlesWidget: (value, meta) {
+//                           int index = value.toInt();
+//                           if (index >= 0 && index < shiftSchedule.length) {
+//                             DateTime date =
+//                                 DateTime.parse(shiftSchedule[index]["date"]);
+//                             return Text("${date.month}/${date.day}");
+//                           }
+//                           return const SizedBox(width: 30);
+//                         },
+//                       ),
+//                     ),
+//                   ),
+//                   borderData: FlBorderData(show: false),
+//                   barGroups: List.generate(shiftSchedule.length, (index) {
+//                     final shift = shiftSchedule[index]["shift"];
+//                     double startHour = shift == "morning"
+//                         ? 8
+//                         : shift == "afternoon"
+//                             ? 13
+//                             : 18;
+//                     double endHour = startHour + 4;
+//                     return BarChartGroupData(
+//                       x: index,
+//                       barRods: [
+//                         BarChartRodData(
+//                           fromY: startHour,
+//                           toY: endHour,
+//                           width: 16,
+//                           color: Colors.blue,
+//                           borderRadius: BorderRadius.zero,
+//                         ),
+//                       ],
+//                     );
+//                   }),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class SalesPredictionChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> salesData;
