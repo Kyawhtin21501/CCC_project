@@ -7,29 +7,46 @@ import requests_cache
 from retry_requests import retry
 import joblib
 from pathlib import Path
+from sklearn.preprocessing import LabelEncoder
 class ShiftCreator:
     """
     This class handles the prediction of daily sales and staff levels
     based on input date range, weather forecast, and festival data.
     """
 
-    def __init__(self, start_date, end_date, latitude, longitude, date_format="%Y-%m-%d"):
+    def __init__(self, start_date, end_date,  date_format="%Y-%m-%d"):
         self.start_date = start_date
         self.end_date = end_date
         self.date_format = date_format
-        self.latitude = latitude
-        self.longitude = longitude
+        self.latitude = 52.52
+        self.longitude = 13.41
 
-        # Define root directories for data and models
         base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services/
-        self.data_dir = os.path.normpath(os.path.join(base_dir, '../../data'))
-        self.model_dir = os.path.normpath(os.path.join(base_dir, '../../model'))
+        self.data_path = os.path.normpath(os.path.join(base_dir, '..', '..', 'data', 'project.csv'))
+        # 正しい修正
+        self.model_dir = os.path.normpath(os.path.join(base_dir, '..', '..', 'model'))
+
+# 個別ファイルのパス
+        self.sales_model_path = os.path.join(self.model_dir, 'sales_model.pkl')
+        self.season_encoder_path = os.path.join(self.model_dir, 'season_encoder0.1.pkl')
+        self.staff_model_path = os.path.join(self.model_dir, 'staff.pkl')
+
 
     def date_data_from_user(self):
         """Convert user input strings to Python datetime.date objects."""
         try:
-            start = datetime.strptime(self.start_date, self.date_format).date()
-            end = datetime.strptime(self.end_date, self.date_format).date()
+            # datetime.strptime() で datetime オブジェクトを作成
+            start_dt = datetime.strptime(self.start_date, self.date_format)
+            end_dt = datetime.strptime(self.end_date, self.date_format)
+
+            # datetime.date() で date オブジェクトに変換
+            start_date_obj = start_dt.date()
+            end_date_obj = end_dt.date()
+
+            # timedelta(days=1) を使って1日加算
+            start = start_date_obj + timedelta(days=1)
+            end = end_date_obj + timedelta(days=1)
+
             print(start, end)
             return start, end
         except ValueError as e:
@@ -38,7 +55,7 @@ class ShiftCreator:
 
     def get_festival_days(self):
         """Load festival dates from CSV and return set of 'MM-DD' strings."""
-        file_path = os.path.join(self.data_dir, "project.csv")
+        file_path = self.data_path
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Festival CSV not found at {file_path}")
         festival_data = pd.read_csv(file_path)
@@ -70,8 +87,8 @@ class ShiftCreator:
             "longitude": self.longitude,
             "daily": ["rain_sum", "snowfall_sum", "weather_code", "temperature_2m_max"],
             "timezone": "Asia/Tokyo",
-            "start_date": start.strftime("%Y-%m-%d"),
-            "end_date": end.strftime("%Y-%m-%d")
+            "start_date": start,
+            "end_date": end
         }
 
         responses = openmeteo.weather_api(url, params=params)
@@ -126,11 +143,12 @@ class ShiftCreator:
         df["season"] = df["month"].apply(assign_season)
 
         # Load season encoder safely
-        season_encoder_path = os.path.join(self.model_dir, 'season_encoder.pkl')
+        season_encoder_path = self.season_encoder_path
         if not os.path.exists(season_encoder_path):
             raise FileNotFoundError(f"Season encoder not found at {season_encoder_path}")
         season_encoder = joblib.load(season_encoder_path)
-        df["season"] = season_encoder.transform(df["season"])
+        
+        df["season"] = season_encoder.fit_transform(df["season"])
 
         # Merge with weather
         df = df.merge(weather_df, on="date", how="left")
@@ -142,7 +160,7 @@ class ShiftCreator:
         ]
         model_input = df[features]
 
-        sales_model_path = os.path.join(self.model_dir, 'sales_model.pkl')
+        sales_model_path = self.sales_model_path
         if not os.path.exists(sales_model_path):
             raise FileNotFoundError(f"Sales model not found at {sales_model_path}")
         model = joblib.load(sales_model_path)
@@ -153,7 +171,7 @@ class ShiftCreator:
             data_dir = (base_dir / "../../data/data_for_dashboard").resolve()          
             data_dir.mkdir(parents=True, exist_ok=True)
 
-            out_path = data_dir / "predicted_sales.csv"
+            out_path = data_dir / "predicted_sales.csv" 
 
             
             df[["date","predicted_sales"]].to_csv(out_path, index=False)    

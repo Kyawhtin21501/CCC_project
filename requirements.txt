@@ -1,47 +1,212 @@
-| 内容                  | 補足                             |
-| ------------------- | ------------------------------ |
-| データ読み込み & 前処理       | `pandas`, `scikit-learn` で加工済み |
-| 売上予測モデル（sales）      | `RandomForestRegressor`        |
-| スタッフレベル予測モデル（staff） | `RandomForestRegressor`        |
-| モデル保存               | `joblib.dump()`で `.pkl` 保存推奨   |
-
-
-
-
-| モジュール               | クラスと役割                                  |
-| ------------------- | --------------------------------------- |
-| `predictor.py`      | `Predictor`：予測モデルを読み込んで `.predict()` 実行 |
-| `data_formatter.py` | 入力されたデータ（複数日）を正しいDataFrameに整形（オプション）    |
-| `evaluator.py`      | MSE・R²・可視化などをまとめる（任意）                   |
-
-
-
-
-| 機能              | 説明                    |
-| --------------- | --------------------- |
-| `/predict/day`  | 1日の予測API（売上・スタッフ数）    |
-| `/predict/week` | 1週間分の予測API            |
-| `/evaluate`     | モデルの評価結果表示（オプション）     |
-| `/dashboard`    | 結果をHTML/グラフで可視化（将来的に） |
-
-
-
-
-
-| ツール               | 内容                      |
-| ----------------- | ----------------------- |
-| Flask + Jinja2    | HTMLテンプレートでページを作成       |
-| Bootstrap         | UIをキレイに整える              |
-| Chart.js や Plotly | グラフ表示に活用できる             |
-| JavaScript / AJAX | JSON経由で非同期に予測を表示することも可能 |
-
-
-
-
-| 内容               | 説明                    |
-| ---------------- | --------------------- |
-| 動作確認             | Flask上でPOSTテスト、結果チェック |
-| 説明資料作成           | 使用技術・特徴・学びを書いておく      |
-| GitHubで公開        | コード管理 & 提出用           |
-| Heroku等でデプロイ（任意） | 公開したい場合は簡易デプロイもあり     |
-
+absl-py==2.2.2
+annotated-types==0.7.0
+anyio==4.6.2.post1
+appnope==0.1.4
+argon2-cffi==23.1.0
+argon2-cffi-bindings==21.2.0
+arrow==1.3.0
+asttokens==3.0.0
+astunparse==1.6.3
+async-lru==2.0.4
+attrs==25.3.0
+Authlib==1.6.0
+babel==2.16.0
+beautifulsoup4==4.12.3
+bleach==6.2.0
+blinker==1.9.0
+boolean.py==5.0
+bottle==0.13.3
+CacheControl==0.14.3
+cattrs==25.1.1
+certifi==2024.8.30
+cffi==1.17.1
+charset-normalizer==3.4.2
+click==8.1.8
+ColabTurtle==2.1.0
+comm==0.2.2
+contourpy==1.3.2
+cryptography==45.0.5
+cycler==0.12.1
+cyclonedx-python-lib==9.1.0
+debugpy==1.8.14
+decorator==5.1.1
+defusedxml==0.7.1
+dill==0.4.0
+dparse==0.6.4
+et_xmlfile==2.0.0
+executing==2.1.0
+fastjsonschema==2.20.0
+filelock==3.16.1
+Flask==3.1.0
+flask-cors==6.0.0
+flatbuffers==25.2.10
+fonttools==4.57.0
+fqdn==1.5.1
+gast==0.6.0
+google-pasta==0.2.0
+grpcio==1.71.0
+gunicorn==23.0.0
+h11==0.14.0
+h5py==3.13.0
+httpcore==1.0.6
+httpx==0.27.2
+idna==3.10
+imageio==2.37.0
+ipykernel==6.29.5
+ipython==9.2.0
+ipython_pygments_lexers==1.1.1
+ipywidgets==8.1.5
+isoduration==20.11.0
+itsdangerous==2.2.0
+jedi==0.19.2
+jh2==5.0.9
+Jinja2==3.1.4
+joblib==1.4.2
+json5==0.9.25
+jsonpointer==3.0.0
+jsonschema==4.23.0
+jsonschema-specifications==2024.10.1
+jupyter==1.1.1
+jupyter-console==6.6.3
+jupyter-events==0.10.0
+jupyter-lsp==2.2.5
+jupyter_client==8.6.3
+jupyter_core==5.7.2
+jupyter_server==2.14.2
+jupyter_server_terminals==0.5.3
+jupyterlab==4.2.6
+jupyterlab_pygments==0.3.0
+jupyterlab_server==2.27.3
+jupyterlab_widgets==3.0.13
+kaggle==1.6.17
+kagglehub==0.3.6
+keras==3.9.2
+kiwisolver==1.4.8
+lazy_loader==0.4
+libclang==18.1.1
+license-expression==30.4.3
+lxml==5.4.0
+Markdown==3.8
+markdown-it-py==3.0.0
+MarkupSafe==3.0.2
+marshmallow==4.0.0
+matplotlib==3.10.3
+matplotlib-inline==0.1.7
+mdurl==0.1.2
+mistune==3.0.2
+ml_dtypes==0.5.1
+msgpack==1.1.1
+namex==0.0.9
+nbclient==0.10.0
+nbconvert==7.16.4
+nbformat==5.10.4
+nest-asyncio==1.6.0
+networkx==3.4.2
+niquests==3.14.1
+nltk==3.9.1
+notebook==7.2.2
+notebook_shim==0.2.4
+numpy==2.1.3
+opencv-contrib-python==4.11.0.86
+opencv-python==4.11.0.86
+openmeteo_requests==1.5.0
+openmeteo_sdk==1.20.1
+openpyxl==3.1.5
+opt_einsum==3.4.0
+optree==0.15.0
+overrides==7.7.0
+packageurl-python==0.17.1
+packaging==24.1
+pandas==2.2.3
+pandocfilters==1.5.1
+parso==0.8.4
+pexpect==4.9.0
+pillow==11.2.1
+pip-api==0.0.34
+pip-requirements-parser==32.0.1
+pip_audit==2.9.0
+platformdirs==4.3.8
+prometheus_client==0.21.0
+prompt_toolkit==3.0.51
+protobuf==5.29.4
+psutil==6.1.1
+ptyprocess==0.7.0
+PuLP==3.2.1
+pure_eval==0.2.3
+py-serializable==2.0.0
+py2flowchart==0.0.3
+pycparser==2.22
+pydantic==2.9.2
+pydantic_core==2.23.4
+Pygments==2.19.1
+pyparsing==3.2.3
+python-dateutil==2.9.0.post0
+python-json-logger==2.0.7
+python-slugify==8.0.4
+pytz==2025.2
+PyYAML==6.0.2
+pyzmq==26.4.0
+qh3==1.5.3
+referencing==0.35.1
+regex==2024.11.6
+requests==2.32.3
+requests-cache==1.2.1
+retry-requests==2.0.0
+rfc3339-validator==0.1.4
+rfc3986-validator==0.1.1
+rich==14.0.0
+robotframework==7.2.2
+rpds-py==0.20.0
+ruamel.yaml==0.18.14
+ruamel.yaml.clib==0.2.12
+safety==3.5.2
+safety-schemas==0.0.14
+scikit-image==0.25.2
+scikit-learn==1.6.1
+scipy==1.15.2
+seaborn==0.13.2
+Send2Trash==1.8.3
+setuptools==75.3.0
+shellingham==1.5.4
+six==1.16.0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+soupsieve==2.6
+stack-data==0.6.3
+tenacity==9.1.2
+tensorboard==2.19.0
+tensorboard-data-server==0.7.2
+tensorflow==2.19.0
+termcolor==3.1.0
+terminado==0.18.1
+text-unidecode==1.3
+threadpoolctl==3.6.0
+tifffile==2025.3.30
+tinycss2==1.4.0
+toml==0.10.2
+tomlkit==0.13.3
+tornado==6.4.1
+tqdm==4.67.1
+traitlets==5.14.3
+typer==0.16.0
+types-python-dateutil==2.9.0.20241003
+typing_extensions==4.13.2
+tzdata==2025.2
+uri-template==1.3.0
+url-normalize==2.2.1
+urllib3==2.2.3
+urllib3-future==2.13.900
+wassima==1.2.2
+wcwidth==0.2.13
+webcolors==24.8.0
+webencodings==0.5.1
+websocket-client==1.8.0
+Werkzeug==3.1.3
+wheel==0.45.1
+widgetsnbextension==4.0.13
+wrapt==1.17.2
+xgboost==3.0.2
+Flutter 3.32.2 • channel stable • https://github.com/flutter/flutter.git
+Framework • revision 8defaa71a7 (3 months ago) • 2025-06-04 11:02:51 -0700
+Engine • revision 1091508939 (3 months ago) • 2025-05-30 12:17:36 -0700
+Tools • Dart 3.8.1 • DevTools 2.45.1

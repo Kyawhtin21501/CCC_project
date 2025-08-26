@@ -1,19 +1,19 @@
 import pandas as pd
 import os
-
+from datetime import datetime, timedelta
 class UserInputHandler:
     """
     This class handles user-submitted daily input data (e.g., from Dashboard screen),
     cleans the assigned staff names, calculates total staff level, and saves the record to CSV.
     """
 
-    def __init__(self, input_data,staff_manager, csv_path=None):
+    def __init__(self, input_data,staff_manager, csv_path=None,date_format="%Y-%m-%d"):
         """
         Constructor: accepts user input dict, a StaffManager instance, and an optional CSV path.
         """
         self.data = input_data
         self.staff_manager = staff_manager
-
+        self.date_format = date_format
         # Default path if none is provided (e.g., /project_root/data/user_input.csv)
         if csv_path is None:
             base_dir = os.path.dirname(os.path.abspath(__file__))  # e.g., /flask_back/services/
@@ -38,8 +38,6 @@ class UserInputHandler:
             'staff_count': self.data.get('staff_count'),         # Number of assigned staff
             'assigned_staff': self.data.get('staff_names'),      # List of staff names
         }
-        
-        
         
         
         # Clean and normalize names (e.g., full-width to half-width, remove extra spaces)

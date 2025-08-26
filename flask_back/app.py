@@ -219,9 +219,9 @@ def shift():
     data = request.get_json()
     start_date = data.get("start_date")
     end_date = data.get("end_date")
-    latitude = data.get("latitude")
-    longitude = data.get("longitude")
-
+    #latitude = 52.52
+    #longitude = 13.41
+    
     # --- Step 1: Predict daily required staff level ---
     creator = ShiftCreator(start_date, end_date, latitude, longitude)
 
@@ -273,8 +273,11 @@ def shift():
     # Return both shift schedule and prediction to frontend
     return jsonify({
         "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
-        "prediction": pred_df_final_end_point                        # Staff requirement prediction
+        "prediction": pred_df_final_end_point  ,
+        # Staff requirement prediction
+        
     }),200
+    
 
 
 
