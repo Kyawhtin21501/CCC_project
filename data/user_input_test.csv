@@ -1,0 +1,202 @@
+date,is_festival,sales,guests,staff_count,assigned_staff,total_staff_level,year,month,day,weekday,weekofyear,season
+2025-01-01,False,215936,269,3,"['Emma', 'Puppy', 'Sakura']",3,2025,1,1,2,1,winter
+2025-01-02,False,420424,292,3,"['Taro', 'Liam', 'Hanako']",6,2025,1,2,3,1,winter
+2025-01-03,False,493686,480,4,"['John', 'Taro', 'Emma', 'Puppy']",8,2025,1,3,4,1,winter
+2025-01-04,False,180927,123,3,"['Hanako', 'Yuki', 'Moe Moe']",3,2025,1,4,5,1,winter
+2025-01-05,False,318243,362,4,"['Emma', 'John', 'Hanako', 'Yuki']",8,2025,1,5,6,1,winter
+2025-01-06,True,339118,210,2,"['Moe Moe', 'Taro']",2,2025,1,6,0,2,winter
+2025-01-07,False,422445,195,2,"['John', 'Taro']",2,2025,1,7,1,2,winter
+2025-01-08,False,423272,361,5,"['Puppy', 'John', 'Liam', 'Hanako', 'Taro']",15,2025,1,8,2,2,winter
+2025-01-09,False,376156,367,2,"['Liam', 'Hanako']",6,2025,1,9,3,2,winter
+2025-01-10,False,134889,223,4,"['Moe Moe', 'Hanako', 'Taro', 'Yuki']",8,2025,1,10,4,2,winter
+2025-01-11,False,276256,493,3,"['Moe Moe', 'Liam', 'Puppy']",9,2025,1,11,5,2,winter
+2025-01-12,False,301537,228,4,"['Aung Aung', 'Moe Moe', 'Emma', 'Liam']",4,2025,1,12,6,2,winter
+2025-01-13,False,206947,376,1,"['Sakura']",1,2025,1,13,0,3,winter
+2025-01-14,False,239285,203,2,"['John', 'Moe Moe']",4,2025,1,14,1,3,winter
+2025-01-15,False,474219,69,4,"['Liam', 'Taro', 'Sakura', 'Emma']",4,2025,1,15,2,3,winter
+2025-01-16,False,279400,268,5,"['Sakura', 'Puppy', 'Hanako', 'Yuki', 'John']",10,2025,1,16,3,3,winter
+2025-01-17,False,126276,457,4,"['Moe Moe', 'Aung Aung', 'Taro', 'Yuki']",8,2025,1,17,4,3,winter
+2025-01-18,False,132443,168,1,"['Hanako']",1,2025,1,18,5,3,winter
+2025-01-19,False,339512,428,4,"['Hanako', 'Aung Aung', 'Moe Moe', 'Puppy']",4,2025,1,19,6,3,winter
+2025-01-20,False,269546,211,2,"['Aung Aung', 'Emma']",6,2025,1,20,0,4,winter
+2025-01-21,False,108669,121,3,"['Liam', 'Emma', 'Moe Moe']",3,2025,1,21,1,4,winter
+2025-01-22,False,330383,198,5,"['Taro', 'Sakura', 'Moe Moe', 'Aung Aung', 'Yuki']",15,2025,1,22,2,4,winter
+2025-01-23,False,428925,345,3,"['Hanako', 'John', 'Puppy']",9,2025,1,23,3,4,winter
+2025-01-24,False,399586,469,1,"['Moe Moe']",1,2025,1,24,4,4,winter
+2025-01-25,False,452693,309,5,"['Emma', 'John', 'Liam', 'Puppy', 'Hanako']",5,2025,1,25,5,4,winter
+2025-01-26,False,485391,285,2,"['Aung Aung', 'Sakura']",4,2025,1,26,6,4,winter
+2025-01-27,True,302849,457,3,"['Emma', 'Hanako', 'Taro']",6,2025,1,27,0,5,winter
+2025-01-28,False,285718,237,5,"['Moe Moe', 'Emma', 'Puppy', 'Sakura', 'Yuki']",15,2025,1,28,1,5,winter
+2025-01-29,False,199489,104,4,"['Liam', 'Aung Aung', 'Taro', 'Emma']",4,2025,1,29,2,5,winter
+2025-01-30,False,356207,196,3,"['Sakura', 'Hanako', 'John']",9,2025,1,30,3,5,winter
+2025-01-31,False,490012,457,5,"['Puppy', 'Liam', 'Moe Moe', 'John', 'Hanako']",5,2025,1,31,4,5,winter
+2025-02-01,False,374815,394,4,"['Emma', 'Yuki', 'Hanako', 'Aung Aung']",8,2025,2,1,5,5,winter
+2025-02-02,False,443756,317,3,"['John', 'Sakura', 'Moe Moe']",3,2025,2,2,6,5,winter
+2025-02-03,False,323540,127,2,"['Taro', 'Liam']",4,2025,2,3,0,6,winter
+2025-02-04,False,415259,365,1,"['Aung Aung']",1,2025,2,4,1,6,winter
+2025-02-05,False,495736,491,3,"['Puppy', 'Hanako', 'Emma']",6,2025,2,5,2,6,winter
+2025-02-06,True,287412,211,5,"['John', 'Sakura', 'Yuki', 'Moe Moe', 'Taro']",15,2025,2,6,3,6,winter
+2025-02-07,False,453028,362,2,"['Emma', 'Aung Aung']",6,2025,2,7,4,6,winter
+2025-02-08,False,186739,166,1,"['Yuki']",1,2025,2,8,5,6,winter
+2025-02-09,False,421846,381,3,"['Hanako', 'Liam', 'Puppy']",9,2025,2,9,6,6,winter
+2025-02-10,False,246175,143,4,"['Sakura', 'Moe Moe', 'Emma', 'John']",4,2025,2,10,0,7,winter
+2025-02-11,False,314260,421,2,"['Yuki', 'Taro']",6,2025,2,11,1,7,winter
+2025-02-12,False,455331,482,5,"['Emma', 'Hanako', 'Puppy', 'Aung Aung', 'Moe Moe']",10,2025,2,12,2,7,winter
+2025-02-13,False,164973,115,2,"['John', 'Liam']",4,2025,2,13,3,7,winter
+2025-02-14,False,296482,325,3,"['Yuki', 'Sakura', 'Emma']",9,2025,2,14,4,7,winter
+2025-02-15,True,372516,433,4,"['Puppy', 'Hanako', 'Moe Moe', 'Taro']",8,2025,2,15,5,7,winter
+2025-02-16,False,223471,263,1,"['Liam']",1,2025,2,16,6,7,winter
+2025-02-17,False,354216,205,5,"['John', 'Sakura', 'Emma', 'Yuki', 'Hanako']",15,2025,2,17,0,8,winter
+2025-02-18,False,471322,337,4,"['Aung Aung', 'Puppy', 'Liam', 'Moe Moe']",4,2025,2,18,1,8,winter
+2025-02-19,False,398614,442,3,"['Taro', 'Emma', 'John']",3,2025,2,19,2,8,winter
+2025-02-20,False,488295,399,5,"['Hanako', 'Sakura', 'Emma', 'John', 'Puppy']",10,2025,2,20,3,8,winter
+2025-02-21,False,167432,201,2,"['Moe Moe', 'Taro']",2,2025,2,21,4,8,winter
+2025-02-22,False,324829,456,3,"['Aung Aung', 'Yuki', 'Emma']",9,2025,2,22,5,8,winter
+2025-02-23,False,286157,278,1,"['John']",1,2025,2,23,6,8,winter
+2025-02-24,True,493820,367,4,"['Sakura', 'Puppy', 'Liam', 'Hanako']",8,2025,2,24,0,9,winter
+2025-02-25,False,278463,159,3,"['Moe Moe', 'Emma', 'John']",9,2025,2,25,1,9,winter
+2025-02-26,False,182476,301,2,"['Yuki', 'Aung Aung']",2,2025,2,26,2,9,winter
+2025-02-27,False,426319,226,4,"['Hanako', 'Puppy', 'Liam', 'Sakura']",12,2025,2,27,3,9,winter
+2025-02-28,False,363572,317,5,"['John', 'Emma', 'Yuki', 'Moe Moe', 'Aung Aung']",15,2025,2,28,4,9,winter
+2025-03-01,False,233415,193,2,"['Liam', 'Hanako']",4,2025,3,1,5,9,spring
+2025-03-02,False,325918,249,3,"['Puppy', 'John', 'Emma']",3,2025,3,2,6,9,spring
+2025-03-03,False,409621,482,5,"['Sakura', 'Taro', 'Moe Moe', 'Yuki', 'Liam']",5,2025,3,3,0,10,spring
+2025-03-04,False,123469,97,1,"['Emma']",1,2025,3,4,1,10,spring
+2025-03-05,False,368142,332,2,"['Hanako', 'John']",2,2025,3,5,2,10,spring
+2025-03-06,True,449286,426,4,"['Moe Moe', 'Aung Aung', 'Yuki', 'Puppy']",12,2025,3,6,3,10,spring
+2025-03-07,False,398267,288,3,"['Taro', 'Emma', 'Hanako']",6,2025,3,7,4,10,spring
+2025-03-08,False,274518,253,2,"['John', 'Yuki']",4,2025,3,8,5,10,spring
+2025-03-09,False,463912,341,5,"['Aung Aung', 'Liam', 'Puppy', 'Sakura', 'Moe Moe']",15,2025,3,9,6,10,spring
+2025-03-10,False,291467,219,4,"['Hanako', 'Emma', 'John', 'Yuki']",4,2025,3,10,0,11,spring
+2025-03-11,False,182946,184,2,"['Puppy', 'Sakura']",6,2025,3,11,1,11,spring
+2025-03-12,False,432615,458,5,"['Moe Moe', 'Hanako', 'Taro', 'Emma', 'John']",10,2025,3,12,2,11,spring
+2025-03-13,False,215789,213,1,"['Yuki']",1,2025,3,13,3,11,spring
+2025-03-14,False,395826,321,3,"['Liam', 'Sakura', 'Aung Aung']",3,2025,3,14,4,11,spring
+2025-03-15,False,341258,199,2,"['Puppy', 'John']",2,2025,3,15,5,11,spring
+2025-03-16,True,476132,387,4,"['Moe Moe', 'Emma', 'Hanako', 'Yuki']",12,2025,3,16,6,11,spring
+2025-03-17,False,224579,173,5,"['Taro', 'Puppy', 'Sakura', 'Aung Aung', 'John']",15,2025,3,17,0,12,spring
+2025-03-18,False,348216,231,3,"['Emma', 'Hanako', 'Liam']",9,2025,3,18,1,12,spring
+2025-03-19,False,275893,278,2,"['Yuki', 'Moe Moe']",2,2025,3,19,2,12,spring
+2025-03-20,False,431286,442,5,"['John', 'Puppy', 'Hanako', 'Sakura', 'Taro']",15,2025,3,20,3,12,spring
+2025-03-21,False,198376,186,2,"['Emma', 'Aung Aung']",4,2025,3,21,4,12,spring
+2025-03-22,False,394571,333,3,"['Liam', 'Hanako', 'Moe Moe']",6,2025,3,22,5,12,spring
+2025-03-23,False,221486,147,1,"['John']",1,2025,3,23,6,12,spring
+2025-03-24,True,462817,428,4,"['Sakura', 'Yuki', 'Emma', 'Taro']",12,2025,3,24,0,13,spring
+2025-03-25,False,357281,273,5,"['Aung Aung', 'Hanako', 'John', 'Puppy', 'Moe Moe']",15,2025,3,25,1,13,spring
+2025-03-26,False,144892,199,2,"['Taro', 'Emma']",6,2025,3,26,2,13,spring
+2025-03-27,False,276495,212,3,"['Sakura', 'Yuki', 'Liam']",3,2025,3,27,3,13,spring
+2025-03-28,False,389472,351,4,"['John', 'Puppy', 'Hanako', 'Moe Moe']",8,2025,3,28,4,13,spring
+2025-03-29,False,199352,189,1,"['Emma']",1,2025,3,29,5,13,spring
+2025-03-30,False,355428,277,2,"['Liam', 'Sakura']",4,2025,3,30,6,13,spring
+2025-03-31,False,412579,394,5,"['Yuki', 'John', 'Puppy', 'Hanako', 'Taro']",15,2025,3,31,0,14,spring
+2025-04-01,False,291683,231,3,"['Moe Moe', 'Emma', 'Sakura']",6,2025,4,1,1,14,spring
+2025-04-02,False,427156,419,4,"['Aung Aung', 'Yuki', 'Liam', 'John']",12,2025,4,2,2,14,spring
+2025-04-03,True,332871,287,2,"['Hanako', 'Taro']",6,2025,4,3,3,14,spring
+2025-04-04,False,183692,169,1,"['Emma']",1,2025,4,4,4,14,spring
+2025-04-05,False,358214,301,3,"['John', 'Sakura', 'Puppy']",9,2025,4,5,5,14,spring
+2025-04-06,False,421763,356,5,"['Moe Moe', 'Hanako', 'Aung Aung', 'Yuki', 'Liam']",5,2025,4,6,6,14,spring
+2025-04-07,False,272415,198,2,"['Emma', 'Taro']",2,2025,4,7,0,15,spring
+2025-04-08,False,336182,276,4,"['Hanako', 'John', 'Puppy', 'Sakura']",8,2025,4,8,1,15,spring
+2025-04-09,False,465392,433,5,"['Yuki', 'Liam', 'Moe Moe', 'Emma', 'Aung Aung']",10,2025,4,9,2,15,spring
+2025-04-10,False,219573,186,1,"['John']",1,2025,4,10,3,15,spring
+2025-04-11,False,423167,462,4,"['Hanako', 'Emma', 'Moe Moe', 'Yuki']",12,2025,4,11,4,15,spring
+2025-04-12,False,364557,264,4,"['Liam', 'Sakura', 'Taro', 'Hanako']",11,2025,4,12,5,15,spring
+2025-04-13,False,482078,482,5,"['John', 'Taro', 'Hanako', 'Moe Moe', 'Emma']",15,2025,4,13,6,15,spring
+2025-04-14,False,376188,273,4,"['Sakura', 'Puppy', 'Emma', 'Yuki']",12,2025,4,14,0,16,spring
+2025-04-15,False,237409,166,3,"['Hanako', 'John', 'Sakura']",6,2025,4,15,1,16,spring
+2025-04-16,False,465513,487,3,"['Taro', 'Emma', 'Yuki']",6,2025,4,16,2,16,spring
+2025-04-17,False,242853,287,4,"['John', 'Moe Moe', 'Sakura', 'Hanako']",10,2025,4,17,3,16,spring
+2025-04-18,False,343445,234,3,"['Emma', 'Puppy', 'Sakura']",9,2025,4,18,4,16,spring
+2025-04-19,False,421747,364,3,"['Moe Moe', 'Yuki', 'Hanako']",9,2025,4,19,5,16,spring
+2025-04-20,False,246892,210,2,"['Sakura', 'Taro']",4,2025,4,20,6,16,spring
+2025-04-21,False,402199,392,3,"['John', 'Emma', 'Hanako']",6,2025,4,21,0,17,spring
+2025-04-22,False,498802,447,4,"['Sakura', 'Moe Moe', 'Yuki', 'Emma']",12,2025,4,22,1,17,spring
+2025-04-23,False,362987,258,3,"['Hanako', 'John', 'Puppy']",6,2025,4,23,2,17,spring
+2025-04-24,False,470187,488,5,"['Emma', 'John', 'Hanako', 'Moe Moe', 'Sakura']",14,2025,4,24,3,17,spring
+2025-04-25,False,280953,213,2,"['Yuki', 'Taro']",4,2025,4,25,4,17,spring
+2025-04-26,False,184771,135,2,"['Sakura', 'Puppy']",4,2025,4,26,5,17,spring
+2025-04-27,False,329844,288,4,"['Emma', 'Hanako', 'Moe Moe', 'John']",12,2025,4,27,6,17,spring
+2025-04-28,False,256739,218,2,"['Yuki', 'Taro']",5,2025,4,28,0,18,spring
+2025-04-29,True,490827,476,5,"['Sakura', 'Emma', 'Puppy', 'John', 'Hanako']",13,2025,4,29,1,18,spring
+2025-04-30,False,385662,290,3,"['Taro', 'Moe Moe', 'Yuki']",7,2025,4,30,2,18,spring
+2025-05-01,False,266903,232,3,"['Emma', 'Puppy', 'Hanako']",8,2025,5,1,3,18,spring
+2025-05-02,False,321558,241,2,"['John', 'Sakura']",5,2025,5,2,4,18,spring
+2025-05-03,True,498127,490,5,"['Taro', 'Emma', 'Moe Moe', 'Hanako', 'Puppy']",14,2025,5,3,5,18,spring
+2025-05-04,False,353997,312,3,"['Sakura', 'John', 'Yuki']",8,2025,5,4,6,18,spring
+2025-05-05,True,492451,481,5,"['Hanako', 'Emma', 'Puppy', 'Moe Moe', 'Taro']",14,2025,5,5,0,19,spring
+2025-05-06,False,371924,265,2,"['John', 'Sakura']",4,2025,5,6,1,19,spring
+2025-05-07,False,412556,374,4,"['Puppy', 'Yuki', 'Emma', 'Taro']",10,2025,5,7,2,19,spring
+2025-05-08,False,382471,300,3,"['Hanako', 'John', 'Moe Moe']",8,2025,5,8,3,19,spring
+2025-05-09,False,496822,487,4,"['Sakura', 'Emma', 'Taro', 'Puppy']",11,2025,5,9,4,19,spring
+2025-05-10,False,267913,196,2,"['Yuki', 'Hanako']",4,2025,5,10,5,19,spring
+2025-05-11,False,316557,283,3,"['Moe Moe', 'John', 'Emma']",9,2025,5,11,6,19,spring
+2025-05-12,False,466338,453,4,"['Sakura', 'Puppy', 'Hanako', 'Yuki']",12,2025,5,12,0,20,spring
+2025-05-13,False,245551,202,2,"['Taro', 'John']",5,2025,5,13,1,20,spring
+2025-05-14,False,336409,256,3,"['Emma', 'Hanako', 'Sakura']",8,2025,5,14,2,20,spring
+2025-05-15,False,428116,398,4,"['Moe Moe', 'Taro', 'Puppy', 'John']",11,2025,5,15,3,20,spring
+2025-05-16,False,198277,180,2,"['Yuki', 'Emma']",4,2025,5,16,4,20,spring
+2025-05-17,False,395226,355,4,"['Hanako', 'John', 'Moe Moe', 'Puppy']",10,2025,5,17,5,20,spring
+2025-05-18,False,276310,221,3,"['Taro', 'Yuki', 'Emma']",7,2025,5,18,6,20,spring
+2025-05-19,False,432155,375,4,"['Hanako', 'Moe Moe', 'John', 'Sakura']",12,2025,5,19,0,21,spring
+2025-05-20,False,214885,170,2,"['Puppy', 'Emma']",4,2025,5,20,1,21,spring
+2025-05-21,False,380216,342,3,"['John', 'Hanako', 'Moe Moe']",7,2025,5,21,2,21,spring
+2025-05-22,False,463188,420,4,"['Sakura', 'Taro', 'Emma', 'Puppy']",11,2025,5,22,3,21,spring
+2025-05-23,False,187419,133,2,"['Yuki', 'Hanako']",5,2025,5,23,4,21,spring
+2025-05-24,False,324558,295,4,"['John', 'Sakura', 'Moe Moe', 'Emma']",12,2025,5,24,5,21,spring
+2025-05-25,False,413992,366,3,"['Puppy', 'Taro', 'Hanako']",7,2025,5,25,6,21,spring
+2025-05-26,False,298511,214,2,"['Emma', 'Sakura']",4,2025,5,26,0,22,spring
+2025-05-27,False,378624,334,3,"['Moe Moe', 'John', 'Yuki']",8,2025,5,27,1,22,spring
+2025-05-28,False,426115,374,4,"['Hanako', 'Puppy', 'Taro', 'Sakura']",11,2025,5,28,2,22,spring
+2025-05-29,False,237688,208,2,"['John', 'Emma']",5,2025,5,29,3,22,spring
+2025-05-30,False,319884,285,3,"['Hanako', 'Moe Moe', 'Yuki']",7,2025,5,30,4,22,spring
+2025-05-31,False,471009,465,4,"['Sakura', 'John', 'Emma', 'Taro']",10,2025,5,31,5,22,spring
+2025-06-01,False,291883,201,2,"['Hanako', 'Puppy']",4,2025,6,1,6,22,summer
+2025-06-02,False,375216,329,4,"['Yuki', 'John', 'Sakura', 'Emma']",11,2025,6,2,0,23,summer
+2025-06-03,False,264557,236,3,"['Taro', 'Hanako', 'Moe Moe']",7,2025,6,3,1,23,summer
+2025-06-04,False,418222,390,3,"['Puppy', 'Sakura', 'John']",7,2025,6,4,2,23,summer
+2025-06-05,False,199435,167,2,"['Emma', 'Yuki']",4,2025,6,5,3,23,summer
+2025-06-06,False,337512,276,3,"['Taro', 'Hanako', 'Moe Moe']",9,2025,6,6,4,23,summer
+2025-06-07,False,482991,480,5,"['Sakura', 'John', 'Puppy', 'Emma', 'Hanako']",13,2025,6,7,5,23,summer
+2025-06-08,False,356711,311,3,"['Moe Moe', 'Yuki', 'John']",7,2025,6,8,6,23,summer
+2025-06-09,False,442157,401,4,"['Sakura', 'Hanako', 'Taro', 'Emma']",12,2025,6,9,0,24,summer
+2025-06-10,False,284551,229,3,"['John', 'Puppy', 'Yuki']",6,2025,6,10,1,24,summer
+2025-06-11,False,364212,321,3,"['Hanako', 'Moe Moe', 'Taro']",7,2025,6,11,2,24,summer
+2025-06-12,False,416833,389,4,"['Sakura', 'Emma', 'John', 'Yuki']",11,2025,6,12,3,24,summer
+2025-06-13,False,221774,184,2,"['Puppy', 'Moe Moe']",5,2025,6,13,4,24,summer
+2025-06-14,False,395126,348,3,"['Taro', 'Emma', 'Hanako']",8,2025,6,14,5,24,summer
+2025-06-15,False,453211,410,4,"['John', 'Sakura', 'Moe Moe', 'Puppy']",12,2025,6,15,6,24,summer
+2025-06-16,False,309884,256,2,"['Yuki', 'Hanako']",5,2025,6,16,0,25,summer
+2025-06-17,False,389771,342,3,"['Emma', 'John', 'Taro']",7,2025,6,17,1,25,summer
+2025-06-18,False,442398,391,4,"['Hanako', 'Moe Moe', 'Sakura', 'Yuki']",12,2025,6,18,2,25,summer
+2025-06-19,False,196558,165,2,"['Puppy', 'Taro']",5,2025,6,19,3,25,summer
+2025-06-20,False,351117,295,3,"['John', 'Emma', 'Hanako']",7,2025,6,20,4,25,summer
+2025-06-21,False,478552,465,5,"['Sakura', 'Puppy', 'Moe Moe', 'Yuki', 'Taro']",14,2025,6,21,5,25,summer
+2025-06-22,False,328914,280,3,"['Hanako', 'John', 'Emma']",8,2025,6,22,6,25,summer
+2025-06-23,False,417885,377,4,"['Taro', 'Sakura', 'Moe Moe', 'Yuki']",11,2025,6,23,0,26,summer
+2025-06-24,False,285661,231,3,"['John', 'Hanako', 'Puppy']",7,2025,6,24,1,26,summer
+2025-06-25,False,362119,322,3,"['Emma', 'Sakura', 'Moe Moe']",8,2025,6,25,2,26,summer
+2025-06-26,False,429511,384,4,"['Hanako', 'John', 'Taro', 'Yuki']",12,2025,6,26,3,26,summer
+2025-06-27,False,211889,178,2,"['Puppy', 'Emma']",4,2025,6,27,4,26,summer
+2025-06-28,False,341227,289,3,"['Sakura', 'John', 'Moe Moe']",7,2025,6,28,5,26,summer
+2025-06-29,False,476552,470,5,"['Hanako', 'Taro', 'Emma', 'Yuki', 'Puppy']",15,2025,6,29,6,26,summer
+2025-06-30,False,296418,240,2,"['John', 'Hanako']",5,2025,6,30,0,27,summer
+2025-07-01,False,382115,343,3,"['Emma', 'Sakura', 'Moe Moe']",8,2025,7,1,1,27,summer
+2025-07-02,False,425933,398,4,"['Hanako', 'John', 'Taro', 'Yuki']",12,2025,7,2,2,27,summer
+2025-07-03,False,264981,219,2,"['Puppy', 'Emma']",5,2025,7,3,3,27,summer
+2025-07-04,False,318272,276,3,"['Sakura', 'Hanako', 'Moe Moe']",7,2025,7,4,4,27,summer
+2025-07-05,False,478332,471,5,"['John', 'Taro', 'Emma', 'Yuki', 'Puppy']",14,2025,7,5,5,27,summer
+2025-07-06,False,359112,312,3,"['Sakura', 'Hanako', 'Moe Moe']",8,2025,7,6,6,27,summer
+2025-07-07,False,419998,379,4,"['John', 'Emma', 'Puppy', 'Yuki']",11,2025,7,7,0,28,summer
+2025-07-08,False,281667,236,2,"['Hanako', 'Taro']",4,2025,7,8,1,28,summer
+2025-07-09,False,349884,298,3,"['Emma', 'Sakura', 'Moe Moe']",7,2025,7,9,2,28,summer
+2025-07-10,False,462115,445,5,"['John', 'Hanako', 'Taro', 'Yuki', 'Puppy']",13,2025,7,10,3,28,summer
+2025-07-11,False,328772,287,3,"['Sakura', 'Emma', 'Moe Moe']",8,2025,7,11,4,28,summer
+2025-07-12,False,414599,378,4,"['Hanako', 'John', 'Taro', 'Yuki']",12,2025,7,12,5,28,summer
+2025-07-13,False,201111,165,2,"['Puppy', 'Emma']",5,2025,7,13,6,28,summer
+2025-07-14,False,367222,317,3,"['Sakura', 'Hanako', 'Moe Moe']",8,2025,7,14,0,29,summer
+2025-07-15,False,483552,478,5,"['John', 'Taro', 'Emma', 'Yuki', 'Puppy']",15,2025,7,15,1,29,summer
+2025-07-16,False,349118,310,3,"['Sakura', 'Hanako', 'Moe Moe']",8,2025,7,16,2,29,summer
+2025-07-17,False,427661,392,4,"['John', 'Emma', 'Puppy', 'Yuki']",11,2025,7,17,3,29,summer
+2025-07-18,False,294556,248,2,"['Hanako', 'Taro']",4,2025,7,18,4,29,summer
+2025-07-19,False,354211,305,3,"['Emma', 'Sakura', 'Moe Moe']",7,2025,7,19,5,29,summer
+

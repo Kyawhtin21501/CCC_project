@@ -1,1 +1,2 @@
 date,is_festival,sales,guests,staff_count,assigned_staff,total_staff_level,year,month,day,weekday,weekofyear,season
+2025-08-26,False,200000,200,2,"['Kyaw', 'Jenie']",0,2025,8,26,1,35,summer
