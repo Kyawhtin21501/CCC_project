@@ -14,19 +14,23 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  // Form controllers
   DateTime? _selectedDate;
   final TextEditingController salesController = TextEditingController();
   final TextEditingController customerController = TextEditingController();
   final TextEditingController staffCountController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
 
+  // Staff selection
   List<String> availableStaffNames = [];
   List<String> selectedStaffNames = [];
 
+  // Event status
   String? festivalStatus;
   bool _loading = false;
   String? error;
 
+  // Cached data for charts
   List<Map<String, dynamic>>? _shiftScheduleCache;
   List<Map<String, dynamic>>? _salesDataCache;
 
@@ -37,6 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadChartData();
   }
 
+  // === API Calls ===
   Future<void> _loadStaffList() async {
     try {
       final staffList = await ApiService.fetchStaffList();
@@ -64,6 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // Build payload for API
   Map<String, dynamic> _buildPayload() {
     return {
       "date": _selectedDate?.toIso8601String().split('T').first ?? '',
@@ -76,11 +82,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
   }
 
+  // Ensure staff count matches selected names
   bool _validateStaffCountMatchesNames() {
     final enteredCount = int.tryParse(staffCountController.text) ?? 0;
     return enteredCount == selectedStaffNames.length;
   }
 
+  // Save user input and reload charts
   Future<void> _saveDataAndRefresh() async {
     if (_formKey.currentState!.validate() &&
         _selectedDate != null &&
@@ -117,6 +125,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // Clear form values
   void _clearForm() {
     setState(() {
       _selectedDate = null;
@@ -138,27 +147,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
+  // === UI Build ===
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(backgroundColor: Colors.white),
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text("Dashboard"),
+        backgroundColor: Colors.blue.shade600,
+        foregroundColor: Colors.white,
+      ),
       drawer: AppDrawer(),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(24),
               children: [
                 _buildDashboardForm(),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
                 if (error != null)
-                  Text(
-                    'Error: $error',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                if (_shiftScheduleCache != null)
+                  Text('Error: $error',
+                      style: const TextStyle(color: Colors.red)),
+                if (_shiftScheduleCache != null) ...[
                   ShiftChartWidget(shiftSchedule: _shiftScheduleCache!),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                ],
                 if (_salesDataCache != null)
                   SalesPredictionChartWidget(salesData: _salesDataCache!),
               ],
@@ -166,216 +179,198 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDashboardForm() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Daily Report',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 32),
-              Wrap(
-                spacing: 20,
-                runSpacing: 20,
-                children: [
-                  _buildDatePicker(),
-                  _buildNumberField(salesController, 'Sale'),
+  // === Form Card ===
+Widget _buildDashboardForm() {
+  return Card(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    elevation: 4,
+    color: Colors.blue.shade50,
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Daily Report',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade700,
+                    )),
+            const SizedBox(height: 20),
+
+            // Grid with improved ratio
+            GridView.count(
+              shrinkWrap:true,
+              crossAxisCount: 2,
+              childAspectRatio: 2.5,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              children: [
+                _buildDatePicker(),
+                _buildNumberField(salesController, 'Sale'),
                   _buildNumberField(customerController, 'Customer'),
                   _buildNumberField(staffCountController, 'Numbers of Staff'),
-                  _buildStaffMultiSelect(),
-                  _buildEventDropdown(),
-                ],
-              ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  OutlinedButton(
-                    onPressed: _clearForm,
-                    child: const Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      child: Text('Clear'),
-                    ),
+               
+                _buildStaffMultiSelect(),
+                _buildEventDropdown(),
+              ],
+            ),
+
+            const SizedBox(height: 30),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _clearForm,
+                  icon: const Icon(Icons.clear),
+                  label: const Text('Clear'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: _saveDataAndRefresh,
+                  icon: const Icon(Icons.save,color: Colors.white,),
+                  label: const Text('Save & Refresh',style: TextStyle(color: Colors.white),),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  const SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _saveDataAndRefresh,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Save & Refresh'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            )
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
+
+
+
+  // === Form Fields ===
   Widget _buildDatePicker() {
-    return SizedBox(
-      width: 350,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Date'),
-          const SizedBox(height: 5),
-          TextFormField(
-            controller: dateController,
-            readOnly: true,
-            decoration: InputDecoration(
-              hintText: 'mm/dd/yyyy',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade200,
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.calendar_today),
-                onPressed: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2030),
-                  );
-                  if (date != null) {
-                    setState(() {
-                      _selectedDate = date;
-                      dateController.text =
-                          '${date.year}/${date.month}/${date.day}';
-                    });
-                  }
-                },
-              ),
-            ),
-            validator:
-                (value) => _selectedDate == null ? 'Please select a date' : null,
+    return _formFieldWrapper(
+      label: "Date",
+      child: TextFormField(
+        controller: dateController,
+        readOnly: true,
+        
+        decoration: InputDecoration(
+           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          hintText: 'yyyy/mm/dd',
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (date != null) {
+                setState(() {
+                  _selectedDate = date;
+                  dateController.text =
+                      '${date.year}/${date.month}/${date.day}';
+                });
+              }
+            },
           ),
-        ],
+        ),
+        validator: (value) =>
+            _selectedDate == null ? 'Please select a date' : null,
       ),
     );
   }
 
-  Widget _buildNumberField(TextEditingController controller, String label) {
-    return SizedBox(
-      width: 350,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label),
-          const SizedBox(height: 5),
-          TextFormField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: 'Value',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade200,
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return '$label is required';
-              if (int.tryParse(value) == null) return 'Enter a valid number';
-              return null;
-            },
-          ),
-        ],
+  Widget _buildNumberField(
+      TextEditingController controller, String label) {
+    return _formFieldWrapper(
+      label: label,
+      child: TextFormField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: const InputDecoration(hintText: 'Enter value'),
+        validator: (value) {
+          if (value == null || value.isEmpty) return '$label is required';
+          if (int.tryParse(value) == null) return 'Enter a valid number';
+          return null;
+        },
       ),
     );
   }
 
   Widget _buildStaffMultiSelect() {
-    return SizedBox(
-      width: 350,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Staff'),
-          const SizedBox(height: 5),
-          MultiSelectDialogField<String>(
-            items: availableStaffNames
-                .map((name) => MultiSelectItem<String>(name, name))
-                .toList(),
-            title: const Text("Select Staff"),
-            selectedColor: Colors.blueAccent,
-            buttonText: const Text("Select"),
-            initialValue: selectedStaffNames,
-            onConfirm: (values) {
-              setState(() {
-                selectedStaffNames = values;
-              });
-            },
-            chipDisplay: MultiSelectChipDisplay(
-              items: selectedStaffNames
-                  .map((name) => MultiSelectItem<String>(name, name))
-                  .toList(),
-              onTap: (value) {
-                setState(() {
-                  selectedStaffNames.remove(value);
-                });
-              },
-            ),
-            validator: (values) {
-              if (values == null || values.isEmpty) {
-                return 'Please select at least one staff';
-              }
-              return null;
-            },
-          ),
-        ],
+    return _formFieldWrapper(
+      label: "Staff",
+      child: MultiSelectDialogField<String>(
+        items: availableStaffNames
+            .map((name) => MultiSelectItem<String>(name, name))
+            .toList(),
+        title: const Text("Select Staff"),
+        selectedColor: Colors.blueAccent,
+        buttonText: const Text("Select"),
+        initialValue: selectedStaffNames,
+        onConfirm: (values) {
+          setState(() {
+            selectedStaffNames = values;
+          });
+        },
+        chipDisplay: MultiSelectChipDisplay(
+          items: selectedStaffNames
+              .map((name) => MultiSelectItem<String>(name, name))
+              .toList(),
+          onTap: (value) {
+            setState(() {
+              selectedStaffNames.remove(value);
+            });
+          },
+        ),
+        validator: (values) {
+          if (values == null || values.isEmpty) {
+            return 'Please select at least one staff';
+          }
+          return null;
+        },
       ),
     );
   }
 
   Widget _buildEventDropdown() {
-    return SizedBox(
-      width: 350,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Event'),
-          const SizedBox(height: 5),
-          DropdownButtonFormField<String>(
-            value: festivalStatus,
-            decoration: InputDecoration(
-              hintText: 'Select option',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade200,
-            ),
-            items: const [
-              DropdownMenuItem(value: '1', child: Text('あり')),
-              DropdownMenuItem(value: '0', child: Text('なし')),
-            ],
-            onChanged: (value) => setState(() => festivalStatus = value),
-            validator: (value) =>
-                value == null ? 'Please select event status' : null,
-          ),
+    return _formFieldWrapper(
+      label: "Event",
+      child: DropdownButtonFormField<String>(
+        value: festivalStatus,
+        items: const [
+          DropdownMenuItem(value: '1', child: Text('あり')),
+          DropdownMenuItem(value: '0', child: Text('なし')),
         ],
+        onChanged: (value) => setState(() => festivalStatus = value),
+        validator: (value) =>
+            value == null ? 'Please select event status' : null,
       ),
     );
   }
+
+  // Helper to add label + spacing
+  Widget _formFieldWrapper({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 5),
+        child,
+      ],
+    );
+  }
 }
+
+// =======================
+// Charts
+// =======================
 
 class ShiftChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> shiftSchedule;
@@ -383,94 +378,91 @@ class ShiftChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Assume each item in shiftSchedule looks like:
-    // { "date": "2025-08-07", "staff": "Alice", "shift": "morning" }
-    // You can extend to include custom startHour / endHour if backend provides.
-
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      color: Colors.white,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Shift Schedule",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const Text("Shift Schedule",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+
+            // Legend row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _legendItem("Morning", Colors.blueAccent),
+                _legendItem("Afternoon", Colors.greenAccent),
+                _legendItem("Night", Colors.orangeAccent),
+              ],
             ),
             const SizedBox(height: 10),
+
             SizedBox(
-              height: 300,
+              height: 250,
               child: BarChart(
                 BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  gridData: FlGridData(show: true, horizontalInterval: 1),
-                  // minY: 6,
-                  // maxY: 24,
-                  
+                  minY: 6,
+                  maxY: 24,
+                  gridData: FlGridData(show: true, horizontalInterval: 2),
                   titlesData: FlTitlesData(
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
-                      axisNameWidget: const Text("Date"),
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 80,
+                        interval: 2,
+                        reservedSize: 40,
+                        getTitlesWidget: (value, meta) =>
+                            Text('${value.toInt()}:00'),
+                      ),
+                    ),
+                    rightTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
                         getTitlesWidget: (value, meta) {
                           int index = value.toInt();
                           if (index >= 0 && index < shiftSchedule.length) {
-                            return Text(shiftSchedule[index]["date"]);
+                            DateTime date =
+                                DateTime.parse(shiftSchedule[index]["date"]);
+                            return Text("${date.month}/${date.day}");
                           }
-                          return const SizedBox.shrink();
+                          return const SizedBox(width: 30);
                         },
                       ),
                     ),
-                    bottomTitles: AxisTitles(
-  axisNameWidget: const Text("Hour"),
-  sideTitles: SideTitles(
-    showTitles: true,
-    interval: 1, // show every hour
-    getTitlesWidget: (value, meta) {
-      // Ensure we only show integer hours
-      if (value % 1 == 0) {
-        int hour = value.toInt();
-        if (hour >= 0 && hour <= 24) {
-          return Text('${hour.toString()}:00',
-              style: const TextStyle(fontSize: 10));
-        }
-      }
-      return const SizedBox.shrink();
-    },
-  ),
-),
-
                   ),
                   borderData: FlBorderData(show: false),
-                  barGroups: _buildBarGroups(),
-barTouchData: BarTouchData(
-  enabled: true,
-  touchTooltipData: BarTouchTooltipData(
-    tooltipPadding: const EdgeInsets.all(8),
-    tooltipMargin: 8,
-    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-      final staff = shiftSchedule[groupIndex]["staff_id"];
-      return BarTooltipItem(
-        'Staff: $staff',
-        const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    },
-   // tooltipBgColor: Colors.black87, // works in most versions
-  ),
-),
-
-
+                  barGroups: List.generate(shiftSchedule.length, (index) {
+                    final shift = shiftSchedule[index]["shift"];
+                    double startHour = shift == "morning"
+                        ? 8
+                        : shift == "afternoon"
+                            ? 13
+                            : 18;
+                    double endHour = startHour + 4;
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          fromY: startHour,
+                          toY: endHour,
+                          width: 16,
+                          color: shift == "morning"
+                              ? Colors.blueAccent
+                              : shift == "afternoon"
+                                  ? Colors.greenAccent
+                                  : Colors.orangeAccent,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ],
+                    );
+                  }),
                 ),
               ),
             ),
@@ -480,148 +472,19 @@ barTouchData: BarTouchData(
     );
   }
 
-List<BarChartGroupData> _buildBarGroups() {
-  List<BarChartGroupData> groups = [];
-
-  // Predefined list of colors (you can customize)
-  final colors = [
-    
-    Colors.green,
-    Colors.blue,
-    Colors.orange,
-   
-    
-  ];
-
-  for (int i = 0; i < shiftSchedule.length; i++) {
-    final shift = shiftSchedule[i];
-
-    // Example mapping for shift hours
-    double startHour = shift["shift"] == "morning"
-        ? 9
-        : shift["shift"] == "afternoon"
-            ? 14
-            : 19;
-    double endHour = startHour + 5;
-
-    groups.add(
-      BarChartGroupData(
-        x: i,
-        barRods: [
-          BarChartRodData(
-            
-            fromY: startHour,
-            toY: endHour,
-            width: startHour+endHour,
-            color: colors[i % colors.length], // assign different color per rod
-            borderRadius: BorderRadius.zero,
-          ),
-         
+  Widget _legendItem(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Container(width: 12, height: 12, color: color),
+          const SizedBox(width: 4),
+          Text(text),
         ],
-        
-       // showingTooltipIndicators: [0],
       ),
     );
   }
-
-  return groups;
 }
-
-}
-
-
-// // =======================
-// // Separate Widgets for Charts
-// // =======================
-
-// class ShiftChartWidget extends StatelessWidget {
-//   final List<Map<String, dynamic>> shiftSchedule;
-//   const ShiftChartWidget({super.key, required this.shiftSchedule});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-//       elevation: 2,
-//       color: Colors.white,
-//       child: Padding(
-//         padding: const EdgeInsets.all(32.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             const Text(
-//               "Shift Schedule",
-//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//             ),
-//             const SizedBox(height: 10),
-//             SizedBox(
-//               height: 250,
-//               child: BarChart(
-//                 BarChartData(
-//                   minY: 6,
-//                   maxY: 24,
-//                   gridData: FlGridData(show: true, horizontalInterval: 2),
-//                   titlesData: FlTitlesData(
-//                     topTitles: AxisTitles(
-//                         sideTitles: SideTitles(showTitles: false)),
-//                     rightTitles: AxisTitles(
-//                         sideTitles: SideTitles(showTitles: false)),
-//                     leftTitles: AxisTitles(
-//                       sideTitles: SideTitles(
-//                         showTitles: true,
-//                         interval: 2,
-//                         reservedSize: 40,
-//                         getTitlesWidget: (value, meta) =>
-//                             Text('${value.toInt()}:00'),
-//                       ),
-//                     ),
-//                     bottomTitles: AxisTitles(
-//                       sideTitles: SideTitles(
-//                         showTitles: true,
-//                         reservedSize: 50,
-//                         getTitlesWidget: (value, meta) {
-//                           int index = value.toInt();
-//                           if (index >= 0 && index < shiftSchedule.length) {
-//                             DateTime date =
-//                                 DateTime.parse(shiftSchedule[index]["date"]);
-//                             return Text("${date.month}/${date.day}");
-//                           }
-//                           return const SizedBox(width: 30);
-//                         },
-//                       ),
-//                     ),
-//                   ),
-//                   borderData: FlBorderData(show: false),
-//                   barGroups: List.generate(shiftSchedule.length, (index) {
-//                     final shift = shiftSchedule[index]["shift"];
-//                     double startHour = shift == "morning"
-//                         ? 8
-//                         : shift == "afternoon"
-//                             ? 13
-//                             : 18;
-//                     double endHour = startHour + 4;
-//                     return BarChartGroupData(
-//                       x: index,
-//                       barRods: [
-//                         BarChartRodData(
-//                           fromY: startHour,
-//                           toY: endHour,
-//                           width: 16,
-//                           color: Colors.blue,
-//                           borderRadius: BorderRadius.zero,
-//                         ),
-//                       ],
-//                     );
-//                   }),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 
 class SalesPredictionChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> salesData;
@@ -630,33 +493,25 @@ class SalesPredictionChartWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      color: Colors.white,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Predicted Sales",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const Text("Predicted Sales",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             SizedBox(
               height: 250,
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: true, horizontalInterval: 100),
+                  gridData: FlGridData(show: true, horizontalInterval: 5000),
                   titlesData: FlTitlesData(
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 40,
+                        reservedSize: 50,
                         getTitlesWidget: (value, meta) =>
                             Text(value.toInt().toString()),
                       ),
@@ -676,8 +531,14 @@ class SalesPredictionChartWidget extends StatelessWidget {
                         },
                       ),
                     ),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: true),
+
+                  // Line Chart
                   lineBarsData: [
                     LineChartBarData(
                       isCurved: true,
@@ -689,8 +550,27 @@ class SalesPredictionChartWidget extends StatelessWidget {
                       color: Colors.redAccent,
                       dotData: FlDotData(show: false),
                       isStrokeCapRound: true,
+                      barWidth: 3,
                     ),
                   ],
+
+                  // Tooltips on hover
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                    //  tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          final date =
+                              salesData[spot.x.toInt()]["date"] ?? "";
+                          final sales = spot.y.toInt();
+                          return LineTooltipItem(
+                            "$date\nSales: $sales",
+                            const TextStyle(color: Colors.white),
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),

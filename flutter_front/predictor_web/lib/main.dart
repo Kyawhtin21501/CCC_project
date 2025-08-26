@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:predictor_web/screens/daily_report.dart';
-import 'package:predictor_web/screens/test_shift_pre.dart';
 
 
 void main() {

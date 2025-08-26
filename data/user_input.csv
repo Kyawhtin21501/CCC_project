@@ -1,2 +1,3 @@
 date,is_festival,sales,guests,staff_count,assigned_staff,total_staff_level,year,month,day,weekday,weekofyear,season
 2025-08-21,False,200000,260,2,"['Puppy', 'Aung Aung']",4,2025,8,21,3,34,summer
+2025-08-24,False,321488,213,5,"['Kyaw Htin', 'Hir', 'Kyaw', 'Lisa', 'Jenie']",10,2025,8,24,6,34,summer
