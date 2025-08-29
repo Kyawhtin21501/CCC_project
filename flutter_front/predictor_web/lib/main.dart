@@ -4,6 +4,7 @@ import 'package:predictor_web/screens/daily_report.dart';
 
 
 void main() {
+  
   runApp(const ShiftAIApp());
 }
 

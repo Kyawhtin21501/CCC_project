@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/daily_report.dart';
+import 'package:predictor_web/screens/shift_auto_generate.dart';
 
 import 'package:predictor_web/screens/staff_profile.dart' hide CreatedShiftScreen;
 
@@ -29,17 +30,17 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
-          // ListTile(
-          //   leading: const Icon(Icons.trending_up),
-          //   title: const Text('予測を実行'),
-          //   onTap: () {
-          //     Navigator.pop(context);
-          //    Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => DashboardEdScreen()
-          //     ));
-          //   },
-          // ),
+          ListTile(
+            leading: const Icon(Icons.trending_up),
+            title: const Text('予測を実行'),
+            onTap: () {
+              Navigator.pop(context);
+             Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ShiftAutoScreen()
+              ));
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.work_history),
             title: const Text('シフト作成'),
