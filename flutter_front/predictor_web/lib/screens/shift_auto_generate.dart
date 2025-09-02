@@ -232,7 +232,7 @@ class _Card extends StatelessWidget {
 
 class _Title extends StatelessWidget {
   final String text;
-  const _Title(this.text, {super.key});
+  const _Title(this.text);
   @override
   Widget build(BuildContext context) =>
       Text(text, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700));
@@ -240,7 +240,7 @@ class _Title extends StatelessWidget {
 
 class _Label extends StatelessWidget {
   final String text;
-  const _Label(this.text, {super.key});
+  const _Label(this.text);
   @override
   Widget build(BuildContext context) =>
       Text(text, style: const TextStyle(fontWeight: FontWeight.w600));
@@ -249,7 +249,7 @@ class _Label extends StatelessWidget {
 class _DateBox extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
-  const _DateBox({super.key, required this.text, required this.onTap});
+  const _DateBox({required this.text, required this.onTap});
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -278,7 +278,7 @@ class _DateBox extends StatelessWidget {
 class _NumberField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  const _NumberField({super.key, required this.label, required this.controller});
+  const _NumberField({required this.label, required this.controller});
   @override
   Widget build(BuildContext context) {
     return SizedBox(

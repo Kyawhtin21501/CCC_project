@@ -1,8 +1,8 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
+import 'package:predictor_web/widgets/charts.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = false;
   String? error;
 
-  // Cached data for charts
+  // Cached chart data
   List<Map<String, dynamic>>? _shiftScheduleCache;
   List<Map<String, dynamic>>? _salesDataCache;
 
@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadChartData();
   }
 
-  // === API Calls ===
+  /// Fetch staff list for multi-select
   Future<void> _loadStaffList() async {
     try {
       final staffList = await ApiService.fetchStaffList();
@@ -49,11 +49,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         availableStaffNames = staffList.map((e) => e.toString()).toList();
       });
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('スタッフリスト取得エラー: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('スタッフリスト取得エラー: $e')),
+      );
     }
   }
 
+  /// Fetch chart data from backend
   Future<void> _loadChartData() async {
     try {
       final shiftData = await ApiService.fetchShiftTableDashboard();
@@ -69,7 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // Build payload for API
+  /// Build payload from form input
   Map<String, dynamic> _buildPayload() {
     return {
       "date": _selectedDate?.toIso8601String().split('T').first ?? '',
@@ -82,20 +84,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
   }
 
-  // Ensure staff count matches selected names
+  /// Check staff count matches selected staff names
   bool _validateStaffCountMatchesNames() {
     final enteredCount = int.tryParse(staffCountController.text) ?? 0;
     return enteredCount == selectedStaffNames.length;
   }
 
-  // Save user input and reload charts
+  /// Save data and refresh charts
   Future<void> _saveDataAndRefresh() async {
     if (_formKey.currentState!.validate() &&
         _selectedDate != null &&
         festivalStatus != null) {
       if (!_validateStaffCountMatchesNames()) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('スタッフ数とスタッフ名の数が一致していません')));
+          const SnackBar(content: Text('スタッフ数とスタッフ名の数が一致していません')),
+        );
         return;
       }
 
@@ -108,7 +111,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         if (response.statusCode != 200) {
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('保存エラー (${response.statusCode})')));
+            SnackBar(content: Text('保存エラー (${response.statusCode})')),
+          );
           return;
         }
 
@@ -116,16 +120,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         await _loadChartData();
 
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('データが保存され、最新シフトが取得されました')));
+          const SnackBar(content: Text('データが保存され、最新シフトが取得されました')),
+        );
       } catch (e) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('通信エラー: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('通信エラー: $e')),
+        );
       }
     }
   }
 
-  // Clear form values
+  /// Reset form values
   void _clearForm() {
     setState(() {
       _selectedDate = null;
@@ -147,7 +153,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  // === UI Build ===
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -179,87 +184,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // === Form Card ===
-Widget _buildDashboardForm() {
-  return Card(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    elevation: 4,
-    color: Colors.blue.shade50,
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Daily Report',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade700,
-                    )),
-            const SizedBox(height: 20),
+  /// Daily Report Input Form
+  Widget _buildDashboardForm() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Daily Report',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade700,
+                      )),
+              const SizedBox(height: 20),
 
-            // Grid with improved ratio
-            GridView.count(
-              shrinkWrap:true,
-              crossAxisCount: 2,
-              childAspectRatio: 2.5,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              children: [
-                _buildDatePicker(),
-                _buildNumberField(salesController, 'Sale'),
+              // Grid layout for inputs
+              GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: 2,
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                children: [
+                  _buildDatePicker(),
+                  _buildNumberField(salesController, 'Sale'),
                   _buildNumberField(customerController, 'Customer'),
                   _buildNumberField(staffCountController, 'Numbers of Staff'),
-               
-                _buildStaffMultiSelect(),
-                _buildEventDropdown(),
-              ],
-            ),
+                  _buildStaffMultiSelect(),
+                  _buildEventDropdown(),
+                ],
+              ),
+              const SizedBox(height: 30),
 
-            const SizedBox(height: 30),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _clearForm,
-                  icon: const Icon(Icons.clear),
-                  label: const Text('Clear'),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: _saveDataAndRefresh,
-                  icon: const Icon(Icons.save,color: Colors.white,),
-                  label: const Text('Save & Refresh',style: TextStyle(color: Colors.white),),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _clearForm,
+                    icon: const Icon(Icons.clear),
+                    label: const Text('Clear'),
                   ),
-                ),
-              ],
-            )
-          ],
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: _saveDataAndRefresh,
+                    icon: const Icon(Icons.save, color: Colors.white),
+                    label: const Text(
+                      'Save & Refresh',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
-
-
+    );
+  }
 
   // === Form Fields ===
+
   Widget _buildDatePicker() {
     return _formFieldWrapper(
       label: "Date",
       child: TextFormField(
         controller: dateController,
         readOnly: true,
-        
         decoration: InputDecoration(
-           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           hintText: 'yyyy/mm/dd',
           suffixIcon: IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -355,7 +361,7 @@ Widget _buildDashboardForm() {
     );
   }
 
-  // Helper to add label + spacing
+  // Label + Field Wrapper
   Widget _formFieldWrapper({required String label, required Widget child}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,219 +370,6 @@ Widget _buildDashboardForm() {
         const SizedBox(height: 5),
         child,
       ],
-    );
-  }
-}
-
-// =======================
-// Charts
-// =======================
-
-class ShiftChartWidget extends StatelessWidget {
-  final List<Map<String, dynamic>> shiftSchedule;
-  const ShiftChartWidget({super.key, required this.shiftSchedule});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Shift Schedule",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-
-            // Legend row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _legendItem("Morning", Colors.blueAccent),
-                _legendItem("Afternoon", Colors.greenAccent),
-                _legendItem("Night", Colors.orangeAccent),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            SizedBox(
-              height: 250,
-              child: BarChart(
-                BarChartData(
-                  minY: 6,
-                  maxY: 24,
-                  gridData: FlGridData(show: true, horizontalInterval: 2),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 2,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) =>
-                            Text('${value.toInt()}:00'),
-                      ),
-                    ),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) {
-                          int index = value.toInt();
-                          if (index >= 0 && index < shiftSchedule.length) {
-                            DateTime date =
-                                DateTime.parse(shiftSchedule[index]["date"]);
-                            return Text("${date.month}/${date.day}");
-                          }
-                          return const SizedBox(width: 30);
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: List.generate(shiftSchedule.length, (index) {
-                    final shift = shiftSchedule[index]["shift"];
-                    double startHour = shift == "morning"
-                        ? 8
-                        : shift == "afternoon"
-                            ? 13
-                            : 18;
-                    double endHour = startHour + 4;
-                    return BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          fromY: startHour,
-                          toY: endHour,
-                          width: 16,
-                          color: shift == "morning"
-                              ? Colors.blueAccent
-                              : shift == "afternoon"
-                                  ? Colors.greenAccent
-                                  : Colors.orangeAccent,
-                          borderRadius: BorderRadius.zero,
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _legendItem(String text, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          Container(width: 12, height: 12, color: color),
-          const SizedBox(width: 4),
-          Text(text),
-        ],
-      ),
-    );
-  }
-}
-
-class SalesPredictionChartWidget extends StatelessWidget {
-  final List<Map<String, dynamic>> salesData;
-  const SalesPredictionChartWidget({super.key, required this.salesData});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Predicted Sales",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 250,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true, horizontalInterval: 5000),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) =>
-                            Text(value.toInt().toString()),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) {
-                          int index = value.toInt();
-                          if (index >= 0 && index < salesData.length) {
-                            DateTime date =
-                                DateTime.parse(salesData[index]["date"]);
-                            return Text("${date.month}/${date.day}");
-                          }
-                          return const SizedBox(width: 30);
-                        },
-                      ),
-                    ),
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: true),
-
-                  // Line Chart
-                  lineBarsData: [
-                    LineChartBarData(
-                      isCurved: true,
-                      spots: List.generate(salesData.length, (index) {
-                        final sales =
-                            salesData[index]["predicted_sales"] ?? 0;
-                        return FlSpot(index.toDouble(), sales.toDouble());
-                      }),
-                      color: Colors.redAccent,
-                      dotData: FlDotData(show: false),
-                      isStrokeCapRound: true,
-                      barWidth: 3,
-                    ),
-                  ],
-
-                  // Tooltips on hover
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                    //  tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          final date =
-                              salesData[spot.x.toInt()]["date"] ?? "";
-                          final sales = spot.y.toInt();
-                          return LineTooltipItem(
-                            "$date\nSales: $sales",
-                            const TextStyle(color: Colors.white),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

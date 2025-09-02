@@ -42,20 +42,6 @@ static Future<Map<String, dynamic>> fetchStaffById(int id) async {
       body: jsonEncode(payload),
     );
   }
-//post /fetch prediction for dashboard -->kyipyar hlaing -------->old version
-// static Future<Map<String, dynamic>> fetchShiftAndPrediction(Map<String, dynamic> payload) async {
-//   final response = await http.post(
-//     Uri.parse('$baseUrl/shift_table/dashboard'),
-//     headers: {"Content-Type": "application/json"},
-//     body: jsonEncode(payload),
-//   );
-//  //print("####################################fetched prediction${response.body}#######in api_service.dart###########################################");
-//   if (response.statusCode == 200) {
-//     return jsonDecode(response.body);
-//   } else {
-//     throw Exception('Failed to fetch shift data: ${response.statusCode}');
-//   }
-// }
 
 //updated shift prediction for  usage in dashboard
   static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
