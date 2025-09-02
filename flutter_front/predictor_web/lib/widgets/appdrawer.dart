@@ -17,7 +17,7 @@ class AppDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           const DrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF2b5797)),
+            decoration: BoxDecoration(color: Colors.blue),
             child: Text('メニュー', style: TextStyle(color: Colors.white, fontSize: 24)),
           ),
           ListTile(
@@ -32,7 +32,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.trending_up),
-            title: const Text('予測を実行'),
+            title: const Text('シフト作成'),
             onTap: () {
               Navigator.pop(context);
              Navigator.push(
@@ -43,7 +43,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.work_history),
-            title: const Text('シフト作成'),
+            title: const Text('シフト希望登録'),
            onTap: () {
               Navigator.pop(context);
              Navigator.push(
@@ -54,7 +54,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.account_box_outlined),
-            title: const Text('Profile'),
+            title: const Text('新規スタッフ登録'),
             onTap: () {
               Navigator.push(
                 context,

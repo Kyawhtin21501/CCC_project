@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
+/// シフト自動作成画面 (Auto Shift Assignment Screen)
 class ShiftAutoScreen extends StatefulWidget {
   const ShiftAutoScreen({super.key});
 
@@ -10,50 +13,160 @@ class ShiftAutoScreen extends StatefulWidget {
 }
 
 class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
-  final _maxHoursCtrl = TextEditingController(text: '8');
-  final _minStaffCtrl = TextEditingController(text: '3');
+  /// --- User input controllers ---
+  final _maxHoursCtrl = TextEditingController(text: '8'); // max hours/day
+  final _minStaffCtrl = TextEditingController(text: '3'); // min staff/day
 
+  /// --- Default date range (Aug 10–16 this year) ---
   DateTime _start = DateTime(DateTime.now().year, 8, 10);
   DateTime _end = DateTime(DateTime.now().year, 8, 16);
-  bool _breakRule = true;
 
-  /// 日付 → { shiftName: staffId }
+  /// --- Business rules ---
+  bool _breakRule = true; // if work > 6h → 1h break
+
+  /// --- UI states ---
+  bool _loading = false;
+  String? _error;
+
+  /// --- Backend base URL ---
+  /// ⚠️ Emulator-specific: Android = 10.0.2.2, iOS = localhost, device = LAN IP
+  final String _baseUrl = 'http://127.0.0.1:5000';
+
+  /// --- Shift assignment results ---
+  /// Format: { Date: { "Morning": "Alice", "Afternoon": "Bob", "Night": "Chris" } }
   Map<DateTime, Map<String, String>> _assign = {};
 
-  void _createShift() {
-    // dummy data logic
+  /// Call backend to auto-generate shifts
+  Future<void> _createShift() async {
     setState(() {
-      _assign = {};
-      DateTime cur = _start;
-      int staffCounter = 1;
-      while (cur.isBefore(_end.add(const Duration(days: 1)))) {
-        _assign[cur] = {
-          "Morning": "S${(staffCounter % 3) + 1}",
-          "Afternoon": "S${((staffCounter + 1) % 3) + 1}",
-          "Night": "S${((staffCounter + 2) % 3) + 1}",
-        };
-        cur = cur.add(const Duration(days: 1));
-        staffCounter++;
-      }
+      _loading = true;
+      _error = null;
     });
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('ダミー: シフトを作成しました')));
+    final String startStr = DateFormat('yyyy-MM-dd').format(_start);
+    final String endStr = DateFormat('yyyy-MM-dd').format(_end);
+
+    try {
+      // === Primary API call: /shift ===
+      final res = await http.post(
+        Uri.parse('$_baseUrl/shift'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'start_date': startStr,
+          'end_date': endStr,
+          // If backend uses GPS, include here:
+          // 'latitude': 35.6762,
+          // 'longitude': 139.6503,
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final List<dynamic> schedule = (data['shift_schedule'] ?? []) as List;
+
+        final Map<DateTime, Map<String, String>> built = {};
+
+        for (final row in schedule) {
+          final r = row as Map<String, dynamic>;
+
+          final String staff = (r['name'] ?? r['name_level'] ?? '-').toString();
+
+          // Normalize shift label ("Morning", "Afternoon", "Night")
+          String shift = (r['shift'] ?? '').toString();
+          if (shift.isEmpty) continue;
+          shift = shift[0].toUpperCase() + shift.substring(1).toLowerCase();
+
+          final dt = DateTime.parse(r['date'].toString());
+          final key = DateTime(dt.year, dt.month, dt.day);
+
+          // Default structure for each day
+          built.putIfAbsent(key, () => {
+                'Morning': '-',
+                'Afternoon': '-',
+                'Night': '-',
+              });
+
+          if (built[key]!.containsKey(shift)) {
+            built[key]![shift] = staff;
+          }
+        }
+
+        setState(() {
+          _assign = built;
+          _loading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('シフトを取得しました')),
+        );
+        return;
+      }
+
+      // === Fallback API call: /shift_table/dashboard (CSV-backed) ===
+      final res2 = await http.get(Uri.parse('$_baseUrl/shift_table/dashboard'));
+      if (res2.statusCode == 200) {
+        final List<dynamic> rows = jsonDecode(res2.body) as List;
+        final Map<DateTime, Map<String, String>> built = {};
+
+        for (final row in rows) {
+          final r = row as Map<String, dynamic>;
+          final dt = DateTime.parse(r['date'].toString());
+          final key = DateTime(dt.year, dt.month, dt.day);
+          final String staff = (r['name_level'] ?? r['name'] ?? '-').toString();
+
+          String shift = (r['shift'] ?? '').toString();
+          shift = shift[0].toUpperCase() + shift.substring(1).toLowerCase();
+
+          built.putIfAbsent(key, () => {
+                'Morning': '-',
+                'Afternoon': '-',
+                'Night': '-',
+              });
+
+          if (built[key]!.containsKey(shift)) {
+            built[key]![shift] = staff;
+          }
+        }
+
+        setState(() {
+          _assign = built;
+          _loading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ダッシュボード用データから読み込みました')),
+        );
+        return;
+      }
+
+      // === If both fail ===
+      setState(() {
+        _loading = false;
+        _error = 'バックエンドから取得できませんでした（${res.statusCode}）';
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = '通信エラー: $e';
+      });
+    }
   }
 
+  /// Reset the assignment table
   void _clear() {
     setState(() {
       _assign.clear();
     });
   }
 
+  /// Dummy save handler (replace with backend POST later)
   void _save() {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('保存しました（ダミー）')));
   }
-//user select START date of the shift
+
+  /// Select shift start date
   Future<void> _pickStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -62,12 +175,11 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
       lastDate: DateTime(2030),
     );
     if (picked != null) {
-      setState(() {
-        _start = picked;
-      });
+      setState(() => _start = picked);
     }
   }
-//user select END date of the shift
+
+  /// Select shift end date
   Future<void> _pickEndDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -76,16 +188,13 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
       lastDate: DateTime(2030),
     );
     if (picked != null) {
-      setState(() {
-        _end = picked;
-      });
+      setState(() => _end = picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    //dateformat 
-    final df = DateFormat('MM/dd');
+    final df = DateFormat('MM/dd'); // date format for UI
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F8),
@@ -101,7 +210,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // User enters the condition for auto shift assignment
+              /// === Input Card: Shift Conditions ===
               _Card(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,92 +219,110 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                     const SizedBox(height: 10),
                     Text(
                       '条件を入力してボタンを押すだけで自動作成',
-                      style: TextStyle(color: Colors.black.withValues()),
+                      style: TextStyle(color: Colors.black.withOpacity(0.6)),
                     ),
                     const SizedBox(height: 30),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+
+                    /// Date range
+                    const _Label('日付範囲'),
+                    const SizedBox(height: 10),
+                    Row(
                       children: [
-                        const _Label('日付範囲'),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            _DateBox(text: df.format(_start), onTap: _pickStartDate),
-                            const SizedBox(width: 12),
-                            _DateBox(text: df.format(_end), onTap: _pickEndDate),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        _NumberField(label: '1日の最大勤務時間', controller: _maxHoursCtrl),
-                        const SizedBox(height: 20),
-                        _NumberField(label: '最低必要スタッフ数', controller: _minStaffCtrl),
-                        const SizedBox(height: 30),
-                        Row(
-                          children: [
-                            const _Label('休憩ルール'),
-                            const SizedBox(width: 12),
-                            Switch(
-                              value: _breakRule,
-                              activeColor: Colors.blue,
-                              onChanged: (v) => setState(() => _breakRule = v),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('6時間超えたら1時間休憩'),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        FilledButton.icon(
-                          onPressed: _createShift,
-                          label: const Text('シフト作成'),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                          ),
-                        ),
+                        _DateBox(text: df.format(_start), onTap: _pickStartDate),
+                        const SizedBox(width: 12),
+                        _DateBox(text: df.format(_end), onTap: _pickEndDate),
                       ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    /// Max hours / min staff
+                    _NumberField(label: '1日の最大勤務時間', controller: _maxHoursCtrl),
+                    const SizedBox(height: 20),
+                    _NumberField(label: '最低必要スタッフ数', controller: _minStaffCtrl),
+                    const SizedBox(height: 30),
+
+                    /// Break rule toggle
+                    Row(
+                      children: [
+                        const _Label('休憩ルール'),
+                        const SizedBox(width: 12),
+                        Switch(
+                          value: _breakRule,
+                          activeColor: Colors.blue,
+                          onChanged: (v) => setState(() => _breakRule = v),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('6時間超えたら1時間休憩'),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    /// Generate button
+                    FilledButton.icon(
+                      onPressed: _createShift,
+                      label: const Text('シフト作成'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 28, vertical: 14),
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
 
-              // AUTO SHIFT ASSIGNMENT!!!!!
+              /// === Output Card: Shift Results ===
               _Card(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _Title('シフト結果'),
                     const SizedBox(height: 12),
-//if 1- the assign is empty or  2- the user click clear button , there will be the prompt of NO DATA ...whereas it is shown the dummy data in datatable
-                    _assign.isEmpty
-                        ? const Text('結果なし', style: TextStyle(color: Colors.black54))
-                        : SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text("Date")),
-                                DataColumn(label: Text("Morning")),
-                                DataColumn(label: Text("Afternoon")),
-                                DataColumn(label: Text("Night")),
-                              ],
-                              rows: _assign.entries.map((entry) {
-                                final date = entry.key;
-                                final shifts = entry.value;
-                                return DataRow(cells: [
-                                  DataCell(Text(df.format(date))),
-                                  DataCell(Text(shifts["Morning"] ?? "-")),
-                                  DataCell(Text(shifts["Afternoon"] ?? "-")),
-                                  DataCell(Text(shifts["Night"] ?? "-")),
-                                ]);
-                              }).toList(),
-                            ),
-                          ),
+
+                    if (_loading) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    ] else if (_error != null) ...[
+                      Text(_error!, style: const TextStyle(color: Colors.red)),
+                    ] else if (_assign.isEmpty) ...[
+                      const Text('結果なし',
+                          style: TextStyle(color: Colors.black54)),
+                    ] else ...[
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text("Date")),
+                            DataColumn(label: Text("Morning")),
+                            DataColumn(label: Text("Afternoon")),
+                            DataColumn(label: Text("Night")),
+                          ],
+                          rows: _assign.entries.map((entry) {
+                            final date = entry.key;
+                            final shifts = entry.value;
+                            return DataRow(cells: [
+                              DataCell(Text(df.format(date))),
+                              DataCell(Text(shifts["Morning"] ?? "-")),
+                              DataCell(Text(shifts["Afternoon"] ?? "-")),
+                              DataCell(Text(shifts["Night"] ?? "-")),
+                            ]);
+                          }).toList(),
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 12),
+
+                    /// Action buttons
                     Row(
                       children: [
-                        OutlinedButton(onPressed: _clear, child: const Text('クリア')),
+                        OutlinedButton(
+                            onPressed: _clear, child: const Text('クリア')),
                         const SizedBox(width: 8),
-                        OutlinedButton(onPressed: _save, child: const Text('保存')),
+                        OutlinedButton(
+                            onPressed: _save, child: const Text('保存')),
                       ],
                     ),
                   ],
@@ -209,7 +336,9 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
   }
 }
 
-/// --- UI widgets for reusability and run-time saving ---
+/// === UI helper widgets ===
+
+/// Card wrapper with shadow + padding
 class _Card extends StatelessWidget {
   final Widget child;
   const _Card({required this.child});
@@ -222,7 +351,10 @@ class _Card extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: const [
-          BoxShadow(blurRadius: 12, offset: Offset(0, 6), color: Color(0x1F000000)),
+          BoxShadow(
+              blurRadius: 12,
+              offset: Offset(0, 6),
+              color: Color(0x1F000000)), // subtle shadow
         ],
       ),
       child: child,
@@ -230,14 +362,16 @@ class _Card extends StatelessWidget {
   }
 }
 
+/// Title text (section headers)
 class _Title extends StatelessWidget {
   final String text;
   const _Title(this.text);
   @override
-  Widget build(BuildContext context) =>
-      Text(text, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700));
+  Widget build(BuildContext context) => Text(text,
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700));
 }
 
+/// Bold label
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
@@ -246,6 +380,7 @@ class _Label extends StatelessWidget {
       Text(text, style: const TextStyle(fontWeight: FontWeight.w600));
 }
 
+/// Date selector box with calendar icon
 class _DateBox extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
@@ -275,6 +410,7 @@ class _DateBox extends StatelessWidget {
   }
 }
 
+/// Numeric input field
 class _NumberField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
@@ -289,7 +425,8 @@ class _NumberField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),

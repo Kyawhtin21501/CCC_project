@@ -248,7 +248,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Create Staff Profile"),
+        title: const Text("新規スタッフ登録"),
         backgroundColor: Colors.blue.shade600,
         foregroundColor: Colors.white,
       ),
@@ -270,7 +270,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '新規スタッフ登録',
+                        '新規スタッフ',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 20),
@@ -280,7 +280,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                       const SizedBox(height: 10),
                       _buildNumberField(_levelController, 'Level (1-5)', 1, 5),
                       const SizedBox(height: 10),
-                      _buildTextField(_emailController, 'Email', isEmail: true),
+                      _buildEditEmailField(_emailController, 'Email'),
+                     // _buildTextField(_emailController, 'Email', isEmail: true),
                       const SizedBox(height: 10),
                       _buildGenderDropdown(),
                       const SizedBox(height: 10),
@@ -575,6 +576,27 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       },
     );
   }
+Widget _buildEditEmailField(TextEditingController controller, String label) {
+  return TextFormField(
+    controller: controller,
+    keyboardType: TextInputType.emailAddress,
+    decoration: InputDecoration(
+      labelText: label,
+      border: const OutlineInputBorder(),
+    ),
+    validator: (value) {
+      if (value == null || value.isEmpty) {
+        return 'Please enter $label';
+      }
+      // Simple email regex
+      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+      if (!emailRegex.hasMatch(value)) {
+        return 'Please enter a valid email address';
+      }
+      return null;
+    },
+  );
+}
 
   String _convertStatusToJapanese(String? status) {
     switch (status) {

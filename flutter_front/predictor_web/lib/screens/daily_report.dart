@@ -14,23 +14,25 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Form controllers
+  // === Form controllers ===
   DateTime? _selectedDate;
   final TextEditingController salesController = TextEditingController();
   final TextEditingController customerController = TextEditingController();
   final TextEditingController staffCountController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
 
-  // Staff selection
+  // === Staff selection ===
   List<String> availableStaffNames = [];
   List<String> selectedStaffNames = [];
 
-  // Event status
+  // === Event status ===
   String? festivalStatus;
+
+  // === Loading / error state ===
   bool _loading = false;
   String? error;
 
-  // Cached chart data
+  // === Cached chart data ===
   List<Map<String, dynamic>>? _shiftScheduleCache;
   List<Map<String, dynamic>>? _salesDataCache;
 
@@ -84,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
   }
 
-  /// Check staff count matches selected staff names
+  /// Ensure staff count matches number of selected names
   bool _validateStaffCountMatchesNames() {
     final enteredCount = int.tryParse(staffCountController.text) ?? 0;
     return enteredCount == selectedStaffNames.length;
@@ -158,7 +160,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text("Dashboard"),
+        title: const Text("ダッシュボード"),
         backgroundColor: Colors.blue.shade600,
         foregroundColor: Colors.white,
       ),
@@ -166,63 +168,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(16),
               children: [
-                _buildDashboardForm(),
-                const SizedBox(height: 24),
+                _buildDashboardForm(), // Top Form
+                const SizedBox(height: 20),
                 if (error != null)
                   Text('Error: $error',
                       style: const TextStyle(color: Colors.red)),
+
+                // Charts
                 if (_shiftScheduleCache != null) ...[
-                  ShiftChartWidget(shiftSchedule: _shiftScheduleCache!),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ShiftChartWidget(shiftSchedule: _shiftScheduleCache!),
+                  ),
                   const SizedBox(height: 20),
                 ],
                 if (_salesDataCache != null)
-                  SalesPredictionChartWidget(salesData: _salesDataCache!),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SalesPredictionChartWidget(salesData: _salesDataCache!),
+                  ),
               ],
             ),
     );
   }
 
-  /// Daily Report Input Form
+  /// === Daily Report Input Form ===
   Widget _buildDashboardForm() {
+    final isDesktop = MediaQuery.of(context).size.width > 1024;
+    final horizontalPadding = isDesktop ? 24.0 : 16.0;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      color: Colors.white,
+      elevation: 3,
+      margin: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 12),
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(isDesktop ? 32 : 20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Daily Report',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      )),
-              const SizedBox(height: 20),
-
-              // Grid layout for inputs
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 2,
-                childAspectRatio: 2.5,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+              // === Title with icon ===
+              Row(
                 children: [
-                  _buildDatePicker(),
-                  _buildNumberField(salesController, 'Sale'),
-                  _buildNumberField(customerController, 'Customer'),
-                  _buildNumberField(staffCountController, 'Numbers of Staff'),
-                  _buildStaffMultiSelect(),
-                  _buildEventDropdown(),
+                  Icon(Icons.assignment_outlined, color: Colors.blue.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Daily Report",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 12),
+              Divider(thickness: 1, color: Colors.grey.shade300),
+              const SizedBox(height: 16),
 
-              // Buttons
+              // === Responsive Grid for form fields ===
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int crossAxisCount;
+                  if (constraints.maxWidth < 600) {
+                    crossAxisCount = 1; // mobile
+                  } else if (constraints.maxWidth < 1024) {
+                    crossAxisCount = 2; // tablet
+                  } else {
+                    crossAxisCount = 3; // desktop
+                  }
+
+                  return GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: 4.2,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    children: [
+                      _buildDatePicker(),
+                      _buildNumberField(salesController, 'Sale'),
+                      _buildNumberField(customerController, 'Customer'),
+                      _buildNumberField(
+                          staffCountController, 'Number of Staff'),
+                      _buildStaffMultiSelect(),
+                      _buildEventDropdown(),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // === Buttons ===
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -231,18 +270,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     icon: const Icon(Icons.clear),
                     label: const Text('Clear'),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: _saveDataAndRefresh,
                     icon: const Icon(Icons.save, color: Colors.white),
-                    label: const Text(
-                      'Save & Refresh',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    label: const Text('Save & Refresh',style: TextStyle(color: Colors.white),),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade600,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 14),
+                          horizontal: 20, vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
@@ -256,8 +292,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // === Form Fields ===
+  // === Individual Form Fields ===
 
+  /// Date picker field
   Widget _buildDatePicker() {
     return _formFieldWrapper(
       label: "Date",
@@ -266,6 +303,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         readOnly: true,
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
           hintText: 'yyyy/mm/dd',
           suffixIcon: IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -292,14 +331,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildNumberField(
-      TextEditingController controller, String label) {
+  /// Number input field
+  Widget _buildNumberField(TextEditingController controller, String label) {
     return _formFieldWrapper(
       label: label,
       child: TextFormField(
         controller: controller,
         keyboardType: TextInputType.number,
-        decoration: const InputDecoration(hintText: 'Enter value'),
+        decoration: InputDecoration(
+          hintText: 'Enter value',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+        ),
         validator: (value) {
           if (value == null || value.isEmpty) return '$label is required';
           if (int.tryParse(value) == null) return 'Enter a valid number';
@@ -309,6 +353,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Staff multi-select
   Widget _buildStaffMultiSelect() {
     return _formFieldWrapper(
       label: "Staff",
@@ -345,6 +390,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Event dropdown
   Widget _buildEventDropdown() {
     return _formFieldWrapper(
       label: "Event",
@@ -357,11 +403,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onChanged: (value) => setState(() => festivalStatus = value),
         validator: (value) =>
             value == null ? 'Please select event status' : null,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+        ),
       ),
     );
   }
 
-  // Label + Field Wrapper
+  /// Label + Field Wrapper
   Widget _formFieldWrapper({required String label, required Widget child}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

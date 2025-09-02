@@ -89,7 +89,7 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text("Shift Preferences"),
+        title: const Text("シフト希望登録"),
         backgroundColor: Colors.blue.shade600,
         foregroundColor: Colors.white,
       ),

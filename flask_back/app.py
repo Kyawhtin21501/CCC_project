@@ -219,6 +219,9 @@ def shift():
     data = request.get_json()
     start_date = data.get("start_date")
     end_date = data.get("end_date")
+    
+    latitude = data.get("latitude", 35.6762) #kyipyar hlaing
+    longitude = data.get("longitude", 139.6503)#kyipyar hlaing
     #latitude = 52.52
     #longitude = 13.41
     
