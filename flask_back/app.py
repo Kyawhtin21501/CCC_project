@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from pprint import pprint
 # Get project root (one folder above flask_back)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -271,18 +272,19 @@ def shift():
     shift_schedule = shift_operator.assign_shifts()
 
     # Convert result to DataFrame for easier formatting
-    shift_schedule = pd.DataFrame(shift_schedule)
+    
 
     # --- Step 4: Return results as JSON-like dict ---
     # Convert predicted staff level (from ML model) to list of dicts
     pred_df_final_end_point = pred_df.to_dict(orient="records")
-
+    pprint("----------------------------pred_df_final_end_point----------------------------")
+    pprint(pred_df_final_end_point)
+    
+    
     # Return both shift schedule and prediction to frontend
-    return jsonify({
+    return ({
         "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
-        "prediction": pred_df_final_end_point  ,
-        # Staff requirement prediction
-        
+        "prediction": pred_df_final_end_point                        # Staff requirement prediction
     }),200
     
 
