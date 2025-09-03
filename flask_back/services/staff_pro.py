@@ -43,7 +43,9 @@ class CreateStaff(StaffProfileOperation):
         self.status = status
 
     def _generate_new_id(self):
+        
         df = pd.read_csv(self.csv_path)
+        
         return 1001 if df.empty else int(df["ID"].max()) + 1
 
     def operate(self):

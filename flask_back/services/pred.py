@@ -22,13 +22,13 @@ class ShiftCreator:
         self.longitude = 13.41
 
         base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services/
-        self.data_path = os.path.normpath(os.path.join(base_dir, '..', '..', 'data', 'project.csv'))
+        self.data_path = os.path.normpath(os.path.join(base_dir, '..', '..', 'data', 'project2.csv'))
         # 正しい修正
         self.model_dir = os.path.normpath(os.path.join(base_dir, '..', '..', 'model'))
 
 # 個別ファイルのパス
-        self.sales_model_path = os.path.join(self.model_dir, 'sales_model.pkl')
-        self.season_encoder_path = os.path.join(self.model_dir, 'season_encoder0.1.pkl')
+        self.sales_model_path = os.path.join(self.model_dir, 'sales_model0_1.pkl')
+        self.season_encoder_path = os.path.join(self.model_dir, 'season_encoder.pkl')
         self.staff_model_path = os.path.join(self.model_dir, 'staff.pkl')
 
 
@@ -44,11 +44,13 @@ class ShiftCreator:
             end_date_obj = end_dt.date()
 
             # timedelta(days=1) を使って1日加算
-            start = start_date_obj + timedelta(days=1)
-            end = end_date_obj + timedelta(days=1)
-
+            start = start_date_obj + timedelta(days=0)
+            end = end_date_obj + timedelta(days=0)
+            #start_wea = start_date_obj + timedelta(days=1)
+            #end_wea = start_date_obj + timedelta(day=1)
             print(start, end)
-            return start, end
+            
+            return start, end 
         except ValueError as e:
             print("Date parsing error:", e)
             return None, None
@@ -75,12 +77,13 @@ class ShiftCreator:
         print(is_festival)
         return is_festival
 
-    def weather_data(self, start, end):
+    def weather_data(self,start,end):
         """Fetch weather data using Open-Meteo API."""
         cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
         retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
         openmeteo = openmeteo_requests.Client(session=retry_session)
-
+        #start,end = ShiftCreator.date_data_from_user()
+        
         url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": self.latitude,
@@ -113,6 +116,7 @@ class ShiftCreator:
 
         df = pd.DataFrame(data=daily_data)
         df["date"] = df["date"].dt.tz_localize(None)  # Remove timezone
+        df["date"]=df["date"].dt.normalize()
         print(df)
         return df
 
@@ -141,30 +145,33 @@ class ShiftCreator:
                 return "autumn"
 
         df["season"] = df["month"].apply(assign_season)
-
+        #print("data type of weather date",weather_df[weather_df["date"]].info())
         # Load season encoder safely
         season_encoder_path = self.season_encoder_path
-        if not os.path.exists(season_encoder_path):
-            raise FileNotFoundError(f"Season encoder not found at {season_encoder_path}")
+        
         season_encoder = joblib.load(season_encoder_path)
         
-        df["season"] = season_encoder.fit_transform(df["season"])
-
+        df["season"] = season_encoder.transform(df["season"])
+        
         # Merge with weather
-        df = df.merge(weather_df, on="date", how="left")
-
+        df = df.merge(weather_df, on="date",how="left")
+        print("学習する前のデータ")
+        print(df)
         features = [
             "weekday", "month", "is_festival", "season",
             "weather_code", "temperature", "snowfall_sum", "rain_sum",
             "year", "day", "weekofyear"
         ]
         model_input = df[features]
-
-        sales_model_path = self.sales_model_path
+        print("model_input")
+        print(model_input)
+        sales_model_path = self.sales_model_path 
         if not os.path.exists(sales_model_path):
             raise FileNotFoundError(f"Sales model not found at {sales_model_path}")
-        model = joblib.load(sales_model_path)
-
+        try:
+            model = joblib.load(sales_model_path)
+        except FileNotFoundError as e:
+            print(e)
         df["predicted_sales"] = model.predict(model_input)
         try:
             base_dir = Path(__file__).resolve().parent             
