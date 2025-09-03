@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:predictor_web/api_services/api_services.dart';
+import 'package:predictor_web/theme_provider/them.dart';
 
 import 'package:predictor_web/widgets/appdrawer.dart';
+import 'package:provider/provider.dart';
 
 class StaffProfileScreen extends StatelessWidget {
   const StaffProfileScreen({super.key});
@@ -245,12 +247,24 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text("新規スタッフ登録"),
-        backgroundColor: Colors.blue.shade600,
-        foregroundColor: Colors.white,
+        title: Text("ダッシュボード"),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () {
+              final isDark = themeProvider.themeMode == ThemeMode.dark;
+              themeProvider.toggleTheme(!isDark);
+            },
+          ),
+        ],
       ),
       drawer: AppDrawer(),
       body: SingleChildScrollView(

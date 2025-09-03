@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:predictor_web/theme_provider/them.dart';
+
 import 'package:predictor_web/widgets/appdrawer.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:predictor_web/api_services/api_services.dart';
 
@@ -64,12 +67,10 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
     try {
       await ApiService.saveShiftPreferences(data);
 
-      // Success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("$staff さんの希望を保存しました")),
       );
 
-      // Reset checkboxes after saving
       setState(() {
         preferences[selectedDate]![staff] = {
           for (var shift in shifts) shift: false,
@@ -85,15 +86,26 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
   @override
   Widget build(BuildContext context) {
     final selectedDate = _selectedDay ?? _focusedDay;
-
+    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: const Text("シフト希望登録"),
-        backgroundColor: Colors.blue.shade600,
-        foregroundColor: Colors.white,
+      appBar:AppBar(
+        title: Text("シフト希望登録"),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () {
+              final isDark = themeProvider.themeMode == ThemeMode.dark;
+              themeProvider.toggleTheme(!isDark);
+            },
+          ),
+        ],
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -104,9 +116,9 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
                     // Calendar Card
                     Card(
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: 4,
-                      color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
@@ -123,13 +135,22 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
                                   _focusedDay = focused;
                                 });
                               },
+                              calendarStyle: CalendarStyle(
+                                todayDecoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(0.4),
+                                  shape: BoxShape.circle,
+                                ),
+                                selectedDecoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               "希望日: ${selectedDate.toLocal().toString().split(" ")[0]}",
-                              style: const TextStyle(
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
                               ),
                             ),
                           ],
@@ -148,20 +169,18 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 2,
-                        color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 1,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Staff name
                               Text(
                                 staff,
-                                style: const TextStyle(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -176,14 +195,13 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
                                           const EdgeInsets.only(right: 16),
                                       child: Row(
                                         children: [
-                                          Text(shift),
+                                          Text(shift,
+                                              style: theme.textTheme.bodyMedium),
                                           Checkbox(
-                                            value: preferences[selectedDate]![
-                                                staff]![shift]!,
+                                            value: preferences[selectedDate]![staff]![shift]!,
                                             onChanged: (val) {
                                               setState(() {
-                                                preferences[selectedDate]![
-                                                    staff]![shift] = val!;
+                                                preferences[selectedDate]![staff]![shift] = val!;
                                               });
                                             },
                                           ),
@@ -202,13 +220,17 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
                                   onPressed: () =>
                                       _saveShiftPreferences(staff),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue.shade600,
-                                    foregroundColor: Colors.white,
+                                    backgroundColor:
+                                        theme.colorScheme.primary,
+                                    foregroundColor:
+                                        theme.colorScheme.onPrimary,
                                     shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 10),
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
                                   ),
                                   child: const Text("保存"),
                                 ),

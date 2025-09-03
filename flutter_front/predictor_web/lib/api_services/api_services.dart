@@ -8,8 +8,8 @@ class ApiService {
  // GET /staff_list completed -->kyipyar hlaing
   static Future<List<String>> fetchStaffList() async {
     final response = await http.get(Uri.parse('$baseUrl/staff_list'));//check this url -->kyaw Htin Hein
-    // print("########## [ApiService] Status: ${response.statusCode} ##########");
-    // print("########## [ApiService] /staff_list response: ${response.body}");
+    print("########## [ApiService] Status: ${response.statusCode} ##########");
+    print("########## [ApiService] /staff_list response: ${response.body}");
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
