@@ -230,11 +230,15 @@ def shift():
 
     # Get start/end date objects
     start, end = creator.date_data_from_user()
+    
+    print ("from user start and end " , start,end)
     if not start or not end:
         return ({"error": "Invalid date range"})
     # Get external data
-    festivals = creator.check_festival_range(start, end)  # Check if each day has a festival
-    weather_df = creator.weather_data(start, end)         # Get weather data for each day
+    festivals = creator.check_festival_range(start, end) 
+    # Check if each day has a festival
+    start_wea ,end_wea= start +timedelta(days=1) , end + timedelta(days=1)
+    weather_df = creator.weather_data(start_wea, end_wea)         # Get weather data for each day
 
     # Predict sales and required staff levels
     pred_df = creator.pred_from_model(start, end, festivals, weather_df)
