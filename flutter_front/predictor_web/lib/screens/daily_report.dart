@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:predictor_web/api_services/api_services.dart';
+import 'package:predictor_web/theme_provider/them.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:predictor_web/widgets/charts.dart';
+import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -157,12 +159,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text("ダッシュボード"),
-        backgroundColor: Colors.blue.shade600,
-        foregroundColor: Colors.white,
+        title: Text("ダッシュボード"),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () {
+              final isDark = themeProvider.themeMode == ThemeMode.dark;
+              themeProvider.toggleTheme(!isDark);
+            },
+          ),
+        ],
       ),
       drawer: AppDrawer(),
       body: _loading
@@ -371,6 +385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
         chipDisplay: MultiSelectChipDisplay(
+          
           items: selectedStaffNames
               .map((name) => MultiSelectItem<String>(name, name))
               .toList(),

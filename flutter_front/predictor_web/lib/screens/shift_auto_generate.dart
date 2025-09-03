@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:predictor_web/theme_provider/them.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 /// シフト自動作成画面 (Auto Shift Assignment Screen)
 class ShiftAutoScreen extends StatefulWidget {
@@ -13,16 +15,16 @@ class ShiftAutoScreen extends StatefulWidget {
 }
 
 class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
-  /// --- User input controllers ---
-  final _maxHoursCtrl = TextEditingController(text: '8'); // max hours/day
-  final _minStaffCtrl = TextEditingController(text: '3'); // min staff/day
+  // /// --- User input controllers ---
+  // final _maxHoursCtrl = TextEditingController(text: '8'); // max hours/day
+  // final _minStaffCtrl = TextEditingController(text: '3'); // min staff/day
 
   /// --- Default date range (Aug 10–16 this year) ---
   DateTime _start = DateTime(DateTime.now().year, 8, 10);
   DateTime _end = DateTime(DateTime.now().year, 8, 16);
 
-  /// --- Business rules ---
-  bool _breakRule = true; // if work > 6h → 1h break
+  // /// --- Business rules ---
+  // bool _breakRule = true; // if work > 6h → 1h break
 
   /// --- UI states ---
   bool _loading = false;
@@ -55,15 +57,16 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
           'start_date': startStr,
           'end_date': endStr,
           // If backend uses GPS, include here:
-          // 'latitude': 35.6762,
-          // 'longitude': 139.6503,
+          'latitude': 35.6762,
+          'longitude': 139.6503,
         }),
       );
-
+print("####################################post shift api in auto generated page${res.statusCode}##################################################");
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
+          
         final List<dynamic> schedule = (data['shift_schedule'] ?? []) as List;
-
+         print("#####################################$schedule######################################");
         final Map<DateTime, Map<String, String>> built = {};
 
         for (final row in schedule) {
@@ -106,6 +109,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
       final res2 = await http.get(Uri.parse('$_baseUrl/shift_table/dashboard'));
       if (res2.statusCode == 200) {
         final List<dynamic> rows = jsonDecode(res2.body) as List;
+    
         final Map<DateTime, Map<String, String>> built = {};
 
         for (final row in rows) {
@@ -195,13 +199,24 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
   @override
   Widget build(BuildContext context) {
     final df = DateFormat('MM/dd'); // date format for UI
-
+ final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F8),
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text("シフト自動作成"),
-        backgroundColor: Colors.blue.shade600,
-        foregroundColor: Colors.white,
+        title: Text("ダッシュボード"),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () {
+              final isDark = themeProvider.themeMode == ThemeMode.dark;
+              themeProvider.toggleTheme(!isDark);
+            },
+          ),
+        ],
       ),
       drawer: AppDrawer(),
       body: Center(
@@ -235,27 +250,27 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    /// Max hours / min staff
-                    _NumberField(label: '1日の最大勤務時間', controller: _maxHoursCtrl),
-                    const SizedBox(height: 20),
-                    _NumberField(label: '最低必要スタッフ数', controller: _minStaffCtrl),
-                    const SizedBox(height: 30),
+                    // /// Max hours / min staff
+                    // _NumberField(label: '1日の最大勤務時間', controller: _maxHoursCtrl),
+                    // const SizedBox(height: 20),
+                    // _NumberField(label: '最低必要スタッフ数', controller: _minStaffCtrl),
+                    // const SizedBox(height: 30),
 
-                    /// Break rule toggle
-                    Row(
-                      children: [
-                        const _Label('休憩ルール'),
-                        const SizedBox(width: 12),
-                        Switch(
-                          value: _breakRule,
-                          activeColor: Colors.blue,
-                          onChanged: (v) => setState(() => _breakRule = v),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('6時間超えたら1時間休憩'),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                    // /// Break rule toggle
+                    // Row(
+                    //   children: [
+                    //     const _Label('休憩ルール'),
+                    //     const SizedBox(width: 12),
+                    //     Switch(
+                    //       value: _breakRule,
+                    //       activeColor: Colors.blue,
+                    //       onChanged: (v) => setState(() => _breakRule = v),
+                    //     ),
+                    //     const SizedBox(width: 8),
+                    //     const Text('6時間超えたら1時間休憩'),
+                    //   ],
+                    // ),
+                    // const SizedBox(height: 20),
 
                     /// Generate button
                     FilledButton.icon(
