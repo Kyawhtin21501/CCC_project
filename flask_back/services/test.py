@@ -9,11 +9,11 @@ def shift():
     start_date = date.today().strftime("%Y-%m-%d")  # Default to today
     end_date = (date.today() + timedelta(days=14)).strftime("%Y-%m-%d") 
     #end_date = data.get("end_date")
-    latitude = 35.8362
-    longitude = 139.5801
+    #latitude = 35.8362
+    #longitude = 139.5801
 
     # Step 1: Use ShiftCreator to predict staff level needed
-    creator = ShiftCreator(start_date, end_date, latitude, longitude)
+    creator = ShiftCreator(start_date, end_date)
 
     # Get start/end date objects
     start, end = creator.date_data_from_user()
@@ -43,13 +43,26 @@ def shift():
     shift_preferences_df = pd.read_csv(data_path_preferences)
     staff_database_df = pd.read_csv(data_path_staff_db)
       # Convert to DataFrame for easier manipulation
-    
+    required_level_dict = {}
+    # list of dicts → DataFrame に変換
+    result_df = pd.DataFrame(result_df)
+
+# これで iterrows が使える
+    for _, row in result_df.iterrows():
+        print(row["predicted_staff_level"])
+
+    required_level_dict[date_str] = {
+        "morning": row["predicted_staff_level"],
+        "afternoon": row["predicted_staff_level"],
+        "night": row["predicted_staff_level"]
+    }
     #pprint(result_df["predicted_staff_level"])
     # --- Step 3: Run shift optimization (LP) ---
     shift_operator = ShiftOperator(
         shift_preferences=shift_preferences_df,
         staff_dataBase=staff_database_df,
-        required_level=result_df[["predicted_staff_level"]]# Convert to dict for easy access
+        required_level = result_df[["predicted_staff_level"]].to_dict(orient="records")
+
     )
     shift_schedule = shift_operator.assign_shifts()
 
