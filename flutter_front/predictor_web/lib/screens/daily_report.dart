@@ -258,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: crossAxisCount,
-                    childAspectRatio: 4.2,
+                    childAspectRatio: 2.2,
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
                     children: [
@@ -267,7 +267,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _buildNumberField(customerController, 'Customer'),
                       _buildNumberField(
                           staffCountController, 'Number of Staff'),
-                      _buildStaffMultiSelect(),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _buildStaffMultiSelect()),
                       _buildEventDropdown(),
                     ],
                   );

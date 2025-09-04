@@ -331,7 +331,7 @@ class _DateBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant,
+          color: theme.colorScheme.surfaceContainerHighest,
           border: Border.all(color: theme.dividerColor),
           borderRadius: BorderRadius.circular(10),
         ),
