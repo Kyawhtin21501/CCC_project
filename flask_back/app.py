@@ -128,12 +128,14 @@ def get_shift_table_dashboard():
         # Load the CSV file containing shift assignments
         base_dir = os.path.dirname(os.path.abspath(__file__))
         csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'temporary_shift_database_for_dashboard.csv')
+        csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
         csv_path = os.path.abspath(csv_path)
         
 
         # Read the CSV into a DataFrame
         df = pd.read_csv(csv_path)
-
+        #df_staff = pd.read_csv(csv_path_staff)
+        
         # Convert DataFrame to a list of dictionaries for JSON response
         shift_data = df.to_dict(orient='records')
         print(shift_data)
@@ -250,15 +252,16 @@ def shift():
     print("----------------------------pred_df----------------------------")
     #pprint(type(result_df))
     # --- Step 2: Load staff preferences and staff profile info ---
-    
+    print("ここまでok")
     #base_dir = os.path.dirname(os.path.dirname(__file__))  
     data_path_preferences = os.path.join(BASE_DIR, "data", "shift_preferences.csv")
     data_path_staff_db = os.path.join(BASE_DIR, "data", "staff_database.csv")
-
+    
     #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
     # Check if files exist
     
     print("data colect ok")
+    
     # Load CSVs
     shift_preferences_df = pd.read_csv(data_path_preferences)
     staff_database_df = pd.read_csv(data_path_staff_db)
@@ -266,21 +269,30 @@ def shift():
     
     #pprint(result_df["predicted_staff_level"])
     # --- Step 3: Run shift optimization (LP) ---
-    
+    result_df = pd.DataFrame(result_df)
+    required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
+    shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
 
-    try:
-        shift_operator = ShiftOperator(
-            shift_preferences=shift_preferences_df,
-            staff_dataBase=staff_database_df,
-            required_level=result_df["predicted_staff_level"].to_dict()
-        )
-        shift_schedule = shift_operator.assign_shifts()
-    except Exception as e:
-        import traceback
-        print("ShiftOperator failed:", e)
-        traceback.print_exc()
-        return {"error": str(e)}, 500
-
+    if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
+        shift_preferences_df = (shift_preferences_df[shift_preferences_df["date"] >= start])
+        if shift_preferences_df.empty:
+            print("empty")
+            #continue  # or handle it differently
+        #match_row = filtered.iloc[0]
+        try:
+            shift_operator = ShiftOperator(
+                shift_preferences=shift_preferences_df,
+                staff_dataBase=staff_database_df,
+                required_level=required_level_dict
+            )
+            shift_schedule = shift_operator.assign_shifts()
+        except Exception as e:
+            import traceback
+            print("ShiftOperator failed:", e)
+            traceback.print_exc()
+            return {"error": str(e)}, 500
+    else:
+        return None
     # --- Step 4: Return results as JSON-like dict ---
     # Convert predicted staff level (from ML model) to list of dicts
     pred_df_final_end_point = pred_df.to_dict(orient="records")
@@ -289,7 +301,7 @@ def shift():
     
     
     # Return both shift schedule and prediction to frontend
-    return ({
+    return jsonify({
         "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
         "prediction": pred_df_final_end_point                        # Staff requirement prediction
     }),200

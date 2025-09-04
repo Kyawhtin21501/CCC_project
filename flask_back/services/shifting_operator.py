@@ -9,7 +9,7 @@ class ShiftOperator:
         self.shift_preferences = shift_preferences  # Staff shift preferences (from UI)
         self.staff_dataBase = staff_dataBase        # Staff profile data (e.g., level, status)
         self.required_level = required_level        # Required staff level per shift (predicted)
-        self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data'))
+        self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data/data_for_dashboard'))
         # Define shift time ranges
         self.time_map = {
             "morning": list(range(9, 14)),      # 9:00 to 13:59
@@ -103,7 +103,7 @@ class ShiftOperator:
             if var.value() == 1:  # Assigned
                 _, staff_id, date, shift = key.split("_", 3)
                 match_row = final_df[
-                    (final_df["ID"] == int(staff_id)) & (final_df["date"] == date)
+                    (final_df["ID"].astype(str) == str(staff_id)) & (final_df["date"].astype(str) == str(date))
                 ].iloc[0]
                 results.append({
                     "staff_id": staff_id,
@@ -121,7 +121,7 @@ class ShiftOperator:
         #results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
         #print("shift---------------------")
         #print(results_df)
-        dishboard_pred_path = os.path.join(self.display_dir, 'shift_data_base.csv')
+        dishboard_pred_path = os.path.join(self.display_dir, 'temporary_shift_database_for_dashboard.csv')
         print(f"Saving results to: {dishboard_pred_path}")
         print(results_df.head())  # データ確認
         try:
