@@ -142,7 +142,7 @@ def get_shift_table_dashboard():
         return jsonify({"error": str(e)}), 500
 
 #////data end point for pred_sale in dashboard
-@app.route('/pred_sale/dashboard', methods=['GET' or 'POST'])
+@app.route('/pred_sale/dashboard', methods=['GET' , 'POST'])
 def get_pred_sale_dashboard():
     """
     Endpoint to retrieve the predicted sales data for the dashboard.
@@ -244,19 +244,21 @@ def shift():
     # Predict sales and required staff levels
     pred_df = creator.pred_from_model(start, end, festivals, weather_df)
     result_df = creator.pred_staff_count(pred_df)
+    
+
     # Get required staff level by hour for each day
     print("----------------------------pred_df----------------------------")
     #pprint(type(result_df))
     # --- Step 2: Load staff preferences and staff profile info ---
-  
-    base_dir = os.path.dirname(os.path.dirname(__file__))  # one folder up from flask_back
-    data_path_preferences = os.path.join(base_dir, "../data", "shift_preferences.csv")
-    data_path_staff_db = os.path.join(base_dir, "../data", "staff_database.csv")
+    
+    #base_dir = os.path.dirname(os.path.dirname(__file__))  
+    data_path_preferences = os.path.join(BASE_DIR, "data", "shift_preferences.csv")
+    data_path_staff_db = os.path.join(BASE_DIR, "data", "staff_database.csv")
+
     #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
     # Check if files exist
-    if not os.path.exists(data_path_preferences) or not os.path.exists(data_path_staff_db):
-        return {"error": "Required data files not found."}
     
+    print("data colect ok")
     # Load CSVs
     shift_preferences_df = pd.read_csv(data_path_preferences)
     staff_database_df = pd.read_csv(data_path_staff_db)
@@ -264,15 +266,20 @@ def shift():
     
     #pprint(result_df["predicted_staff_level"])
     # --- Step 3: Run shift optimization (LP) ---
-    shift_operator = ShiftOperator(
-        shift_preferences=shift_preferences_df,
-        staff_dataBase=staff_database_df,
-        required_level=result_df[["predicted_staff_level"]]# Convert to dict for easy access
-    )
-    shift_schedule = shift_operator.assign_shifts()
-
-    # Convert result to DataFrame for easier formatting
     
+
+    try:
+        shift_operator = ShiftOperator(
+            shift_preferences=shift_preferences_df,
+            staff_dataBase=staff_database_df,
+            required_level=result_df["predicted_staff_level"].to_dict()
+        )
+        shift_schedule = shift_operator.assign_shifts()
+    except Exception as e:
+        import traceback
+        print("ShiftOperator failed:", e)
+        traceback.print_exc()
+        return {"error": str(e)}, 500
 
     # --- Step 4: Return results as JSON-like dict ---
     # Convert predicted staff level (from ML model) to list of dicts

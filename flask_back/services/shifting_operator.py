@@ -9,7 +9,7 @@ class ShiftOperator:
         self.shift_preferences = shift_preferences  # Staff shift preferences (from UI)
         self.staff_dataBase = staff_dataBase        # Staff profile data (e.g., level, status)
         self.required_level = required_level        # Required staff level per shift (predicted)
-        self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data/data_for_dashboard'))
+        self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data'))
         # Define shift time ranges
         self.time_map = {
             "morning": list(range(9, 14)),      # 9:00 to 13:59
@@ -118,7 +118,22 @@ class ShiftOperator:
         results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
         print("shift---------------------")
         print(results_df)
-        from pulp import LpProblem, LpVariable, LpMaximize, lpSum
+        #results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
+        #print("shift---------------------")
+        #print(results_df)
+        dishboard_pred_path = os.path.join(self.display_dir, 'shift_data_base.csv')
+        print(f"Saving results to: {dishboard_pred_path}")
+        print(results_df.head())  # データ確認
+        try:
+            results_df.to_csv(dishboard_pred_path, index=False)
+            print("File saved successfully!")
+        except Exception as e:
+            print(f"Failed to save CSV: {e}")
+
+        
+        return results_df
+"""
+from pulp import LpProblem, LpVariable, LpMaximize, lpSum
 import pandas as pd
 import os
 from pprint import pprint
@@ -234,17 +249,8 @@ class ShiftOperator:
                     "level": match_row["Level"],
               
                 })
+    """
         
-        results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
-        print("shift---------------------")
-        print(results_df)
-        dishboard_pred_path = os.path.join(self.display_dir, 'temporary_shift_database_for_dashboard.csv')
-        try:
-            results_df.to_csv(dishboard_pred_path, index=False)
-        except Exception as e:
-            print(f"Failed to save CSV: {e}")
-
-        return results_df
         
             
         
