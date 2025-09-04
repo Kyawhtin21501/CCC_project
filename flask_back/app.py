@@ -266,7 +266,7 @@ def shift():
     shift_preferences_df = pd.read_csv(data_path_preferences)
     staff_database_df = pd.read_csv(data_path_staff_db)
       # Convert to DataFrame for easier manipulation
-    
+ 
     #pprint(result_df["predicted_staff_level"])
     # --- Step 3: Run shift optimization (LP) ---
     result_df = pd.DataFrame(result_df)
@@ -411,6 +411,7 @@ def delete_staff(staff_id):
 # ---------------------------------------
 @app.route('/services/staff/search', methods=['GET'])
 def search_staff():
+    
     term = request.args.get("term")
     by = request.args.get("by", "ID")  # Default search by ID
     try:

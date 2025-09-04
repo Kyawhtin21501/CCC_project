@@ -161,7 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text("ダッシュボード"),
         actions: [
@@ -258,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: crossAxisCount,
-                    childAspectRatio: 4.2,
+                    childAspectRatio: 2.2,
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
                     children: [
@@ -267,7 +267,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _buildNumberField(customerController, 'Customer'),
                       _buildNumberField(
                           staffCountController, 'Number of Staff'),
-                      _buildStaffMultiSelect(),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _buildStaffMultiSelect()),
                       _buildEventDropdown(),
                     ],
                   );
@@ -377,6 +379,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .toList(),
         title: const Text("Select Staff"),
         selectedColor: Colors.blueAccent,
+      itemsTextStyle: TextStyle(
+          color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+              ? Colors.white
+              : Colors.black,
+        ),
         buttonText: const Text("Select"),
         initialValue: selectedStaffNames,
         onConfirm: (values) {
@@ -385,7 +392,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
         chipDisplay: MultiSelectChipDisplay(
-          
+          chipColor: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+              ? Colors.blue.shade700
+              : Colors.blue.shade200,
           items: selectedStaffNames
               .map((name) => MultiSelectItem<String>(name, name))
               .toList(),

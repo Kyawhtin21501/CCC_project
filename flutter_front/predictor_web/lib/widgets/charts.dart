@@ -159,18 +159,69 @@ class ShiftChartWidget extends StatelessWidget {
   }
 }
 
+
+
 class SalesPredictionChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> salesData;
   const SalesPredictionChartWidget({super.key, required this.salesData});
+
+  /// Aggregate sales by day (average per day)
+  List<Map<String, dynamic>> _aggregateSales(List<Map<String, dynamic>> data) {
+    Map<String, double> dailySales = {};
+    Map<String, int> dailyCount = {};
+
+    for (var item in data) {
+      final date = item["date"].substring(0, 10); // yyyy-MM-dd
+      final sales = (item["predicted_sales"] ?? 0).toDouble();
+
+      dailySales[date] = (dailySales[date] ?? 0) + sales;
+      dailyCount[date] = (dailyCount[date] ?? 0) + 1;
+    }
+
+    // Average sales per day
+    List<Map<String, dynamic>> aggregated = dailySales.keys.map((date) {
+      return {
+        "date": date,
+        "predicted_sales": dailySales[date]! / dailyCount[date]!,
+      };
+    }).toList();
+
+    // Sort by date
+    aggregated.sort(
+        (a, b) => DateTime.parse(a["date"]).compareTo(DateTime.parse(b["date"])));
+
+    return aggregated;
+  }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isMobile = constraints.maxWidth < 600;
-        bool isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+        bool isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
 
         double chartHeight = isMobile ? 200 : isTablet ? 250 : 350;
+
+        // Aggregate data
+        final aggregatedData = _aggregateSales(salesData);
+
+        // Base date for x-axis
+        final startDate = DateTime.parse(aggregatedData.first["date"]);
+        final totalDays = DateTime.parse(aggregatedData.last["date"])
+            .difference(startDate)
+            .inDays;
+
+        // Spots
+        List<FlSpot> spots = aggregatedData.map((data) {
+          final date = DateTime.parse(data["date"]);
+          final x = date.difference(startDate).inDays.toDouble();
+          final y = (data["predicted_sales"] ?? 0).toDouble();
+          return FlSpot(x, y);
+        }).toList();
+
+        // Dynamic step for bottom titles (avoid clutter)
+        int step = (totalDays ~/ 6).clamp(1, 7);
 
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -180,14 +231,14 @@ class SalesPredictionChartWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("売上予測表",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 SizedBox(
                   height: chartHeight,
                   child: LineChart(
                     LineChartData(
-                      gridData:
-                          FlGridData(show: true, horizontalInterval: 5000),
+                      gridData: FlGridData(show: true, horizontalInterval: 5000),
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
@@ -201,14 +252,11 @@ class SalesPredictionChartWidget extends StatelessWidget {
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 40,
+                            interval: step.toDouble(),
                             getTitlesWidget: (value, meta) {
-                              int index = value.toInt();
-                              if (index >= 0 && index < salesData.length) {
-                                DateTime date = DateTime.parse(
-                                    salesData[index]["date"]);
-                                return Text("${date.month}/${date.day}");
-                              }
-                              return const SizedBox(width: 30);
+                              final date = startDate
+                                  .add(Duration(days: value.toInt()));
+                              return Text("${date.month}/${date.day}");
                             },
                           ),
                         ),
@@ -222,17 +270,12 @@ class SalesPredictionChartWidget extends StatelessWidget {
                       // Line Chart
                       lineBarsData: [
                         LineChartBarData(
-                          isCurved: true,
-                          spots: List.generate(salesData.length, (index) {
-                            final sales =
-                                salesData[index]["predicted_sales"] ?? 0;
-                            return FlSpot(
-                                index.toDouble(), sales.toDouble());
-                          }),
+                          isCurved: false, // 👈 straight line
+                          spots: spots,
                           color: Colors.redAccent,
-                          dotData: FlDotData(show: false),
+                          dotData: FlDotData(show: true),
                           isStrokeCapRound: true,
-                          barWidth: 3,
+                          barWidth: 2,
                         ),
                       ],
 
@@ -241,11 +284,11 @@ class SalesPredictionChartWidget extends StatelessWidget {
                         touchTooltipData: LineTouchTooltipData(
                           getTooltipItems: (touchedSpots) {
                             return touchedSpots.map((spot) {
-                              final date =
-                                  salesData[spot.x.toInt()]["date"] ?? "";
+                              final date = startDate
+                                  .add(Duration(days: spot.x.toInt()));
                               final sales = spot.y.toInt();
                               return LineTooltipItem(
-                                "$date\nSales: $sales",
+                                "${date.month}/${date.day}\nSales: $sales",
                                 const TextStyle(color: Colors.white),
                               );
                             }).toList();

@@ -125,8 +125,13 @@ class ShiftOperator:
         print(f"Saving results to: {dishboard_pred_path}")
         print(results_df.head())  # データ確認
         try:
-            results_df.to_csv(dishboard_pred_path, index=False)
-            print("File saved successfully!")
+            if os.path.exists(dishboard_pred_path) and  os.stat(dishboard_pred_path).st_size > 0:
+                results_df.to_csv(dishboard_pred_path, index=False)
+                print("File saved successfully!")
+            else:
+    # ファイルが存在しないか空の場合、新規保存
+                results_df.to_csv(dishboard_pred_path, index=False)
+                print("new")
         except Exception as e:
             print(f"Failed to save CSV: {e}")
 
