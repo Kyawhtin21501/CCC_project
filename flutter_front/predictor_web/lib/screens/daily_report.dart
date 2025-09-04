@@ -377,6 +377,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .toList(),
         title: const Text("Select Staff"),
         selectedColor: Colors.blueAccent,
+      itemsTextStyle: TextStyle(
+          color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+              ? Colors.white
+              : Colors.black,
+        ),
         buttonText: const Text("Select"),
         initialValue: selectedStaffNames,
         onConfirm: (values) {
@@ -385,7 +390,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
         chipDisplay: MultiSelectChipDisplay(
-          
+          chipColor: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+              ? Colors.blue.shade700
+              : Colors.blue.shade200,
           items: selectedStaffNames
               .map((name) => MultiSelectItem<String>(name, name))
               .toList(),
