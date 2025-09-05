@@ -1,5 +1,15 @@
 staff_id,date,shift,level
-1003,2025-09-06,afternoon,3
+1004,2025-09-05,afternoon,3
+1005,2025-09-05,afternoon,4
+1006,2025-09-05,afternoon,4
+1007,2025-09-05,afternoon,2
+1001,2025-09-05,morning,3
+1006,2025-09-05,morning,4
+1002,2025-09-05,night,4
+1004,2025-09-05,night,3
+1005,2025-09-05,night,4
+1007,2025-09-05,night,2
+1001,2025-09-06,afternoon,3
 1004,2025-09-06,afternoon,3
 1005,2025-09-06,afternoon,4
 1006,2025-09-06,afternoon,4
@@ -7,7 +17,7 @@ staff_id,date,shift,level
 1003,2025-09-06,morning,3
 1004,2025-09-06,morning,3
 1007,2025-09-06,morning,2
-1001,2025-09-06,night,3
+1003,2025-09-06,night,3
 1005,2025-09-06,night,4
 1006,2025-09-06,night,4
 1007,2025-09-06,night,2
@@ -27,7 +37,7 @@ staff_id,date,shift,level
 1005,2025-09-08,afternoon,4
 1006,2025-09-08,afternoon,4
 1007,2025-09-08,afternoon,2
-1002,2025-09-08,morning,4
+1001,2025-09-08,morning,3
 1004,2025-09-08,morning,3
 1005,2025-09-08,morning,4
 1007,2025-09-08,morning,2
@@ -55,7 +65,7 @@ staff_id,date,shift,level
 1005,2025-09-10,morning,4
 1006,2025-09-10,morning,4
 1007,2025-09-10,morning,2
-1001,2025-09-10,night,3
+1002,2025-09-10,night,4
 1004,2025-09-10,night,3
 1005,2025-09-10,night,4
 1007,2025-09-10,night,2
