@@ -138,7 +138,7 @@ def get_shift_table_dashboard():
         
         # Convert DataFrame to a list of dictionaries for JSON response
         shift_data = df.to_dict(orient='records')
-        print(shift_data)
+        pprint(shift_data)
         return jsonify(shift_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -274,7 +274,7 @@ def shift():
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
 
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
-        shift_preferences_df = (shift_preferences_df[shift_preferences_df["date"] >= start])
+        #shift_preferences_df = shift_preferences_df["date"].between(start, end)
         if shift_preferences_df.empty:
             print("empty")
             #continue  # or handle it differently
