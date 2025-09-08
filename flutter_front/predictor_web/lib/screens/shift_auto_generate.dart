@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/theme_provider/them.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
 
-/// シフト自動作成画面 (Auto Shift Assignment Screen)
 class ShiftAutoScreen extends StatefulWidget {
   const ShiftAutoScreen({super.key});
 
@@ -15,151 +13,64 @@ class ShiftAutoScreen extends StatefulWidget {
 }
 
 class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
-  DateTime _start = DateTime(DateTime.now().year, 8, 10);
-  DateTime _end = DateTime(DateTime.now().year, 8, 16);
+  DateTime _start = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _end = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 7);
 
   bool _loading = false;
   String? _error;
 
-  final String _baseUrl = 'http://127.0.0.1:5000';
+  List<Map<String, dynamic>> _shiftTable = [];
 
-  Map<DateTime, Map<String, String>> _assign = {};
-
-  /// Call backend to auto-generate shifts
-  Future<void> _createShift() async {
+  /// Load data from API
+  Future<void> _loadShiftTable() async {
     setState(() {
       _loading = true;
       _error = null;
     });
-
-    final String startStr = DateFormat('yyyy-MM-dd').format(_start);
-    final String endStr = DateFormat('yyyy-MM-dd').format(_end);
-
     try {
-      final res = await http.post(
-        Uri.parse('$_baseUrl/shift'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'start_date': startStr,
-          'end_date': endStr,
-          'latitude': 35.6762,
-          'longitude': 139.6503,
-        }),
-      );
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body) as Map<String, dynamic>;
-        final List<dynamic> schedule = (data['shift_schedule'] ?? []) as List;
-
-        final Map<DateTime, Map<String, String>> built = {};
-        for (final row in schedule) {
-          final r = row as Map<String, dynamic>;
-          final String staff = (r['name'] ?? r['name_level'] ?? '-').toString();
-
-          String shift = (r['shift'] ?? '').toString();
-          if (shift.isEmpty) continue;
-          shift = shift[0].toUpperCase() + shift.substring(1).toLowerCase();
-
-          final dt = DateTime.parse(r['date'].toString());
-          final key = DateTime(dt.year, dt.month, dt.day);
-
-          built.putIfAbsent(key, () => {
-                'Morning': '-',
-                'Afternoon': '-',
-                'Night': '-',
-              });
-
-          if (built[key]!.containsKey(shift)) {
-            built[key]![shift] = staff;
-          }
-        }
-
-        setState(() {
-          _assign = built;
-          _loading = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('シフトを取得しました')),
-        );
-        return;
-      }
-
-      // fallback
-      final res2 = await http.get(Uri.parse('$_baseUrl/shift_table/dashboard'));
-      if (res2.statusCode == 200) {
-        final List<dynamic> rows = jsonDecode(res2.body) as List;
-
-        final Map<DateTime, Map<String, String>> built = {};
-        for (final row in rows) {
-          final r = row as Map<String, dynamic>;
-          final dt = DateTime.parse(r['date'].toString());
-          final key = DateTime(dt.year, dt.month, dt.day);
-          final String staff = (r['name_level'] ?? r['name'] ?? '-').toString();
-
-          String shift = (r['shift'] ?? '').toString();
-          shift = shift[0].toUpperCase() + shift.substring(1).toLowerCase();
-
-          built.putIfAbsent(key, () => {
-                'Morning': '-',
-                'Afternoon': '-',
-                'Night': '-',
-              });
-
-          if (built[key]!.containsKey(shift)) {
-            built[key]![shift] = staff;
-          }
-        }
-
-        setState(() {
-          _assign = built;
-          _loading = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ダッシュボード用データから読み込みました')),
-        );
-        return;
-      }
-
+      final data = await ApiService.fetchShiftTableDashboard();
       setState(() {
-        _loading = false;
-        _error = 'バックエンドから取得できませんでした（${res.statusCode}）';
+        _shiftTable = data;
       });
     } catch (e) {
       setState(() {
+        _error = "Error: $e";
+      });
+    } finally {
+      setState(() {
         _loading = false;
-        _error = '通信エラー: $e';
       });
     }
   }
 
-  void _clear() => setState(() => _assign.clear());
+  /// Clear results
+  void _clear() {
+    setState(() {
+      _shiftTable = [];
+      _error = null;
+      _loading = false;
+    });
+  }
 
   void _save() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('保存しました（ダミー）')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('保存機能は未実装です')),
+    );
   }
 
-  Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _start,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) setState(() => _start = picked);
-  }
+  /// Group by date → shift → staff_ids
+  Map<String, Map<String, List<int>>> _groupByDateShift(List<Map<String, dynamic>> data) {
+    final Map<String, Map<String, List<int>>> grouped = {};
+    for (var item in data) {
+      String date = item['date'];
+      String shift = item['shift'];
+      int staffId = item['staff_id'];
 
-  Future<void> _pickEndDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _end,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) setState(() => _end = picked);
+      grouped.putIfAbsent(date, () => {});
+      grouped[date]!.putIfAbsent(shift, () => []);
+      grouped[date]![shift]!.add(staffId);
+    }
+    return grouped;
   }
 
   @override
@@ -168,8 +79,10 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
 
+    final grouped = _groupByDateShift(_shiftTable);
+
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface, // ✅ use theme background
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text("シフト自動作成"),
         actions: [
@@ -193,7 +106,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              /// === Input Card: Shift Conditions ===
+              /// === Input Card ===
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -206,12 +119,6 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                       Text("シフト自動作成",
                           style: theme.textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 10),
-                      Text(
-                        '条件を入力してボタンを押すだけで自動作成',
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(color: theme.hintColor),
-                      ),
                       const SizedBox(height: 30),
 
                       Text("日付範囲",
@@ -220,21 +127,33 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _DateBox(text: df.format(_start), onTap: _pickStartDate),
+                          _DateBox(text: df.format(_start), onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _start,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (picked != null) setState(() => _start = picked);
+                          }),
                           const SizedBox(width: 12),
-                          _DateBox(text: df.format(_end), onTap: _pickEndDate),
+                          _DateBox(text: df.format(_end), onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _end,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (picked != null) setState(() => _end = picked);
+                          }),
                         ],
                       ),
                       const SizedBox(height: 20),
 
                       FilledButton.icon(
-                        onPressed: _createShift,
+                        onPressed: _loadShiftTable,
                         label: const Text('シフト作成'),
                         icon: const Icon(Icons.auto_awesome),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 28, vertical: 14),
-                        ),
                       ),
                     ],
                   ),
@@ -242,7 +161,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
               ),
               const SizedBox(height: 16),
 
-              /// === Output Card: Shift Results ===
+              /// === Output Card ===
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -258,15 +177,10 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                       const SizedBox(height: 12),
 
                       if (_loading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
+                        const Center(child: CircularProgressIndicator())
                       else if (_error != null)
-                        Text(_error!,
-                            style:
-                                theme.textTheme.bodyMedium?.copyWith(color: Colors.red))
-                      else if (_assign.isEmpty)
+                        Text(_error!, style: const TextStyle(color: Colors.red))
+                      else if (_shiftTable.isEmpty)
                         Text("結果なし",
                             style: theme.textTheme.bodyMedium
                                 ?.copyWith(color: theme.hintColor))
@@ -280,21 +194,20 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                               DataColumn(label: Text("Afternoon")),
                               DataColumn(label: Text("Night")),
                             ],
-                            rows: _assign.entries.map((entry) {
+                            rows: grouped.entries.map((entry) {
                               final date = entry.key;
                               final shifts = entry.value;
                               return DataRow(cells: [
-                                DataCell(Text(df.format(date))),
-                                DataCell(Text(shifts["Morning"] ?? "-")),
-                                DataCell(Text(shifts["Afternoon"] ?? "-")),
-                                DataCell(Text(shifts["Night"] ?? "-")),
+                                DataCell(Text(df.format(DateTime.parse(date)))),
+                                DataCell(Text((shifts['morning'] ?? []).join(", "))),
+                                DataCell(Text((shifts['afternoon'] ?? []).join(", "))),
+                                DataCell(Text((shifts['night'] ?? []).join(", "))),
                               ]);
                             }).toList(),
                           ),
                         ),
 
                       const SizedBox(height: 12),
-
                       Row(
                         children: [
                           OutlinedButton(
@@ -316,7 +229,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
   }
 }
 
-/// Date selector box with calendar icon (keeps theme colors)
+/// Date selector box
 class _DateBox extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
