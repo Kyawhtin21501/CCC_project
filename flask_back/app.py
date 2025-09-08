@@ -274,7 +274,7 @@ def shift():
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
 
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
-        #shift_preferences_df = shift_preferences_df["date"].between(start, end)
+        shift_preferences_df = shift_preferences_df["date"].between(start, end)
         if shift_preferences_df.empty:
             print("empty")
             #continue  # or handle it differently
