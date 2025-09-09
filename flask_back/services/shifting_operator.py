@@ -9,7 +9,7 @@ class ShiftOperator:
         self.shift_preferences = shift_preferences  # Staff shift preferences (from UI)
         self.staff_dataBase = staff_dataBase        # Staff profile data (e.g., level, status)
         self.required_level = required_level        # Required staff level per shift (predicted)
-        self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data/data_for_dashboard'))
+        self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data/data_for_dashboard/'))
         # Define shift time ranges
         self.time_map = {
             "morning": list(range(9, 14)),      # 9:00 to 13:59

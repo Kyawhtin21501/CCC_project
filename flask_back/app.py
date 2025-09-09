@@ -221,7 +221,7 @@ def shift():
     result_df = pd.DataFrame(result_df)
     required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
-    dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard" 'temporary_shift_database_for_dashboard.csv')
+    dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard/" 'temporary_shift_database_for_dashboard.csv')
     print("Kyaw Htin Hein")
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
         #shift_preferences_df = shift_preferences_df["date"].between(start, end)
