@@ -13,8 +13,10 @@ class ShiftAutoScreen extends StatefulWidget {
 }
 
 class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
-  DateTime _start = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  DateTime _end = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 7);
+  DateTime _start =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _end =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 7);
 
   bool _loading = false;
   String? _error;
@@ -28,7 +30,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
       _error = null;
     });
     try {
-      final data = await ApiService.fetchShiftTableDashboard();
+      final data = await ApiService.fetchAutoShiftTableDashboard(_start, _end);
       setState(() {
         _shiftTable = data;
       });
@@ -59,12 +61,15 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
   }
 
   /// Group by date → shift → staff_ids
-  Map<String, Map<String, List<int>>> _groupByDateShift(List<Map<String, dynamic>> data) {
+  Map<String, Map<String, List<int>>> _groupByDateShift(
+      List<Map<String, dynamic>> data) {
     final Map<String, Map<String, List<int>>> grouped = {};
     for (var item in data) {
       String date = item['date'];
       String shift = item['shift'];
-      int staffId = item['staff_id'];
+
+      // ✅ Convert staff_id safely
+      int staffId = int.tryParse(item['staff_id'].toString()) ?? 0;
 
       grouped.putIfAbsent(date, () => {});
       grouped[date]!.putIfAbsent(shift, () => []);
@@ -127,25 +132,33 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          _DateBox(text: df.format(_start), onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _start,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2030),
-                            );
-                            if (picked != null) setState(() => _start = picked);
-                          }),
+                          _DateBox(
+                              text: df.format(_start),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _start,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2030),
+                                );
+                                if (picked != null) {
+                                  setState(() => _start = picked);
+                                }
+                              }),
                           const SizedBox(width: 12),
-                          _DateBox(text: df.format(_end), onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _end,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2030),
-                            );
-                            if (picked != null) setState(() => _end = picked);
-                          }),
+                          _DateBox(
+                              text: df.format(_end),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _end,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2030),
+                                );
+                                if (picked != null) {
+                                  setState(() => _end = picked);
+                                }
+                              }),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -179,7 +192,8 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                       if (_loading)
                         const Center(child: CircularProgressIndicator())
                       else if (_error != null)
-                        Text(_error!, style: const TextStyle(color: Colors.red))
+                        Text(_error!,
+                            style: const TextStyle(color: Colors.red))
                       else if (_shiftTable.isEmpty)
                         Text("結果なし",
                             style: theme.textTheme.bodyMedium
@@ -198,10 +212,14 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                               final date = entry.key;
                               final shifts = entry.value;
                               return DataRow(cells: [
-                                DataCell(Text(df.format(DateTime.parse(date)))),
-                                DataCell(Text((shifts['morning'] ?? []).join(", "))),
-                                DataCell(Text((shifts['afternoon'] ?? []).join(", "))),
-                                DataCell(Text((shifts['night'] ?? []).join(", "))),
+                                DataCell(
+                                    Text(df.format(DateTime.parse(date)))),
+                                DataCell(Text(
+                                    (shifts['morning'] ?? []).join(", "))),
+                                DataCell(Text(
+                                    (shifts['afternoon'] ?? []).join(", "))),
+                                DataCell(Text(
+                                    (shifts['night'] ?? []).join(", "))),
                               ]);
                             }).toList(),
                           ),
