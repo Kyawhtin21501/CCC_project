@@ -118,57 +118,6 @@ def save_data():
 example response of shift assignment and sale prediction 
 
 """
-@app.route('/shift_table/dashboard', methods=['GET' , 'POST'])
-def get_shift_table_dashboard():
-    """
-    Endpoint to retrieve the shift table for the dashboard.
-    Returns a JSON response with the shift assignments.
-    """
-    try:
-        # Load the CSV file containing shift assignments
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'temporary_shift_database_for_dashboard.csv')
-        csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
-        csv_path = os.path.abspath(csv_path)
-        
-
-        # Read the CSV into a DataFrame
-        df = pd.read_csv(csv_path)
-        #df_staff = pd.read_csv(csv_path_staff)
-        
-        # Convert DataFrame to a list of dictionaries for JSON response
-        shift_data = df.to_dict(orient='records')
-        pprint(shift_data)
-        return jsonify(shift_data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-#////data end point for pred_sale in dashboard
-@app.route('/pred_sale/dashboard', methods=['GET' , 'POST'])
-def get_pred_sale_dashboard():
-    """
-    Endpoint to retrieve the predicted sales data for the dashboard.
-    Returns a JSON response with the predicted sales.
-    """
-    try:
-        # Load the CSV file containing predicted sales
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'predicted_sales.csv')
-        csv_path = os.path.abspath(csv_path)
-
-        # Read the CSV into a DataFrame
-        df = pd.read_csv(csv_path)
-
-        # Convert DataFrame to a list of dictionaries for JSON response
-        pred_data = df.to_dict(orient='records')
-        
-        return jsonify(pred_data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-
-
-#------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -272,9 +221,11 @@ def shift():
     result_df = pd.DataFrame(result_df)
     required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
-
+    dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard" 'temporary_shift_database_for_dashboard.csv')
+    print("Kyaw Htin Hein")
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
-        shift_preferences_df = shift_preferences_df["date"].between(start, end)
+        #shift_preferences_df = shift_preferences_df["date"].between(start, end)
+        print("final data check" ,shift_preferences_df)
         if shift_preferences_df.empty:
             print("empty")
             #continue  # or handle it differently
@@ -286,6 +237,18 @@ def shift():
                 required_level=required_level_dict
             )
             shift_schedule = shift_operator.assign_shifts()
+            try:
+                if os.path.exists(dishboard_pred_path) and  os.stat(dishboard_pred_path).st_size > 0:
+                    shift_schedule.to_csv(dishboard_pred_path, index=False)
+                    print("File saved successfully!")
+                else:
+    # ファイルが存在しないか空の場合、新規保存
+                    shift_schedule.to_csv(dishboard_pred_path, index=False)
+                    print("new")
+            except Exception as e:
+                    print(f"Failed to save CSV: {e}")
+
+        
         except Exception as e:
             import traceback
             print("ShiftOperator failed:", e)
@@ -312,6 +275,58 @@ def shift():
 
 # ---------------------------------------------------------------------------------------------------------------------------------
 
+
+@app.route('/shift_table/dashboard', methods=['GET' , 'POST'])
+def get_shift_table_dashboard():
+    """
+    Endpoint to retrieve the shift table for the dashboard.
+    Returns a JSON response with the shift assignments.
+    """
+    try:
+        # Load the CSV file containing shift assignments
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'temporary_shift_database_for_dashboard.csv')
+        csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
+        csv_path = os.path.abspath(csv_path)
+        
+
+        # Read the CSV into a DataFrame
+        df = pd.read_csv(csv_path)
+        #df_staff = pd.read_csv(csv_path_staff)
+        
+        # Convert DataFrame to a list of dictionaries for JSON response
+        shift_data = df.to_dict(orient='records')
+        pprint(shift_data)
+        return jsonify(shift_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+#////data end point for pred_sale in dashboard
+@app.route('/pred_sale/dashboard', methods=['GET' , 'POST'])
+def get_pred_sale_dashboard():
+    """
+    Endpoint to retrieve the predicted sales data for the dashboard.
+    Returns a JSON response with the predicted sales.
+    """
+    try:
+        # Load the CSV file containing predicted sales
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'predicted_sales.csv')
+        csv_path = os.path.abspath(csv_path)
+
+        # Read the CSV into a DataFrame
+        df = pd.read_csv(csv_path)
+
+        # Convert DataFrame to a list of dictionaries for JSON response
+        pred_data = df.to_dict(orient='records')
+        
+        return jsonify(pred_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+
+#------------------------------------------------------------------------------------------------------------------------------------
 
 
 

@@ -121,21 +121,10 @@ class ShiftOperator:
         #results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
         #print("shift---------------------")
         #print(results_df)
-        dishboard_pred_path = os.path.join(self.display_dir, 'temporary_shift_database_for_dashboard.csv')
-        print(f"Saving results to: {dishboard_pred_path}")
-        print(results_df.head())  # データ確認
-        try:
-            if os.path.exists(dishboard_pred_path) and  os.stat(dishboard_pred_path).st_size > 0:
-                results_df.to_csv(dishboard_pred_path, index=False)
-                print("File saved successfully!")
-            else:
-    # ファイルが存在しないか空の場合、新規保存
-                results_df.to_csv(dishboard_pred_path, index=False)
-                print("new")
-        except Exception as e:
-            print(f"Failed to save CSV: {e}")
-
         
+        #print(f"Saving results to: {dishboard_pred_path}")
+        print(results_df.head())  # データ確認
+
         return results_df
 """
 from pulp import LpProblem, LpVariable, LpMaximize, lpSum
