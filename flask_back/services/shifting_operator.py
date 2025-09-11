@@ -106,7 +106,7 @@ class ShiftOperator:
                     (final_df["ID"].astype(str) == str(staff_id)) & (final_df["date"].astype(str) == str(date))
                 ].iloc[0]
                 results.append({
-                    "staff_id": staff_id,
+                    "ID": staff_id,
                     "date": date,
                     "shift": shift,
                     #"not_enough_staff":False,
@@ -115,7 +115,7 @@ class ShiftOperator:
               
                 })
         
-        results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
+        results_df = pd.DataFrame(results).sort_values(["date", "shift", "ID"]).reset_index(drop=True)
         print("shift---------------------")
         print(results_df)
         #results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)

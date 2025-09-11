@@ -221,7 +221,7 @@ def shift():
     result_df = pd.DataFrame(result_df)
     required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
-    dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard" 'temporary_shift_database_for_dashboard.csv')
+    dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard/" 'temporary_shift_database_for_dashboard.csv')
     print("Kyaw Htin Hein")
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
         #shift_preferences_df = shift_preferences_df["date"].between(start, end)
@@ -285,7 +285,7 @@ def get_shift_table_dashboard():
     try:
         # Load the CSV file containing shift assignments
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'temporary_shift_database_for_dashboard.csv')
+        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'temporary_shift_database_for_dashboard.csv')
         csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
         csv_path = os.path.abspath(csv_path)
         
@@ -296,8 +296,10 @@ def get_shift_table_dashboard():
         
         # Convert DataFrame to a list of dictionaries for JSON response
         shift_data = df.to_dict(orient='records')
-        pprint(shift_data)
-        return jsonify(shift_data), 200
+        staff_data = pd.read_csv(csv_path_staff).to_dict(orient='records')
+        result = pd.DataFrame(shift_data).merge(pd.DataFrame(staff_data), left_on='ID', right_on='ID', how='left')
+        pprint(result)
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
