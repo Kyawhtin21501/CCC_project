@@ -285,7 +285,7 @@ def get_shift_table_dashboard():
     try:
         # Load the CSV file containing shift assignments
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'temporary_shift_database_for_dashboard.csv')
+        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'temporary_shift_database_for_dashboard.csv')
         csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
         csv_path = os.path.abspath(csv_path)
         
@@ -296,8 +296,10 @@ def get_shift_table_dashboard():
         
         # Convert DataFrame to a list of dictionaries for JSON response
         shift_data = df.to_dict(orient='records')
-        pprint(shift_data)
-        return jsonify(shift_data), 200
+        staff_data = pd.read_csv(csv_path_staff).to_dict(orient='records')
+        result = pd.DataFrame(shift_data).merge(pd.DataFrame(staff_data), left_on='ID', right_on='ID', how='left')
+        pprint(result)
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
