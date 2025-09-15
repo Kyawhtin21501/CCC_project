@@ -230,7 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Icon(Icons.assignment_outlined, color: Colors.blue.shade600),
                   const SizedBox(width: 8),
                   Text(
-                    "Daily Report",
+                    "日報入力",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.blue.shade700,
@@ -263,10 +263,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisSpacing: 20,
                     children: [
                       _buildDatePicker(),
-                      _buildNumberField(salesController, 'Sale'),
-                      _buildNumberField(customerController, 'Customer'),
+                      _buildNumberField(salesController, '売上'),
+                      _buildNumberField(customerController, '来客数'),
                       _buildNumberField(
-                          staffCountController, 'Number of Staff'),
+                          staffCountController, 'スタッフ数'),
                       SizedBox(
                         width: double.infinity,
                         child: _buildStaffMultiSelect()),
@@ -284,13 +284,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   OutlinedButton.icon(
                     onPressed: _clearForm,
                     icon: const Icon(Icons.clear),
-                    label: const Text('Clear'),
+                    label: const Text('クリア'),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: _saveDataAndRefresh,
                     icon: const Icon(Icons.save, color: Colors.white),
-                    label: const Text('Save & Refresh',style: TextStyle(color: Colors.white),),
+                    label: const Text('保存して更新',style: TextStyle(color: Colors.white),),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade600,
                       padding: const EdgeInsets.symmetric(
@@ -313,7 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Date picker field
   Widget _buildDatePicker() {
     return _formFieldWrapper(
-      label: "Date",
+      label: "日付",
       child: TextFormField(
         controller: dateController,
         readOnly: true,
@@ -345,7 +345,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         validator: (value) =>
-            _selectedDate == null ? 'Please select a date' : null,
+            _selectedDate == null ? '日付を選択してください' : null,
       ),
     );
   }
@@ -358,7 +358,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         controller: controller,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          hintText: 'Enter value',
+          hintText: '数値を入力してください',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
         fillColor: //change color for dark mode
@@ -368,7 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) return '$label is required';
-          if (int.tryParse(value) == null) return 'Enter a valid number';
+          if (int.tryParse(value) == null) return '有効な数値を入力してください';
           return null;
         },
       ),
@@ -378,19 +378,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Staff multi-select
   Widget _buildStaffMultiSelect() {
     return _formFieldWrapper(
-      label: "Staff",
+      label: "スタフ",
       child: MultiSelectDialogField<String>(
         items: availableStaffNames
             .map((name) => MultiSelectItem<String>(name, name))
             .toList(),
-        title: const Text("Select Staff"),
+        title: const Text("スタフ選択"),
         selectedColor: Colors.blueAccent,
       itemsTextStyle: TextStyle(
           color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
               ? Colors.white
               : Colors.black,
         ),
-        buttonText: const Text("Select"),
+        buttonText: const Text("選択"),
         initialValue: selectedStaffNames,
         onConfirm: (values) {
           setState(() {
@@ -417,7 +417,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         validator: (values) {
           if (values == null || values.isEmpty) {
-            return 'Please select at least one staff';
+            return 'スタッフを1人以上選択してください';
           }
           return null;
         },
@@ -428,7 +428,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Event dropdown
   Widget _buildEventDropdown() {
     return _formFieldWrapper(
-      label: "Event",
+      label: "イベント",
       child: DropdownButtonFormField<String>(
         value: festivalStatus,
         items: const [
@@ -437,7 +437,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
         onChanged: (value) => setState(() => festivalStatus = value),
         validator: (value) =>
-            value == null ? 'Please select event status' : null,
+            value == null ? 'イベントの有無を選択してください' : null,
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,

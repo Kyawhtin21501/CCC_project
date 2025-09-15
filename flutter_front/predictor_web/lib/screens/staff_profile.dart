@@ -251,7 +251,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text("ダッシュボード"),
+        title: Text("新人スタッフ登録"),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(
@@ -288,13 +289,13 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 20),
-                      _buildTextField(_nameController, 'Name'),
+                      _buildTextField(_nameController, '名前'),
                       const SizedBox(height: 10),
-                      _buildNumberField(_ageController, 'Age', 18, 100),
+                      _buildNumberField(_ageController, '年齢', 18, 100),
                       const SizedBox(height: 10),
-                      _buildNumberField(_levelController, 'Level (1-5)', 1, 5),
+                      _buildNumberField(_levelController, 'レベル(1-5)', 1, 5),
                       const SizedBox(height: 10),
-                      _buildEditEmailField(_emailController, 'Email'),
+                      _buildEditEmailField(_emailController, 'メール'),
                      // _buildTextField(_emailController, 'Email', isEmail: true),
                       const SizedBox(height: 10),
                       _buildGenderDropdown(),
@@ -332,7 +333,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No staff found.'));
+                  return const Center(child: Text('スタフが見つかりません'));
                 }
 
                 final staffNames = snapshot.data!;
@@ -397,28 +398,28 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       context: context,
       builder:
           (_) => AlertDialog(
-            title: Text('Edit Staff ID: $staffId'),
+            title: Text('スタフId Id : $staffId'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildEditField(editName, 'Name'),
+                  _buildEditField(editName, '名前'),
                   const SizedBox(height: 10),
-                  _buildEditNumberField(editAge, 'Age', 18, 100),
+                  _buildEditNumberField(editAge, '年齢', 18, 100),
                   const SizedBox(height: 10),
-                  _buildEditNumberField(editLevel, 'Level (1-5)', 1, 5),
+                  _buildEditNumberField(editLevel, 'レベル (1-5)', 1, 5),
                   const SizedBox(height: 10),
-                  _buildEditField(editEmail, 'Email'),
+                  _buildEditField(editEmail, 'メール'),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     value: gender,
                     decoration: const InputDecoration(
-                      labelText: 'Gender',
+                      labelText: '性別',
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'Male', child: Text('Male')),
-                      DropdownMenuItem(value: 'Female', child: Text('Female')),
+                      DropdownMenuItem(value: '男性', child: Text('男性')),
+                      DropdownMenuItem(value: '女性', child: Text('女性')),
                     ],
                     onChanged: (val) => gender = val!,
                   ),
@@ -443,7 +444,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Leave'),
+                child: const Text('閉じる'),
               ),
               TextButton(
                 onPressed: () async {
@@ -476,7 +477,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                     _showMessage('Error', 'Update failed: $e');
                   }
                 },
-                child: const Text('Update'),
+                child: const Text('保存'),
               ),
             ],
           ),
@@ -497,7 +498,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       ),
       validator:
           (value) =>
-              value == null || value.isEmpty ? 'Please enter $label' : null,
+              value == null || value.isEmpty ? ' $label が必要です' : null,
     );
   }
 
@@ -515,10 +516,10 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         border: const OutlineInputBorder(),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'Please enter $label';
+        if (value == null || value.isEmpty) return ' $label が必要です';
         final number = int.tryParse(value);
         if (number == null || number < min || number > max) {
-          return '$label must be between $min and $max';
+          return '$label は $min と $max の間でなければなりません';
         }
         return null;
       },
@@ -529,13 +530,14 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     return DropdownButtonFormField<String>(
       value: _selectedGender,
       decoration: const InputDecoration(
-        labelText: 'Gender',
+        labelText: '性別',
         border: OutlineInputBorder(),
       ),
-      items: const [
-        DropdownMenuItem(value: 'Male', child: Text('Male')),
-        DropdownMenuItem(value: 'Female', child: Text('Female')),
-      ],
+   items: const [
+  DropdownMenuItem(value: 'Male', child: Text('男性')),
+  DropdownMenuItem(value: 'Female', child: Text('女性')),
+],
+
       onChanged: (value) => setState(() => _selectedGender = value!),
     );
   }
@@ -544,7 +546,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     return DropdownButtonFormField<String>(
       value: _selectedStatus,
       decoration: const InputDecoration(
-        labelText: 'Status',
+        labelText: 'ステータス',
         border: OutlineInputBorder(),
       ),
       items: const [
@@ -584,7 +586,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       validator: (value) {
         final number = int.tryParse(value ?? '');
         if (number == null || number < min || number > max) {
-          return '$label must be between $min and $max';
+          return '$label は $min と$max の間でなければなりません';
         }
         return null;
       },

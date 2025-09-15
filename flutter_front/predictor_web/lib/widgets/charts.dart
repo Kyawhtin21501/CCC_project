@@ -31,17 +31,17 @@ class ShiftChartWidget extends StatelessWidget {
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _legendItem("Morning", Colors.blueAccent),
-                          _legendItem("Afternoon", Colors.greenAccent),
-                          _legendItem("Night", Colors.orangeAccent),
+                          _legendItem("朝シフト（午前）", Colors.blueAccent),
+                          _legendItem("昼シフト（午後）", Colors.greenAccent),
+                          _legendItem("夜シフト（夜間）", Colors.orangeAccent),
                         ],
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          _legendItem("Morning", Colors.blueAccent),
-                          _legendItem("Afternoon", Colors.greenAccent),
-                          _legendItem("Night", Colors.orangeAccent),
+                          _legendItem("朝シフト（午前）", Colors.blueAccent),
+                          _legendItem("昼シフト（午後）", Colors.greenAccent),
+                          _legendItem("夜シフト（夜間）", Colors.orangeAccent),
                         ],
                       ),
 
@@ -98,7 +98,7 @@ class ShiftChartWidget extends StatelessWidget {
                             final date = shiftSchedule[group.x.toInt()]["date"] ??
                                 "";
                             return BarTooltipItem(
-                              "$date\nStaff: $shift",
+                              "$date\nスタッフ : $shift",
                               const TextStyle(color: Colors.white),
                             );
                           },
@@ -270,7 +270,7 @@ class SalesPredictionChartWidget extends StatelessWidget {
                       // Line Chart
                       lineBarsData: [
                         LineChartBarData(
-                          isCurved: false, // 👈 straight line
+                          isCurved: false, //  straight line
                           spots: spots,
                           color: Colors.redAccent,
                           dotData: FlDotData(show: true),
@@ -288,7 +288,7 @@ class SalesPredictionChartWidget extends StatelessWidget {
                                   .add(Duration(days: spot.x.toInt()));
                               final sales = spot.y.toInt();
                               return LineTooltipItem(
-                                "${date.month}/${date.day}\nSales: $sales",
+                                "${date.month}/${date.day}\nSales: $sales ￥",
                                 const TextStyle(color: Colors.white),
                               );
                             }).toList();
