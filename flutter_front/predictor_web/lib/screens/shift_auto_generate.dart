@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:predictor_web/api_services/api_services.dart';
 import 'package:predictor_web/theme_provider/them.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ShiftAutoScreen extends StatefulWidget {
   const ShiftAutoScreen({super.key});
@@ -64,34 +65,31 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
   }
 
   /// Group by date → shift → staff list (id + name)
-/// Group by date → shift → staff list (id + name)
-Map<String, Map<String, List<Map<String, dynamic>>>> _groupByDateShift(
-    List<Map<String, dynamic>> data) {
-  final Map<String, Map<String, List<Map<String, dynamic>>>> grouped = {};
+  Map<String, Map<String, List<Map<String, dynamic>>>> _groupByDateShift(
+      List<Map<String, dynamic>> data) {
+    final Map<String, Map<String, List<Map<String, dynamic>>>> grouped = {};
 
-  for (var item in data) {
-    String date = item['date'].toString();
-    String shift = item['shift'].toString();
+    for (var item in data) {
+      String date = item['date'].toString();
+      String shift = item['shift'].toString();
 
-    // ✅ Use correct keys: "ID" and "Name"
-    int staffId = int.tryParse(item['ID'].toString()) ?? 0;
-    String staffName = item['Name']?.toString() ?? 'Unknown';
+      int staffId = int.tryParse(item['ID'].toString()) ?? 0;
+      String staffName = item['Name']?.toString() ?? 'Unknown';
 
-    if (staffId == 0) continue;
+      if (staffId == 0) continue;
 
-    grouped.putIfAbsent(date, () => {});
-    grouped[date]!.putIfAbsent(shift, () => []);
+      grouped.putIfAbsent(date, () => {});
+      grouped[date]!.putIfAbsent(shift, () => []);
 
-    grouped[date]![shift]!.add({
-      "ID": staffId,
-      "Name": staffName,
-    });
+      grouped[date]![shift]!.add({
+        "ID": staffId,
+        "Name": staffName,
+      });
+    }
+
+    print("✅ Grouped data: $grouped"); // debug
+    return grouped;
   }
-
-  print("✅ Grouped data: $grouped"); // debug
-  return grouped;
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -205,47 +203,27 @@ Map<String, Map<String, List<Map<String, dynamic>>>> _groupByDateShift(
                       const SizedBox(height: 12),
 
                       if (_loading)
-                        const Center(child: CircularProgressIndicator())
+                        _buildShimmerPlaceholder()
                       else if (_error != null)
-                        Text(_error!,
-                            style: const TextStyle(color: Colors.red))
+                        Text(_error!, style: const TextStyle(color: Colors.red))
                       else if (_shiftTable.isEmpty)
                         Text("結果なし",
                             style: theme.textTheme.bodyMedium
                                 ?.copyWith(color: theme.hintColor))
                       else
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text("Date")),
-                              DataColumn(label: Text("Morning")),
-                              DataColumn(label: Text("Afternoon")),
-                              DataColumn(label: Text("Night")),
-                            ],
-                            rows: grouped.entries.map((entry) {
-                              final date = entry.key;
-                              final shifts = entry.value;
-
-                              String formatNames(List<Map<String, dynamic>>? staffList) {
-  if (staffList == null || staffList.isEmpty) return "-";
-  return staffList.map((s) => s["Name"]).join(", ");
-}
-
-
-                              return DataRow(cells: [
-                                DataCell(Text(df.format(DateTime.parse(date)))),
-                                DataCell(
-                                    Text(formatNames(shifts["morning"]))),
-                                DataCell(
-                                    Text(formatNames(shifts["afternoon"]))),
-                                DataCell(Text(formatNames(shifts["night"]))),
-                              ]);
-                            }).toList(),
-                          ),
-                        ),
+                        _buildShiftTable(grouped, df),
 
                       const SizedBox(height: 12),
+                      Text("注意:",
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      Text("シフトなし    :スタッフが不足しているか、"
+                          "そのシフトに利用可能なスタッフがいないこと、"
+                          "スタフが希望日まだ記入してないとを意味します。",
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.hintColor)),
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           OutlinedButton(
@@ -262,6 +240,63 @@ Map<String, Map<String, List<Map<String, dynamic>>>> _groupByDateShift(
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Extracted widget for shift table
+  Widget _buildShiftTable(
+      Map<String, Map<String, List<Map<String, dynamic>>>> grouped, DateFormat df) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text("日付")),
+          DataColumn(label: Text("朝シフト（午前）")),
+          DataColumn(label: Text("昼シフト（午後）")),
+          DataColumn(label: Text("夜シフト（夜間）")),
+        ],
+        rows: List.generate(
+          _end.difference(_start).inDays + 1,
+          (i) {
+            final currentDate = _start.add(Duration(days: i));
+            final dateStr = currentDate.toIso8601String().split("T").first;
+
+            final shifts = grouped[dateStr] ?? {};
+
+            String formatNames(List<Map<String, dynamic>>? staffList) {
+              if (staffList == null || staffList.isEmpty) {
+                return "シフトなし";
+              }
+              return staffList.map((s) => s["Name"]).join(", ");
+            }
+
+            return DataRow(cells: [
+              DataCell(Text(df.format(currentDate))),
+              DataCell(Text(formatNames(shifts["morning"]))),
+              DataCell(Text(formatNames(shifts["afternoon"]))),
+              DataCell(Text(formatNames(shifts["night"]))),
+            ]);
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Shimmer placeholder while loading
+  Widget _buildShimmerPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Column(
+        children: List.generate(5, (index) {
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            height: 20,
+            width: double.infinity,
+            color: Colors.white,
+          );
+        }),
       ),
     );
   }
