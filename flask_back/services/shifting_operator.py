@@ -29,8 +29,8 @@ class ShiftOperator:
         print(self.staff_dataBase)
         # Merge preference and staff profile info using ID
         final_df = pd.merge(self.shift_preferences, self.staff_dataBase, on="ID", how="left")
-        
-        print(final_df)
+        print("final data for shift operation")
+        print(final_df.columns)
         # Define Linear Programming problem
         model = LpProblem("Basic_Shift_Assignment", LpMaximize)
 
@@ -105,17 +105,22 @@ class ShiftOperator:
                 match_row = final_df[
                     (final_df["ID"].astype(str) == str(staff_id)) & (final_df["date"].astype(str) == str(date))
                 ].iloc[0]
+                staff_name = final_df[final_df["ID"] == int(staff_id)]["Name_x"].iloc[0]
+
                 results.append({
                     "ID": staff_id,
                     "date": date,
                     "shift": shift,
                     #"not_enough_staff":False,
-                    
+                    "Name": staff_name,
                     "level": match_row["Level"],
               
                 })
         
         results_df = pd.DataFrame(results).sort_values(["date", "shift", "ID"]).reset_index(drop=True)
+        
+       
+        #results_df = results_df.merge(staff_database_df, left_on='
         print("shift---------------------")
         print(results_df)
         #results_df = pd.DataFrame(results).sort_values(["date", "shift", "staff_id"]).reset_index(drop=True)
