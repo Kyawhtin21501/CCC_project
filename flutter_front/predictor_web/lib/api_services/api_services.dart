@@ -70,6 +70,16 @@ print("####################################fetched shift prediction${response.st
         "end_date": formatter.format(end),
       }),
     );
+    //added for debug
+
+    if (kDebugMode) {
+      print(
+          "[ApiService] POST /shift with start: ${formatter.format(start)}, end: ${formatter.format(end)} -> ${response.statusCode}");
+    }
+    //add response body for debug
+    if (kDebugMode) {
+      print("[ApiService] Response body: ${response.body}");
+    }
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> jsonData = jsonDecode(response.body);

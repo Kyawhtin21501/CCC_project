@@ -25,12 +25,15 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
 
   /// Load data from API
   Future<void> _loadShiftTable() async {
+    print("Loading shift table from $_start to $_end");
+
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final data = await ApiService.fetchAutoShiftTableDashboard(_start, _end);
+      print("Fetched shift table: $data");
       setState(() {
         _shiftTable = data;
       });
@@ -60,23 +63,35 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
     );
   }
 
-  /// Group by date → shift → staff_ids
-  Map<String, Map<String, List<int>>> _groupByDateShift(
-      List<Map<String, dynamic>> data) {
-    final Map<String, Map<String, List<int>>> grouped = {};
-    for (var item in data) {
-      String date = item['date'];
-      String shift = item['shift'];
+  /// Group by date → shift → staff list (id + name)
+/// Group by date → shift → staff list (id + name)
+Map<String, Map<String, List<Map<String, dynamic>>>> _groupByDateShift(
+    List<Map<String, dynamic>> data) {
+  final Map<String, Map<String, List<Map<String, dynamic>>>> grouped = {};
 
-      // ✅ Convert staff_id safely
-      int staffId = int.tryParse(item['staff_id'].toString()) ?? 0;
+  for (var item in data) {
+    String date = item['date'].toString();
+    String shift = item['shift'].toString();
 
-      grouped.putIfAbsent(date, () => {});
-      grouped[date]!.putIfAbsent(shift, () => []);
-      grouped[date]![shift]!.add(staffId);
-    }
-    return grouped;
+    // ✅ Use correct keys: "ID" and "Name"
+    int staffId = int.tryParse(item['ID'].toString()) ?? 0;
+    String staffName = item['Name']?.toString() ?? 'Unknown';
+
+    if (staffId == 0) continue;
+
+    grouped.putIfAbsent(date, () => {});
+    grouped[date]!.putIfAbsent(shift, () => []);
+
+    grouped[date]![shift]!.add({
+      "ID": staffId,
+      "Name": staffName,
+    });
   }
+
+  print("✅ Grouped data: $grouped"); // debug
+  return grouped;
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -211,15 +226,20 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                             rows: grouped.entries.map((entry) {
                               final date = entry.key;
                               final shifts = entry.value;
+
+                              String formatNames(List<Map<String, dynamic>>? staffList) {
+  if (staffList == null || staffList.isEmpty) return "-";
+  return staffList.map((s) => s["Name"]).join(", ");
+}
+
+
                               return DataRow(cells: [
+                                DataCell(Text(df.format(DateTime.parse(date)))),
                                 DataCell(
-                                    Text(df.format(DateTime.parse(date)))),
-                                DataCell(Text(
-                                    (shifts['morning'] ?? []).join(", "))),
-                                DataCell(Text(
-                                    (shifts['afternoon'] ?? []).join(", "))),
-                                DataCell(Text(
-                                    (shifts['night'] ?? []).join(", "))),
+                                    Text(formatNames(shifts["morning"]))),
+                                DataCell(
+                                    Text(formatNames(shifts["afternoon"]))),
+                                DataCell(Text(formatNames(shifts["night"]))),
                               ]);
                             }).toList(),
                           ),

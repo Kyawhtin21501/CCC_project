@@ -94,7 +94,7 @@ class ShiftChartWidget extends StatelessWidget {
                         touchTooltipData: BarTouchTooltipData(
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             final shift =
-                                shiftSchedule[group.x.toInt()]["staff_id"] ?? "";
+                                shiftSchedule[group.x.toInt()]["Name"] ?? "";
                             final date = shiftSchedule[group.x.toInt()]["date"] ??
                                 "";
                             return BarTooltipItem(

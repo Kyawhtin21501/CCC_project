@@ -320,7 +320,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: //change color for dark mode
+              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade50,
           hintText: 'yyyy/mm/dd',
           suffixIcon: IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -358,7 +361,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           hintText: 'Enter value',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.grey.shade50,
+        fillColor: //change color for dark mode
+              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade50,
         ),
         validator: (value) {
           if (value == null || value.isEmpty) return '$label is required';
@@ -395,6 +401,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           chipColor: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
               ? Colors.blue.shade700
               : Colors.blue.shade200,
+              textStyle: TextStyle(
+                color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
           items: selectedStaffNames
               .map((name) => MultiSelectItem<String>(name, name))
               .toList(),
@@ -430,7 +441,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.grey.shade50,
+        fillColor: //change color for dark mode
+              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade50,
         ),
       ),
     );

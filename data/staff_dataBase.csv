@@ -8,5 +8,6 @@ ID,Name,Level,Gender,Age,Email,status
 1007,fff,2,Male,20,fff@gmail.com,high_school_student
 1008,ggg,3,Female,22,ggg@gmail.com,international_student
 1009,hhh,3,Female,26,fff@gmail.com,Full Time
-1010,iii,4 ,Female,28,iii@gmail.com,Part Time
+1010,iii,4,Female,28,iii@gmail.com,Part Time
 1011,jjj,2,Male,21,jjj@gmail.come,high_school_student
+1012,JJK,5,Male,28,jkk@gmail.com,Full Time

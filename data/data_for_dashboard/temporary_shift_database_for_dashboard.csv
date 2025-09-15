@@ -1,76 +1,36 @@
 ID,date,shift,Name,level
-1004,2025-09-05,afternoon,aaa,3
-1005,2025-09-05,afternoon,bbb,4
-1006,2025-09-05,afternoon,ccc,4
-1007,2025-09-05,afternoon,fff,2
-1001,2025-09-05,morning,Kyaw Htin Hein,3
-1006,2025-09-05,morning,ccc,4
-1002,2025-09-05,night,Yan Shinn Shein,4
-1004,2025-09-05,night,aaa,3
-1005,2025-09-05,night,bbb,4
-1007,2025-09-05,night,fff,2
-1003,2025-09-06,afternoon,Kyi Pyar Hlaing,3
-1004,2025-09-06,afternoon,aaa,3
-1005,2025-09-06,afternoon,bbb,4
-1006,2025-09-06,afternoon,ccc,4
-1002,2025-09-06,morning,Yan Shinn Shein,4
-1004,2025-09-06,morning,aaa,3
-1007,2025-09-06,morning,fff,2
-1001,2025-09-06,night,Kyaw Htin Hein,3
-1005,2025-09-06,night,bbb,4
-1006,2025-09-06,night,ccc,4
-1007,2025-09-06,night,fff,2
-1004,2025-09-07,afternoon,aaa,3
-1005,2025-09-07,afternoon,bbb,4
-1006,2025-09-07,afternoon,ccc,4
-1007,2025-09-07,afternoon,fff,2
-1004,2025-09-07,morning,aaa,3
-1006,2025-09-07,morning,ccc,4
-1007,2025-09-07,morning,fff,2
-1004,2025-09-07,night,aaa,3
-1005,2025-09-07,night,bbb,4
-1006,2025-09-07,night,ccc,4
-1007,2025-09-07,night,fff,2
-1004,2025-09-08,afternoon,aaa,3
-1005,2025-09-08,afternoon,bbb,4
-1006,2025-09-08,afternoon,ccc,4
-1007,2025-09-08,afternoon,fff,2
-1001,2025-09-08,morning,Kyaw Htin Hein,3
-1004,2025-09-08,morning,aaa,3
-1005,2025-09-08,morning,bbb,4
-1007,2025-09-08,morning,fff,2
-1001,2025-09-08,night,Kyaw Htin Hein,3
-1005,2025-09-08,night,bbb,4
-1006,2025-09-08,night,ccc,4
-1004,2025-09-09,afternoon,aaa,3
-1005,2025-09-09,afternoon,bbb,4
-1006,2025-09-09,afternoon,ccc,4
-1007,2025-09-09,afternoon,fff,2
-1003,2025-09-09,morning,Kyi Pyar Hlaing,3
-1004,2025-09-09,morning,aaa,3
-1006,2025-09-09,morning,ccc,4
-1004,2025-09-09,night,aaa,3
-1005,2025-09-09,night,bbb,4
-1006,2025-09-09,night,ccc,4
-1007,2025-09-09,night,fff,2
-1004,2025-09-10,afternoon,aaa,3
-1005,2025-09-10,afternoon,bbb,4
-1006,2025-09-10,afternoon,ccc,4
-1007,2025-09-10,afternoon,fff,2
-1003,2025-09-10,morning,Kyi Pyar Hlaing,3
-1005,2025-09-10,morning,bbb,4
-1006,2025-09-10,morning,ccc,4
-1007,2025-09-10,morning,fff,2
-1001,2025-09-10,night,Kyaw Htin Hein,3
-1004,2025-09-10,night,aaa,3
-1005,2025-09-10,night,bbb,4
-1007,2025-09-10,night,fff,2
-1002,2025-09-12,afternoon,Yan Shinn Shein,4
-1003,2025-09-12,afternoon,Kyi Pyar Hlaing,3
-1004,2025-09-12,afternoon,aaa,3
-1005,2025-09-12,afternoon,bbb,4
-1002,2025-09-12,morning,Yan Shinn Shein,4
-1004,2025-09-12,morning,aaa,3
-1002,2025-09-12,night,Yan Shinn Shein,4
-1003,2025-09-12,night,Kyi Pyar Hlaing,3
-1005,2025-09-12,night,bbb,4
+1006,2025-09-18,afternoon,ccc,4
+1009,2025-09-18,afternoon,hhh,3
+1010,2025-09-18,afternoon,iii,4
+1011,2025-09-18,afternoon,jjj,2
+1003,2025-09-18,morning,Kyi Pyar Hlaing,3
+1007,2025-09-18,morning,fff,2
+1011,2025-09-18,morning,jjj,2
+1006,2025-09-18,night,ccc,4
+1007,2025-09-18,night,fff,2
+1009,2025-09-18,night,hhh,3
+1011,2025-09-18,night,jjj,2
+1002,2025-09-19,afternoon,Yan Shinn Shein,4
+1004,2025-09-19,afternoon,aaa,3
+1006,2025-09-19,afternoon,ccc,4
+1008,2025-09-19,afternoon,ggg,3
+1001,2025-09-19,morning,Kyaw Htin Hein,3
+1003,2025-09-19,morning,Kyi Pyar Hlaing,3
+1005,2025-09-19,morning,bbb,4
+1007,2025-09-19,morning,fff,2
+1002,2025-09-19,night,Yan Shinn Shein,4
+1005,2025-09-19,night,bbb,4
+1006,2025-09-19,night,ccc,4
+1009,2025-09-19,night,hhh,3
+1006,2025-09-20,afternoon,ccc,4
+1007,2025-09-20,afternoon,fff,2
+1010,2025-09-20,afternoon,iii,4
+1011,2025-09-20,afternoon,jjj,2
+1007,2025-09-20,morning,fff,2
+1009,2025-09-20,morning,hhh,3
+1010,2025-09-20,morning,iii,4
+1011,2025-09-20,morning,jjj,2
+1001,2025-09-20,night,Kyaw Htin Hein,3
+1003,2025-09-20,night,Kyi Pyar Hlaing,3
+1005,2025-09-20,night,bbb,4
+1011,2025-09-20,night,jjj,2

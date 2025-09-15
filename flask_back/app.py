@@ -257,7 +257,7 @@ def shift():
             traceback.print_exc()
             return {"error": str(e)}, 500
     else:
-        return None
+        return jsonify({"error": "No shift preferences found for the given date range"}), 400
     # --- Step 4: Return results as JSON-like dict ---
     # Convert predicted staff level (from ML model) to list of dicts
     pred_df_final_end_point = pred_df.to_dict(orient="records")
