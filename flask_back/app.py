@@ -78,7 +78,7 @@ def staff_list():
 
 
 @app.route('/user_input', methods=['POST'])
-def save_data():
+def save_data():    
     # Get the data submitted by the frontend (usually from Dashboard)
     data = request.get_json()
     
@@ -223,6 +223,7 @@ def shift():
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
     dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard/" 'temporary_shift_database_for_dashboard.csv')
     print("Kyaw Htin Hein")
+    shift_preferences_df = shift_preferences_df[(shift_preferences_df["date"] >= start) & (shift_preferences_df["date"] <= end)]
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
         #shift_preferences_df = shift_preferences_df["date"].between(start, end)
         print("final data check" ,shift_preferences_df)
@@ -238,7 +239,8 @@ def shift():
             )
             shift_schedule = shift_operator.assign_shifts()
             try:
-                if os.path.exists(dishboard_pred_path) and  os.stat(dishboard_pred_path).st_size > 0:
+                if os.path.exists(dishboard_pred_path):
+                    #staff_database_df
                     shift_schedule.to_csv(dishboard_pred_path, index=False)
                     print("File saved successfully!")
                 else:
@@ -296,12 +298,14 @@ def get_shift_table_dashboard():
         
         # Convert DataFrame to a list of dictionaries for JSON response
         shift_data = df.to_dict(orient='records')
-        staff_data = pd.read_csv(csv_path_staff).to_dict(orient='records')
-        result = pd.DataFrame(shift_data).merge(pd.DataFrame(staff_data), left_on='ID', right_on='ID', how='left')
-        pprint(result)
-        return jsonify(result), 200
+        #staff_data = pd.read_csv(csv_path_staff).to_dict(orient='records')
+        #result = pd.DataFrame(shift_data).merge(pd.DataFrame(staff_data), left_on='ID', right_on='ID', how='left')
+        pprint(shift_data)
+        return jsonify(shift_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 
 #////data end point for pred_sale in dashboard
 @app.route('/pred_sale/dashboard', methods=['GET' , 'POST'])

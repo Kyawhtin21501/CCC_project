@@ -62,7 +62,10 @@ def shift():
     result_df = pd.DataFrame(result_df)
     required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
-
+    
+    shift_preferences_df = shift_preferences_df[(shift_preferences_df["date"] >= start) & (shift_preferences_df["date"] <= end)]
+    print("shift_preferences_df")
+    print(shift_preferences_df)
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
         shift_preferences_df = (shift_preferences_df[shift_preferences_df["date"] >= start])
         if shift_preferences_df.empty:
@@ -85,6 +88,8 @@ def shift():
         return None
     # --- Step 4: Return results as JSON-like dict ---
     # Convert predicted staff level (from ML model) to list of dicts
+    print("----------------------------shift_schedule----------------------------")
+    pprint(shift_schedule)
     pred_df_final_end_point = pred_df.to_dict(orient="records")
     pprint("----------------------------pred_df_final_end_point----------------------------")
     pprint(pred_df_final_end_point)
