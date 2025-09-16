@@ -188,7 +188,8 @@ class SalesPredictionChartWidget extends StatelessWidget {
 
     // Sort by date
     aggregated.sort(
-        (a, b) => DateTime.parse(a["date"]).compareTo(DateTime.parse(b["date"])));
+      (a, b) => DateTime.parse(a["date"]).compareTo(DateTime.parse(b["date"])),
+    );
 
     return aggregated;
   }
@@ -197,11 +198,9 @@ class SalesPredictionChartWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        bool isMobile = constraints.maxWidth < 600;
-        bool isTablet =
-            constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
-
-        double chartHeight = isMobile ? 200 : isTablet ? 250 : 350;
+        // Dynamically scale chart height (20% of available height, min 200, max 400)
+        double chartHeight = (constraints.maxHeight * 0.2)
+            .clamp(200.0, 400.0);
 
         // Aggregate data
         final aggregatedData = _aggregateSales(salesData);
@@ -219,6 +218,11 @@ class SalesPredictionChartWidget extends StatelessWidget {
           final y = (data["predicted_sales"] ?? 0).toDouble();
           return FlSpot(x, y);
         }).toList();
+
+        // Find max sales for dynamic Y range
+        final double maxSales =
+            spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+        final double maxY = maxSales * 1.1; // add 10% headroom
 
         // Dynamic step for bottom titles (avoid clutter)
         int step = (totalDays ~/ 6).clamp(1, 7);
@@ -238,7 +242,10 @@ class SalesPredictionChartWidget extends StatelessWidget {
                   height: chartHeight,
                   child: LineChart(
                     LineChartData(
-                      gridData: FlGridData(show: true, horizontalInterval: 5000),
+                      gridData: FlGridData(show: false), // no background lines
+                      maxY: maxY,
+
+                      // Axes
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
@@ -270,10 +277,10 @@ class SalesPredictionChartWidget extends StatelessWidget {
                       // Line Chart
                       lineBarsData: [
                         LineChartBarData(
-                          isCurved: false, //  straight line
+                          isCurved: false, // straight line
                           spots: spots,
-                          color: Colors.redAccent,
-                          dotData: FlDotData(show: true),
+                          color: Colors.blueAccent,
+                          dotData: FlDotData(show: false),
                           isStrokeCapRound: true,
                           barWidth: 2,
                         ),
