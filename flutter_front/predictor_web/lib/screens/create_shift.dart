@@ -220,18 +220,10 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
                                   onPressed: () =>
                                       _saveShiftPreferences(staff),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        theme.colorScheme.primary,
-                                    foregroundColor:
-                                        theme.colorScheme.onPrimary,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 10,
-                                    ),
-                                  ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
                                   child: const Text("保存"),
                                 ),
                               ),

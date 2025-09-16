@@ -178,6 +178,11 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
 
                       FilledButton.icon(
                         onPressed: _loadShiftTable,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
                         label: const Text('シフト作成'),
                         icon: const Icon(Icons.auto_awesome),
                       ),
@@ -220,7 +225,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                       const SizedBox(height: 6),
                       Text("シフトなし    :スタッフが不足しているか、"
                           "そのシフトに利用可能なスタッフがいないこと、"
-                          "スタフが希望日まだ記入してないとを意味します。",
+                          "スタフが希望日まだ記入してないことを意味します。",
                           style: theme.textTheme.bodySmall
                               ?.copyWith(color: theme.hintColor)),
                       const SizedBox(height: 20),
@@ -229,8 +234,8 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
                           OutlinedButton(
                               onPressed: _clear, child: const Text('クリア')),
                           const SizedBox(width: 8),
-                          OutlinedButton(
-                              onPressed: _save, child: const Text('保存')),
+                          // OutlinedButton(
+                          //     onPressed: _save, child: const Text('保存')),
                         ],
                       ),
                     ],

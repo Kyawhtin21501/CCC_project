@@ -125,7 +125,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   Future<void> _deleteProfileById(String id) async {
     final intId = int.tryParse(id);
     if (intId == null) {
-      _showMessage('Error', 'Invalid ID. Please enter a valid number.');
+      _showMessage('Error', 'IDが無効です');
       return;
     }
 
@@ -134,7 +134,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       final res = jsonDecode(response.body);
 
       _showMessage(
-        response.statusCode == 200 ? 'Deleted' : 'Error',
+        response.statusCode == 200 ? '削除しました。' : 'Error',
         res['message'] ?? 'No message',
       );
 
@@ -152,17 +152,17 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text('Edit Staff'),
+            title: const Text('スタフ更新'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Enter Staff ID to edit:'),
+                const Text('スタフIDを入力してください:'),
                 const SizedBox(height: 10),
                 TextField(
                   keyboardType: TextInputType.number,
                   onChanged: (value) => enteredId = value,
                   decoration: const InputDecoration(
-                    hintText: 'Staff ID',
+                    hintText: 'スタフID',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -171,19 +171,19 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: const Text('キャンセル'),
               ),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
                   if (enteredId.isEmpty) {
-                    _showMessage('Error', 'ID is required.');
+                    _showMessage('Error', 'ID が必要です');
                     return;
                   }
 
                   final id = int.tryParse(enteredId);
                   if (id == null) {
-                    _showMessage('Error', 'Invalid ID.');
+                    _showMessage('Error', 'ID が無効です');
                     return;
                   }
 
@@ -194,7 +194,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                     _showMessage('Error', 'Fetch failed: $e');
                   }
                 },
-                child: const Text('Edit'),
+                child: const Text('確認'),
               ),
             ],
           ),
@@ -208,17 +208,17 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       context: context,
       builder:
           (_) => AlertDialog(
-            title: Text('Delete $name'),
+            title: Text(' $name を削除しますか？'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Enter the staff ID to confirm deletion:'),
+                const Text('IDを入力して削除を確認してください:'),
                 const SizedBox(height: 10),
                 TextField(
                   keyboardType: TextInputType.number,
                   onChanged: (value) => enteredId = value,
                   decoration: const InputDecoration(
-                    hintText: 'Staff ID',
+                    hintText: 'スタフID',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -227,7 +227,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: const Text('キャンセル'),
               ),
               TextButton(
                 onPressed: () {
@@ -235,10 +235,10 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   if (enteredId.isNotEmpty) {
                     _deleteProfileById(enteredId);
                   } else {
-                    _showMessage('Error', 'ID is required for deletion.');
+                    _showMessage('Error', 'ＩＤ が必要です');
                   }
                 },
-                child: const Text('Delete'),
+                child: const Text('確認'),
               ),
             ],
           ),
@@ -338,8 +338,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
                 final staffNames = snapshot.data!;
                 return ListView.builder(
-                  shrinkWrap: true, // ✅ lets it work inside SingleChildScrollView
-                  physics: const NeverScrollableScrollPhysics(), // ✅ avoid nested scrolling
+                  shrinkWrap: true, // lets it work inside SingleChildScrollView
+                  physics: const NeverScrollableScrollPhysics(), //  avoid nested scrolling
                   itemCount: staffNames.length,
                   itemBuilder: (context, index) {
                     final name = staffNames[index];
@@ -418,8 +418,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: '男性', child: Text('男性')),
-                      DropdownMenuItem(value: '女性', child: Text('女性')),
+                    DropdownMenuItem(value: 'Male', child: Text('男性')),
+  DropdownMenuItem(value: 'Female', child: Text('女性')),
                     ],
                     onChanged: (val) => gender = val!,
                   ),
@@ -427,7 +427,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                   DropdownButtonFormField<String>(
                     value: status,
                     decoration: const InputDecoration(
-                      labelText: 'Status',
+                      labelText: 'ステータス',
                       border: OutlineInputBorder(),
                     ),
                     items: const [
@@ -556,7 +556,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
         DropdownMenuItem(value: 'パートタイム', child: Text('パートタイム')),
       ],
       onChanged: (value) => setState(() => _selectedStatus = value),
-      validator: (value) => value == null ? 'Please select staff status' : null,
+      validator: (value) => value == null ? 'スタフのステータスが必要です' : null,
     );
   }
 
@@ -602,12 +602,12 @@ Widget _buildEditEmailField(TextEditingController controller, String label) {
     ),
     validator: (value) {
       if (value == null || value.isEmpty) {
-        return 'Please enter $label';
+        return ' $label が必要です。';
       }
       // Simple email regex
       final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
       if (!emailRegex.hasMatch(value)) {
-        return 'Please enter a valid email address';
+        return '正しいメールアドレスを入力してください。';
       }
       return null;
     },
