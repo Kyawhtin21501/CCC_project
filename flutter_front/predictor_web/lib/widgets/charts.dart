@@ -9,11 +9,15 @@ class ShiftChartWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Decide layout based on screen width
+        // Responsive breakpoints
         bool isMobile = constraints.maxWidth < 600;
         bool isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
 
         double chartHeight = isMobile ? 200 : isTablet ? 250 : 350;
+
+        // Decide step size dynamically (how often to show dates)
+        int totalDays = shiftSchedule.length;
+        int step = (totalDays ~/ (isMobile ? 4 : isTablet ? 6 : 10)).clamp(1, 7);
 
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -26,7 +30,7 @@ class ShiftChartWidget extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
 
-                // Legend responsive (column for mobile, row for bigger screens)
+                // Legend responsive
                 isMobile
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,26 +69,33 @@ class ShiftChartWidget extends StatelessWidget {
                                 Text('${value.toInt()}:00'),
                           ),
                         ),
-                        rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                        rightTitles:
+                            AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles:
+                            AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 40,
+                            interval: step.toDouble(),
                             getTitlesWidget: (value, meta) {
                               int index = value.toInt();
-                              if (index >= 0 &&
+                              if (index % step == 0 &&
+                                  index >= 0 &&
                                   index < shiftSchedule.length) {
-                                DateTime date = DateTime.parse(
-                                    shiftSchedule[index]["date"]);
+                                DateTime date =
+                                    DateTime.parse(shiftSchedule[index]["date"]);
+
+                                // Rotate if mobile
                                 return Transform.rotate(
-                                  angle: -1,
-                                  child: Text("${date.month}/${date.day}"),
+                                  angle: isMobile ? -0.8 : 0,
+                                  child: Text(
+                                    "${date.month}/${date.day}",
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                 );
                               }
-                              return const SizedBox(width: 30);
+                              return const SizedBox.shrink();
                             },
                           ),
                         ),
@@ -95,8 +106,7 @@ class ShiftChartWidget extends StatelessWidget {
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             final shift =
                                 shiftSchedule[group.x.toInt()]["Name"] ?? "";
-                            final date = shiftSchedule[group.x.toInt()]["date"] ??
-                                "";
+                            final date = shiftSchedule[group.x.toInt()]["date"] ?? "";
                             return BarTooltipItem(
                               "$date\nスタッフ : $shift",
                               const TextStyle(color: Colors.white),
@@ -104,8 +114,7 @@ class ShiftChartWidget extends StatelessWidget {
                           },
                         ),
                       ),
-                      barGroups:
-                          List.generate(shiftSchedule.length, (index) {
+                      barGroups: List.generate(shiftSchedule.length, (index) {
                         final shift = shiftSchedule[index]["shift"];
                         double startHour = shift == "morning"
                             ? 8
@@ -114,12 +123,9 @@ class ShiftChartWidget extends StatelessWidget {
                                 : 18;
                         double endHour = startHour + 4;
                         return BarChartGroupData(
-                         
                           x: index,
-                         
                           barRods: [
                             BarChartRodData(
-                              
                               fromY: startHour,
                               toY: endHour,
                               width: 16,
@@ -158,7 +164,6 @@ class ShiftChartWidget extends StatelessWidget {
     );
   }
 }
-
 
 
 class SalesPredictionChartWidget extends StatelessWidget {
