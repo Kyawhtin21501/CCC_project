@@ -1,59 +1,85 @@
 ID,date,shift,Name,level
-1001,2025-09-04,afternoon,Kyaw Htin Hein,3
-1003,2025-09-04,afternoon,Kyi Pyar Hlaing,3
-1005,2025-09-04,afternoon,bbb,4
-1006,2025-09-04,afternoon,ccc,4
-1002,2025-09-04,morning,Yan Shinn Shein,4
-1004,2025-09-04,morning,aaa,3
-1005,2025-09-04,morning,bbb,4
-1007,2025-09-04,morning,fff,2
-1001,2025-09-04,night,Kyaw Htin Hein,3
-1004,2025-09-04,night,aaa,3
-1006,2025-09-04,night,ccc,4
-1007,2025-09-04,night,fff,2
-1004,2025-09-05,afternoon,aaa,3
-1005,2025-09-05,afternoon,bbb,4
-1006,2025-09-05,afternoon,ccc,4
-1007,2025-09-05,afternoon,fff,2
-1001,2025-09-05,morning,Kyaw Htin Hein,3
-1006,2025-09-05,morning,ccc,4
-1003,2025-09-05,night,Kyi Pyar Hlaing,3
-1004,2025-09-05,night,aaa,3
-1005,2025-09-05,night,bbb,4
-1007,2025-09-05,night,fff,2
-1003,2025-09-06,afternoon,Kyi Pyar Hlaing,3
-1004,2025-09-06,afternoon,aaa,3
-1005,2025-09-06,afternoon,bbb,4
-1006,2025-09-06,afternoon,ccc,4
-1002,2025-09-06,morning,Yan Shinn Shein,4
-1003,2025-09-06,morning,Kyi Pyar Hlaing,3
-1004,2025-09-06,morning,aaa,3
-1007,2025-09-06,morning,fff,2
-1002,2025-09-06,night,Yan Shinn Shein,4
-1005,2025-09-06,night,bbb,4
-1006,2025-09-06,night,ccc,4
-1007,2025-09-06,night,fff,2
-1004,2025-09-07,afternoon,aaa,3
-1005,2025-09-07,afternoon,bbb,4
-1006,2025-09-07,afternoon,ccc,4
-1007,2025-09-07,afternoon,fff,2
-1003,2025-09-07,morning,Kyi Pyar Hlaing,3
-1004,2025-09-07,morning,aaa,3
-1006,2025-09-07,morning,ccc,4
-1007,2025-09-07,morning,fff,2
-1004,2025-09-07,night,aaa,3
-1005,2025-09-07,night,bbb,4
-1006,2025-09-07,night,ccc,4
-1007,2025-09-07,night,fff,2
-1004,2025-09-08,afternoon,aaa,3
-1005,2025-09-08,afternoon,bbb,4
-1006,2025-09-08,afternoon,ccc,4
-1007,2025-09-08,afternoon,fff,2
-1001,2025-09-08,morning,Kyaw Htin Hein,3
-1004,2025-09-08,morning,aaa,3
-1005,2025-09-08,morning,bbb,4
-1007,2025-09-08,morning,fff,2
-1001,2025-09-08,night,Kyaw Htin Hein,3
-1002,2025-09-08,night,Yan Shinn Shein,4
-1005,2025-09-08,night,bbb,4
-1006,2025-09-08,night,ccc,4
+1005,2025-09-16,afternoon,Shimizu Keiko,4
+1011,2025-09-16,afternoon,Okada Ren,2
+1012,2025-09-16,afternoon,Kawasaki Sho,5
+1015,2025-09-16,afternoon,Suzuki Nanami,4
+1005,2025-09-16,morning,Shimizu Keiko,4
+1009,2025-09-16,morning,Nakamura Haruna,3
+1015,2025-09-16,morning,Suzuki Nanami,4
+1016,2025-09-16,morning,Yoshida Kaito,2
+1006,2025-09-16,night,Takahashi Daiki,4
+1007,2025-09-16,night,Matsuda Kenta,2
+1009,2025-09-16,night,Nakamura Haruna,3
+1010,2025-09-16,night,Hasegawa Mio,4
+1006,2025-09-17,afternoon,Takahashi Daiki,4
+1007,2025-09-17,afternoon,Matsuda Kenta,2
+1011,2025-09-17,afternoon,Okada Ren,2
+1012,2025-09-17,afternoon,Kawasaki Sho,5
+1004,2025-09-17,morning,Kobayashi Rina,3
+1005,2025-09-17,morning,Shimizu Keiko,4
+1015,2025-09-17,morning,Suzuki Nanami,4
+1020,2025-09-17,morning,Honda Sakura,3
+1006,2025-09-17,night,Takahashi Daiki,4
+1010,2025-09-17,night,Hasegawa Mio,4
+1011,2025-09-17,night,Okada Ren,2
+1015,2025-09-17,night,Suzuki Nanami,4
+1006,2025-09-18,afternoon,Takahashi Daiki,4
+1009,2025-09-18,afternoon,Nakamura Haruna,3
+1010,2025-09-18,afternoon,Hasegawa Mio,4
+1019,2025-09-18,afternoon,Hayashi Riku,3
+1007,2025-09-18,morning,Matsuda Kenta,2
+1010,2025-09-18,morning,Hasegawa Mio,4
+1016,2025-09-18,morning,Yoshida Kaito,2
+1024,2025-09-18,morning,Lisa Müller,4
+1004,2025-09-18,night,Kobayashi Rina,3
+1011,2025-09-18,night,Okada Ren,2
+1012,2025-09-18,night,Kawasaki Sho,5
+1019,2025-09-18,night,Hayashi Riku,3
+1006,2025-09-19,afternoon,Takahashi Daiki,4
+1009,2025-09-19,afternoon,Nakamura Haruna,3
+1011,2025-09-19,afternoon,Okada Ren,2
+1017,2025-09-19,afternoon,Kondo Akira,3
+1004,2025-09-19,morning,Kobayashi Rina,3
+1006,2025-09-19,morning,Takahashi Daiki,4
+1009,2025-09-19,morning,Nakamura Haruna,3
+1015,2025-09-19,morning,Suzuki Nanami,4
+1004,2025-09-19,night,Kobayashi Rina,3
+1005,2025-09-19,night,Shimizu Keiko,4
+1007,2025-09-19,night,Matsuda Kenta,2
+1019,2025-09-19,night,Hayashi Riku,3
+1006,2025-09-20,afternoon,Takahashi Daiki,4
+1009,2025-09-20,afternoon,Nakamura Haruna,3
+1016,2025-09-20,afternoon,Yoshida Kaito,2
+1019,2025-09-20,afternoon,Hayashi Riku,3
+1004,2025-09-20,morning,Kobayashi Rina,3
+1005,2025-09-20,morning,Shimizu Keiko,4
+1007,2025-09-20,morning,Matsuda Kenta,2
+1022,2025-09-20,morning,Sophia Chen,4
+1006,2025-09-20,night,Takahashi Daiki,4
+1009,2025-09-20,night,Nakamura Haruna,3
+1011,2025-09-20,night,Okada Ren,2
+1015,2025-09-20,night,Suzuki Nanami,4
+1004,2025-09-21,afternoon,Kobayashi Rina,3
+1006,2025-09-21,afternoon,Takahashi Daiki,4
+1016,2025-09-21,afternoon,Yoshida Kaito,2
+1017,2025-09-21,afternoon,Kondo Akira,3
+1006,2025-09-21,morning,Takahashi Daiki,4
+1010,2025-09-21,morning,Hasegawa Mio,4
+1017,2025-09-21,morning,Kondo Akira,3
+1019,2025-09-21,morning,Hayashi Riku,3
+1005,2025-09-21,night,Shimizu Keiko,4
+1006,2025-09-21,night,Takahashi Daiki,4
+1007,2025-09-21,night,Matsuda Kenta,2
+1009,2025-09-21,night,Nakamura Haruna,3
+1004,2025-09-22,afternoon,Kobayashi Rina,3
+1006,2025-09-22,afternoon,Takahashi Daiki,4
+1007,2025-09-22,afternoon,Matsuda Kenta,2
+1010,2025-09-22,afternoon,Hasegawa Mio,4
+1006,2025-09-22,morning,Takahashi Daiki,4
+1012,2025-09-22,morning,Kawasaki Sho,5
+1015,2025-09-22,morning,Suzuki Nanami,4
+1019,2025-09-22,morning,Hayashi Riku,3
+1005,2025-09-22,night,Shimizu Keiko,4
+1007,2025-09-22,night,Matsuda Kenta,2
+1016,2025-09-22,night,Yoshida Kaito,2
+1022,2025-09-22,night,Sophia Chen,4
