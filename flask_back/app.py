@@ -8,7 +8,7 @@ from pprint import pprint
 # Get project root (one folder above flask_back)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Centralize CSV paths here
+# Centralize CSV pat
 # PATHS = {
 #     "shift_preferences": os.path.join(BASE_DIR, "data", "shift_preferences.csv"),
 #     "shift_data_base": os.path.join(BASE_DIR, "data", "shift_data_base.csv"),
