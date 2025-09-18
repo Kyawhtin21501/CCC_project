@@ -1,0 +1,464 @@
+import 'package:flutter/material.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:predictor_web/api_services/api_services.dart';
+import 'package:predictor_web/theme_provider/them.dart';
+import 'package:predictor_web/widgets/appdrawer.dart';
+import 'package:predictor_web/widgets/charts.dart';
+import 'package:provider/provider.dart';
+
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  // === Form controllers ===
+  DateTime? _selectedDate;
+  final TextEditingController salesController = TextEditingController();
+  final TextEditingController customerController = TextEditingController();
+  final TextEditingController staffCountController = TextEditingController();
+  final TextEditingController dateController = TextEditingController();
+
+  // === Staff selection ===
+  List<String> availableStaffNames = [];
+  List<String> selectedStaffNames = [];
+
+  // === Event status ===
+  String? festivalStatus;
+
+  // === Loading / error state ===
+  bool _loading = false;
+  String? error;
+
+  // === Cached chart data ===
+  List<Map<String, dynamic>>? _shiftScheduleCache;
+  List<Map<String, dynamic>>? _salesDataCache;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStaffList();
+    _loadChartData();
+  }
+
+  /// Fetch staff list for multi-select
+  Future<void> _loadStaffList() async {
+    try {
+      final staffList = await ApiService.fetchStaffList();
+      setState(() {
+        availableStaffNames = staffList.map((e) => e.toString()).toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('スタッフリスト取得エラー: $e')),
+      );
+    }
+  }
+
+  /// Fetch chart data from backend
+  Future<void> _loadChartData() async {
+    try {
+      final shiftData = await ApiService.fetchShiftTableDashboard();
+      final salesData = await ApiService.getPredSales();
+      setState(() {
+        _shiftScheduleCache = shiftData;
+        _salesDataCache = salesData;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+      });
+    }
+  }
+
+  /// Build payload from form input
+  Map<String, dynamic> _buildPayload() {
+    return {
+      "date": _selectedDate?.toIso8601String().split('T').first ?? '',
+      "day": _selectedDate?.weekday.toString() ?? '',
+      "event": festivalStatus == '1' ? "True" : "False",
+      "customer_count": int.tryParse(customerController.text) ?? 0,
+      "sales": int.tryParse(salesController.text) ?? 0,
+      "staff_names": selectedStaffNames,
+      "staff_count": int.tryParse(staffCountController.text) ?? 0,
+    };
+  }
+
+  /// Ensure staff count matches number of selected names
+  bool _validateStaffCountMatchesNames() {
+    final enteredCount = int.tryParse(staffCountController.text) ?? 0;
+    return enteredCount == selectedStaffNames.length;
+  }
+
+  /// Save data and refresh charts
+  Future<void> _saveDataAndRefresh() async {
+    if (_formKey.currentState!.validate() &&
+        _selectedDate != null &&
+        festivalStatus != null) {
+      if (!_validateStaffCountMatchesNames()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('スタッフ数とスタッフ名の数が一致していません')),
+        );
+        return;
+      }
+
+      final payloadUserInput = _buildPayload();
+
+      try {
+        setState(() => _loading = true);
+        final response = await ApiService.postUserInput(payloadUserInput);
+        setState(() => _loading = false);
+
+        if (response.statusCode != 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('保存エラー (${response.statusCode})')),
+          );
+          return;
+        }
+
+        _clearForm();
+        await _loadChartData();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('データが保存され、最新シフトが取得されました')),
+        );
+      } catch (e) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('通信エラー: $e')),
+        );
+      }
+    }
+  }
+
+  /// Reset form values
+  void _clearForm() {
+    setState(() {
+      _selectedDate = null;
+      salesController.clear();
+      customerController.clear();
+      staffCountController.clear();
+      selectedStaffNames.clear();
+      festivalStatus = null;
+      dateController.clear();
+    });
+  }
+
+  @override
+  void dispose() {
+    salesController.dispose();
+    customerController.dispose();
+    staffCountController.dispose();
+    dateController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text("ダッシュボード"),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () {
+              final isDark = themeProvider.themeMode == ThemeMode.dark;
+              themeProvider.toggleTheme(!isDark);
+            },
+          ),
+        ],
+      ),
+      drawer: AppDrawer(),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildDashboardForm(), // Top Form
+                const SizedBox(height: 20),
+                if (error != null)
+                  Text('Error: $error',
+                      style: const TextStyle(color: Colors.red)),
+
+                // Charts
+                if (_shiftScheduleCache != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ShiftChartWidget(shiftSchedule: _shiftScheduleCache!),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                if (_salesDataCache != null)
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SalesPredictionChartWidget(salesData: _salesDataCache!),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  /// === Daily Report Input Form ===
+  Widget _buildDashboardForm() {
+    final isDesktop = MediaQuery.of(context).size.width > 1024;
+    final horizontalPadding = isDesktop ? 24.0 : 16.0;
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      margin: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 12),
+      child: Padding(
+        padding: EdgeInsets.all(isDesktop ? 32 : 20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // === Title with icon ===
+              Row(
+                children: [
+                  Icon(Icons.assignment_outlined, color: Colors.blue.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    "日報入力",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Divider(thickness: 1, color: Colors.grey.shade300),
+              const SizedBox(height: 16),
+
+              // === Responsive Grid for form fields ===
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int crossAxisCount;
+                  if (constraints.maxWidth < 600) {
+                    crossAxisCount = 1; // mobile
+                  } else if (constraints.maxWidth < 1024) {
+                    crossAxisCount = 2; // tablet
+                  } else {
+                    crossAxisCount = 3; // desktop
+                  }
+
+                  return GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: 2.2,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    children: [
+                      _buildDatePicker(),
+                      _buildNumberField(salesController, '売上'),
+                      _buildNumberField(customerController, '来客数'),
+                      _buildNumberField(
+                          staffCountController, 'スタッフ数'),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _buildStaffMultiSelect()),
+                      _buildEventDropdown(),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // === Buttons ===
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _clearForm,
+                    icon: const Icon(Icons.clear),
+                    label: const Text('クリア'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _saveDataAndRefresh,
+                    icon: const Icon(Icons.save, color: Colors.white),
+                    label: const Text('保存して更新',style: TextStyle(color: Colors.white),),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // === Individual Form Fields ===
+
+  /// Date picker field
+  Widget _buildDatePicker() {
+    return _formFieldWrapper(
+      label: "日付",
+      child: TextFormField(
+        controller: dateController,
+        readOnly: true,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: //change color for dark mode
+              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade50,
+          hintText: 'yyyy/mm/dd',
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (date != null) {
+                setState(() {
+                  _selectedDate = date;
+                  dateController.text =
+                      '${date.year}/${date.month}/${date.day}';
+                });
+              }
+            },
+          ),
+        ),
+        validator: (value) =>
+            _selectedDate == null ? '日付を選択してください' : null,
+      ),
+    );
+  }
+
+  /// Number input field
+  Widget _buildNumberField(TextEditingController controller, String label) {
+    return _formFieldWrapper(
+      label: label,
+      child: TextFormField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          hintText: '数値を入力してください',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+        fillColor: //change color for dark mode
+              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade50,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) return '$label is required';
+          if (int.tryParse(value) == null) return '有効な数値を入力してください';
+          return null;
+        },
+      ),
+    );
+  }
+
+  /// Staff multi-select
+  Widget _buildStaffMultiSelect() {
+    return _formFieldWrapper(
+      label: "スタフ",
+      child: MultiSelectDialogField<String>(
+        items: availableStaffNames
+            .map((name) => MultiSelectItem<String>(name, name))
+            .toList(),
+        title: const Text("スタフ選択"),
+        selectedColor: Colors.blueAccent,
+      itemsTextStyle: TextStyle(
+          color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+              ? Colors.white
+              : Colors.black,
+        ),
+        buttonText: const Text("選択"),
+        initialValue: selectedStaffNames,
+        onConfirm: (values) {
+          setState(() {
+            selectedStaffNames = values;
+          });
+        },
+        chipDisplay: MultiSelectChipDisplay(
+          chipColor: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+              ? Colors.blue.shade700
+              : Colors.blue.shade200,
+              textStyle: TextStyle(
+                color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
+          items: selectedStaffNames
+              .map((name) => MultiSelectItem<String>(name, name))
+              .toList(),
+          onTap: (value) {
+            setState(() {
+              selectedStaffNames.remove(value);
+            });
+          },
+        ),
+        validator: (values) {
+          if (values == null || values.isEmpty) {
+            return 'スタッフを1人以上選択してください';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  /// Event dropdown
+  Widget _buildEventDropdown() {
+    return _formFieldWrapper(
+      label: "イベント",
+      child: DropdownButtonFormField<String>(
+        value: festivalStatus,
+        items: const [
+          DropdownMenuItem(value: '1', child: Text('あり')),
+          DropdownMenuItem(value: '0', child: Text('なし')),
+        ],
+        onChanged: (value) => setState(() => festivalStatus = value),
+        validator: (value) =>
+            value == null ? 'イベントの有無を選択してください' : null,
+        decoration: InputDecoration(
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+        fillColor: //change color for dark mode
+              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade50,
+        ),
+      ),
+    );
+  }
+
+  /// Label + Field Wrapper
+  Widget _formFieldWrapper({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 5),
+        child,
+      ],
+    );
+  }
+}
