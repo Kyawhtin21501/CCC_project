@@ -4,12 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-  static const String baseUrl = "https://your-railway-app.up.railway.app";
+  static const String BASE_URL = "https://your-railway-app.up.railway.app";
  // update for production
 
   // ---- GET staff list ----
   static Future<List<String>> fetchStaffList() async {
-    final response = await http.get(Uri.parse('$baseUrl/staff_list'));
+    final response = await http.get(Uri.parse('$BASE_URL/staff_list'));
     if (kDebugMode) {
       print("[ApiService] GET /staff_list -> ${response.statusCode}");
     }
@@ -24,7 +24,7 @@ class ApiService {
 
   // ---- GET staff by ID ----
   static Future<Map<String, dynamic>> fetchStaffById(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/services/staff/$id'));
+    final response = await http.get(Uri.parse('$BASE_URL/services/staff/$id'));
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -38,7 +38,7 @@ class ApiService {
       print("[ApiService] POST /user_input payload: $payload");
     }
     return await http.post(
-      Uri.parse('$baseUrl/user_input'),
+      Uri.parse('$BASE_URL/user_input'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(payload),
     );
@@ -46,7 +46,7 @@ class ApiService {
 
 //updated shift prediction for  usage in dashboard
   static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
-    final url = Uri.parse("$baseUrl/shift_table/dashboard");
+    final url = Uri.parse("$BASE_URL/shift_table/dashboard");
     final response = await http.get(url);
 print("####################################fetched shift prediction${response.statusCode}#####${response.body}##in api_service.dart###########################################");
     if (response.statusCode == 200) {
@@ -60,7 +60,7 @@ print("####################################fetched shift prediction${response.st
   // ---- POST auto shift generation ----
   static Future<List<Map<String, dynamic>>> fetchAutoShiftTableDashboard(
       DateTime start, DateTime end) async {
-    final url = Uri.parse("$baseUrl/shift");
+    final url = Uri.parse("$BASE_URL/shift");
     final formatter = DateFormat('yyyy-MM-dd');
 
     final response = await http.post(
@@ -92,7 +92,7 @@ print("####################################fetched shift prediction${response.st
 
   // ---- GET predicted sales (dashboard) ----
   static Future<List<Map<String, dynamic>>> getPredSales() async {
-    final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
+    final response = await http.get(Uri.parse("$BASE_URL/pred_sale/dashboard"));
     if (kDebugMode) {
       print("[ApiService] GET /pred_sale/dashboard -> ${response.statusCode}");
     }
@@ -107,7 +107,7 @@ print("####################################fetched shift prediction${response.st
   // ---- POST create staff ----
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
     return await http.post(
-      Uri.parse('$baseUrl/services/staff'),
+      Uri.parse('$BASE_URL/services/staff'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
@@ -116,7 +116,7 @@ print("####################################fetched shift prediction${response.st
   // ---- POST shift preferences ----
   static Future<void> saveShiftPreferences(Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/save_shift_preferences'),
+      Uri.parse('$BASE_URL/save_shift_preferences'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(data),
     );
@@ -128,7 +128,7 @@ print("####################################fetched shift prediction${response.st
   // ---- PUT update staff ----
   static Future<http.Response> updateStaffProfile(int id, Map<String, dynamic> updates) async {
     return await http.put(
-      Uri.parse('$baseUrl/services/staff/$id'),
+      Uri.parse('$BASE_URL/services/staff/$id'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(updates),
     );
@@ -136,12 +136,12 @@ print("####################################fetched shift prediction${response.st
 
   // ---- DELETE staff ----
   static Future<http.Response> deleteStaffProfile(int id) async {
-    return await http.delete(Uri.parse('$baseUrl/services/staff/$id'));
+    return await http.delete(Uri.parse('$BASE_URL/services/staff/$id'));
   }
 
   // ---- GET search staff ----
   static Future<http.Response> searchStaff(String term, {String by = "ID"}) async {
-    final url = Uri.parse('$baseUrl/services/staff/search?term=$term&by=$by');
+    final url = Uri.parse('$BASE_URL/services/staff/search?term=$term&by=$by');
     return await http.get(url);
   }
 }
