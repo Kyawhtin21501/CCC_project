@@ -206,7 +206,4 @@ wheel==0.45.1
 widgetsnbextension==4.0.13
 wrapt==1.17.2
 xgboost==3.0.2
-Flutter 3.32.2 • channel stable • https://github.com/flutter/flutter.git
-Framework • revision 8defaa71a7 (3 months ago) • 2025-06-04 11:02:51 -0700
-Engine • revision 1091508939 (3 months ago) • 2025-05-30 12:17:36 -0700
-Tools • Dart 3.8.1 • DevTools 2.45.1
+xlrd==2.0.1
