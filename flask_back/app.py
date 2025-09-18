@@ -27,6 +27,8 @@ from services.pred import ShiftCreator
 from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
 from services.shifting_operator import ShiftOperator
 from services.shift_preferences import ShiftPreferences
+from flask_back.services.staff_manager import StaffManager
+
 #from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
