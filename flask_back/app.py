@@ -33,7 +33,8 @@ from flask_back.services.staff_manager import StaffManager
 from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
-CORS(app)  # Enable CORS to allow requests from frontend (e.g. Flutter)
+CORS(app, resources={r"/*": {"origins": "*"}})
+  # Enable CORS to allow requests from frontend (e.g. Flutter)
 
 # ---------------------------------------
 # Health check endpoint
