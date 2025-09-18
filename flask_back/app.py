@@ -21,12 +21,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import all necessary service modules
-from services.staff_manager import StaffManager
-from services.user_input_handler import UserInputHandler
-from services.pred import ShiftCreator
-from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
-from services.shifting_operator import ShiftOperator
-from services.shift_preferences import ShiftPreferences
+from flask_back.services.staff_manager import StaffManager
+from flask_back.services.user_input_handler import UserInputHandler
+from flask_back.services.pred import ShiftCreator
+from flask_back.services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
+from flask_back.services.shifting_operator import ShiftOperator
+from flask_back.services.shift_preferences import ShiftPreferences
 from flask_back.services.staff_manager import StaffManager
 
 #from services.retrain import reTrain_model
