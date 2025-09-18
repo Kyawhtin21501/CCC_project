@@ -30,13 +30,13 @@ from services.shift_preferences import ShiftPreferences
 #from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
-app = Flask(__name__)
-CORS(app)  # Enable CORS to allow requests from frontend (e.g. Flutter)
+myapp = Flask(__name__)
+CORS(myapp)  # Enable CORS to allow requests from frontend (e.g. Flutter)
 
 # ---------------------------------------
 # Health check endpoint
 # ---------------------------------------
-@app.route('/')
+@myapp.route('/')
 def home():
     # This is a basic check to confirm the server is running
     return "API Server is Running"
@@ -46,7 +46,7 @@ def home():
 # add retrain model start point
 # --------------------------------------
 #_________________________________________staff list for user list show off__________________________
-@app.route('/staff_list', methods=['GET'])
+@myapp.route('/staff_list', methods=['GET'])
 def staff_list():
     try:
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -77,7 +77,7 @@ def staff_list():
 #-------------------------------------------data end point for dashboard----------------------------------
 
 
-@app.route('/user_input', methods=['POST'])
+@myapp.route('/user_input', methods=['POST'])
 def save_data():    
     # Get the data submitted by the frontend (usually from Dashboard)
     data = request.get_json()
@@ -125,7 +125,7 @@ example response of shift assignment and sale prediction
 # This endpoint receives shift preferences from the frontend and saves them to a CSV file.
 # The preferences are expected to be in a specific format, and the date is also provided.
 # The CSV file is saved in the 'data' directory of the Flask application.
-@app.route('/save_shift_preferences', methods=['POST'])
+@myapp.route('/save_shift_preferences', methods=['POST'])
 def save_shift_preferences():
     """
     Endpoint to receive shift preferences from the frontend and save them to a CSV file.
@@ -166,7 +166,7 @@ def save_shift_preferences():
 # Predict sales and assign shifts based on input dates and location
 # ---------------------------------------
 
-@app.route('/shift', methods=['POST', 'GET'])
+@myapp.route('/shift', methods=['POST', 'GET'])
 def shift():
     data = request.get_json()
     start_date = data.get("start_date")
@@ -278,7 +278,7 @@ def shift():
 # ---------------------------------------------------------------------------------------------------------------------------------
 
 
-@app.route('/shift_table/dashboard', methods=['GET' , 'POST'])
+@myapp.route('/shift_table/dashboard', methods=['GET' , 'POST'])
 def get_shift_table_dashboard():
     """
     Endpoint to retrieve the shift table for the dashboard.
@@ -308,7 +308,7 @@ def get_shift_table_dashboard():
 
 
 #////data end point for pred_sale in dashboard
-@app.route('/pred_sale/dashboard', methods=['GET' , 'POST'])
+@myapp.route('/pred_sale/dashboard', methods=['GET' , 'POST'])
 def get_pred_sale_dashboard():
     """
     Endpoint to retrieve the predicted sales data for the dashboard.
@@ -346,7 +346,7 @@ def get_pred_sale_dashboard():
 # ---------------------------------------
 # Create a new staff profile (from StaffProfile screen)
 # ---------------------------------------
-@app.route('/services/staff', methods=['POST'])
+@myapp.route('/services/staff', methods=['POST'])
 def create_staff():
     data = request.get_json()
     print(f"Received JSON: {data}")  # Debug
@@ -371,7 +371,7 @@ def create_staff():
 # ---------------------------------------
 # Khh ok 
 
-@app.route('/services/staff/<int:staff_id>', methods=['PUT','GET','POST'])
+@myapp.route('/services/staff/<int:staff_id>', methods=['PUT','GET','POST'])
 def update_staff_by_id(staff_id):
     try:
         if request.method == 'PUT':
@@ -413,7 +413,7 @@ def update_staff_by_id(staff_id):
 # ---------------------------------------
 # Delete staff record by ID
 # ---------------------------------------
-@app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
+@myapp.route('/services/staff/<int:staff_id>', methods=['DELETE'])
       
 def delete_staff(staff_id):
     try:
@@ -430,7 +430,7 @@ def delete_staff(staff_id):
 # ---------------------------------------
 # Search staff by ID or Name
 # ---------------------------------------
-@app.route('/services/staff/search', methods=['GET'])
+@myapp.route('/services/staff/search', methods=['GET'])
 def search_staff():
     
     term = request.args.get("term")
@@ -451,5 +451,5 @@ def search_staff():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))  # Railwayが渡すPORTを使う
-    app.run(host="0.0.0.0", port=port)
+    myapp.run(host="0.0.0.0", port=port)
 
