@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:5000'; // update for production
+  static const String baseUrl = "https://your-railway-app.up.railway.app";
+ // update for production
 
   // ---- GET staff list ----
   static Future<List<String>> fetchStaffList() async {
