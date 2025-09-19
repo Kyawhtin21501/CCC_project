@@ -1,4 +1,5 @@
-web: gunicorn flask_back.app:app
+gunicorn -w 4 -b 0.0.0.0:$PORT flask_back.app:app
+
 
 
 
