@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-  static const String BASE_URL = "https://your-app-production.up.railway.app/";
+  static const String BASE_URL = "https://cccproject-production.up.railway.app/api/";
+
  // update for production
 
   // ---- GET staff list ----
