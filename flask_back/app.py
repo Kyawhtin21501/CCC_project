@@ -32,13 +32,22 @@ from flask_back.services.staff_manager import StaffManager
 #from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
+import os
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    static_folder=os.path.join(APP_ROOT, "flutter_front/predictor_web/build/web"),
+    static_url_path=""
+)
+
 app = Flask(
     __name__,
     static_folder="flutter_front/predictor_web/build/web",
     static_url_path=""
 )
 
-CORS(app,resources={r"/api/*": {"origins": "https://cccproject-production.up.railway.app/"}})
+CORS(app)
+
   # Enable CORS to allow requests from frontend (e.g. Flutter)
 
 # ---------------------------------------
