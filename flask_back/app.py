@@ -2,7 +2,7 @@ import sys
 import os
 from datetime import date, timedelta
 import pandas as pd
-from flask import Flask, request, jsonify
+from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from pprint import pprint
 # Get project root (one folder above flask_back)
@@ -32,17 +32,18 @@ from flask_back.services.staff_manager import StaffManager
 #from services.retrain import reTrain_model
 from datetime import date, timedelta
 import pandas as pd
-app = Flask(__name__, static_folder="flutter_front/predictor_web/build/web", static_url_path="")
+app = Flask(__name__, static_folder=__name__, static_folder="flutter_front/predictor_web/build/web", static_url_path="")
 CORS(app,resources={r"/api/*": {"origins": "https://cccproject-production.up.railway.app/"}})
   # Enable CORS to allow requests from frontend (e.g. Flutter)
 
 # ---------------------------------------
 # Health check endpoint
 # ---------------------------------------
-@app.route('/cccproject-production.up.railway.app/flutter_front/predictor_web/build/web')
+@app.route('/')
 def home():
     # This is a basic check to confirm the server is running
-    return "API Server is Running"
+    return send_from_directory(app.static_folder, "index.html")
+
 
 # ---------------------------------------
 # Save user input (e.g. sales, staff count)
