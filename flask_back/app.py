@@ -40,11 +40,8 @@ app = Flask(
     static_url_path=""
 )
 
-app = Flask(
-    __name__,
-    static_folder="flutter_front/predictor_web/build/web",
-    static_url_path=""
-)
+
+
 
 CORS(app)
 
@@ -55,8 +52,9 @@ CORS(app)
 # ---------------------------------------
 @app.route('/')
 def home():
-    # This is a basic check to confirm the server is running
     return send_from_directory(app.static_folder, "index.html")
+
+
 
 
 # ---------------------------------------
