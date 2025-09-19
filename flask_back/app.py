@@ -33,13 +33,13 @@ from flask_back.services.staff_manager import StaffManager
 from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__, static_folder="flutter_front/predictor_web/build/web", static_url_path="")
-CORS(app)
+CORS(app,resources={r"/api/*": {"origins": "https://cccproject-production.up.railway.app/"}})
   # Enable CORS to allow requests from frontend (e.g. Flutter)
 
 # ---------------------------------------
 # Health check endpoint
 # ---------------------------------------
-@app.route('/')
+@app.route('/cccproject-production.up.railway.app/flutter_front/predictor_web/build/web')
 def home():
     # This is a basic check to confirm the server is running
     return "API Server is Running"
