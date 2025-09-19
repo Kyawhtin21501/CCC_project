@@ -1,4 +1,6 @@
-web: python flask_back/app.py
+web: gunicorn flask_back.app:app
+
+
 
 
 
