@@ -1,5 +1,4 @@
-﻿Name,morning,afternoon,night,date,ID
-Sato Haruki,True,True,True,2025-09-16,1001
+Name,morning,afternoon,night,date,ID
 Tanaka Yuto,False,True,True,2025-09-16,1002
 Yamamoto Aoi,True,True,False,2025-09-16,1003
 Kobayashi Rina,False,True,True,2025-09-16,1004
@@ -23,7 +22,6 @@ Michael Johnson,True,True,True,2025-09-16,1021
 Sophia Chen,False,True,True,2025-09-16,1022
 Daniel Kim,True,True,True,2025-09-16,1023
 Lisa Müller,True,True,True,2025-09-16,1024
-Sato Haruki,False,True,True,2025-09-17,1001
 Tanaka Yuto,True,True,False,2025-09-17,1002
 Yamamoto Aoi,False,True,True,2025-09-17,1003
 Kobayashi Rina,True,True,False,2025-09-17,1004
@@ -72,7 +70,6 @@ Shimizu Keiko,False,True,True,2025-09-18,1005
 Kobayashi Rina,False,True,True,2025-09-18,1004
 Yamamoto Aoi,True,True,False,2025-09-18,1003
 Tanaka Yuto,False,True,True,2025-09-18,1002
-Sato Haruki,True,False,True,2025-09-18,1001
 Ahmed Ali,False,True,True,2025-09-19,1025
 Lisa Müller,False,True,True,2025-09-19,1024
 Daniel Kim,False,False,True,2025-09-19,1023
@@ -95,10 +92,8 @@ Nakamura Haruna,True,True,False,2025-09-19,1009
 Kobayashi Rina,True,False,True,2025-09-19,1004
 Shimizu Keiko,False,True,True,2025-09-19,1005
 Takahashi Daiki,True,True,False,2025-09-19,1006
-Sato Haruki,False,True,True,2025-09-19,1001
 Tanaka Yuto,False,True,True,2025-09-19,1002
 Yamamoto Aoi,False,True,True,2025-09-19,1003
-Sato Haruki,False,True,True,2025-09-20,1001
 Tanaka Yuto,False,True,True,2025-09-20,1002
 Yamamoto Aoi,True,True,False,2025-09-20,1003
 Kobayashi Rina,True,True,False,2025-09-20,1004
@@ -147,7 +142,6 @@ Shimizu Keiko,False,True,True,2025-09-21,1005
 Yamamoto Aoi,True,True,False,2025-09-21,1003
 Kobayashi Rina,False,True,True,2025-09-21,1004
 Tanaka Yuto,False,True,True,2025-09-21,1002
-Sato Haruki,True,False,True,2025-09-21,1001
 Ahmed Ali,False,True,False,2025-09-22,1025
 Lisa Müller,False,True,False,2025-09-22,1024
 Daniel Kim,True,True,False,2025-09-22,1023
@@ -172,5 +166,4 @@ Shimizu Keiko,False,True,True,2025-09-22,1005
 Kobayashi Rina,True,True,False,2025-09-22,1004
 Yamamoto Aoi,False,True,True,2025-09-22,1003
 Tanaka Yuto,True,False,True,2025-09-22,1002
-Sato Haruki,False,True,True,2025-09-22,1001
 Ahmed Ali,False,True,False,2025-09-16,1025

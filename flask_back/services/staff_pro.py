@@ -117,7 +117,7 @@ class DeleteStaff(StaffProfileOperation):
     # def __init__(self, staff_id, csv_path=None):
     base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services
     csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'staff_dataBase.csv'))
-    
+    shift_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'shift_preferences.csv'))  
     def __init__(self, staff_id, csv_path=csv_path):
         super().__init__(csv_path)
         self.staff_id = staff_id
@@ -126,6 +126,10 @@ class DeleteStaff(StaffProfileOperation):
         df = pd.read_csv(self.csv_path)
         if self.staff_id in df["ID"].values:
             df = df.drop(df[df["ID"] == self.staff_id].index)
+            shift_df = pd.read_csv(self.shift_path)
+            shift_df = shift_df.drop(shift_df[shift_df["ID"] == self.staff_id].index)
+            shift_df.to_csv(self.shift_path, index=False)
+            
             df.to_csv(self.csv_path, index=False)
             return f"{self.staff_id}"
         else:
