@@ -131,6 +131,8 @@ def save_shift_preferences():
     Endpoint to receive shift preferences from the frontend and save them to a CSV file.
     
     """
+    """
+    """
     try:
         # Step 1: Parse JSON data from request
         data = request.get_json()
