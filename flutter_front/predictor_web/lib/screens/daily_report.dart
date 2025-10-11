@@ -5,6 +5,7 @@ import 'package:predictor_web/theme_provider/them.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:predictor_web/widgets/charts.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart'; // Added for yen formatting
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -49,9 +50,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadStaffList() async {
     try {
       final staffList = await ApiService.fetchStaffList();
-      setState(() {
-        availableStaffNames = staffList.map((e) => e.toString()).toList();
-      });
+      if (staffList != null && staffList.isNotEmpty) {
+        setState(() {
+          availableStaffNames = staffList.map((e) => e.toString()).toList();
+        });
+      } else {
+        setState(() {
+          availableStaffNames = [];
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('スタッフリスト取得エラー: $e')),
@@ -64,6 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final shiftData = await ApiService.fetchShiftTableDashboard();
       final salesData = await ApiService.getPredSales();
+
       setState(() {
         _shiftScheduleCache = shiftData;
         _salesDataCache = salesData;
@@ -159,49 +167,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider?>(context, listen: true);
+    final isDarkMode = themeProvider?.themeMode == ThemeMode.dark;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text("ダッシュボード"),
+        title: const Text("ダッシュボード"),
         actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.themeMode == ThemeMode.dark
-                  ? Icons.light_mode
-                  : Icons.dark_mode,
+          if (themeProvider != null)
+            IconButton(
+              icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+              onPressed: () {
+                final isDark = themeProvider.themeMode == ThemeMode.dark;
+                themeProvider.toggleTheme(!isDark);
+              },
             ),
-            onPressed: () {
-              final isDark = themeProvider.themeMode == ThemeMode.dark;
-              themeProvider.toggleTheme(!isDark);
-            },
-          ),
         ],
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildDashboardForm(), // Top Form
+                // === Form + Sales chart ===
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 2, child: _buildDashboardForm()),
+                    const SizedBox(width: 8),
+                    if (_salesDataCache != null && _salesDataCache!.isNotEmpty)
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    "本日の予測売上",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue.shade700,
+                                        ),
+                                  ),
+                                  const SizedBox(height:20),
+                                  Text(
+                                    NumberFormat.currency(
+                                            locale: 'ja_JP', symbol: '¥')
+                                        .format(_salesDataCache!
+                                            .first['predicted_sales']),
+                                    style: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 25),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SalesPredictionChartWidget(
+                                  salesData: _salesDataCache!),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 if (error != null)
                   Text('Error: $error',
                       style: const TextStyle(color: Colors.red)),
 
-                // Charts
-                if (_shiftScheduleCache != null) ...[
+                // === Shift Chart ===
+                if (_shiftScheduleCache != null &&
+                    _shiftScheduleCache!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ShiftChartWidget(shiftSchedule: _shiftScheduleCache!),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-                if (_salesDataCache != null)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SalesPredictionChartWidget(salesData: _salesDataCache!),
                   ),
               ],
             ),
@@ -212,6 +263,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDashboardForm() {
     final isDesktop = MediaQuery.of(context).size.width > 1024;
     final horizontalPadding = isDesktop ? 24.0 : 16.0;
+    final themeProvider = Provider.of<ThemeProvider?>(context, listen: false);
+    final isDarkMode = themeProvider?.themeMode == ThemeMode.dark;
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -224,7 +277,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === Title with icon ===
               Row(
                 children: [
                   Icon(Icons.assignment_outlined, color: Colors.blue.shade600),
@@ -242,16 +294,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Divider(thickness: 1, color: Colors.grey.shade300),
               const SizedBox(height: 16),
 
-              // === Responsive Grid for form fields ===
               LayoutBuilder(
                 builder: (context, constraints) {
                   int crossAxisCount;
                   if (constraints.maxWidth < 600) {
-                    crossAxisCount = 1; // mobile
+                    crossAxisCount = 1;
                   } else if (constraints.maxWidth < 1024) {
-                    crossAxisCount = 2; // tablet
+                    crossAxisCount = 2;
                   } else {
-                    crossAxisCount = 3; // desktop
+                    crossAxisCount = 3;
                   }
 
                   return GridView.count(
@@ -262,22 +313,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
                     children: [
-                      _buildDatePicker(),
-                      _buildNumberField(salesController, '売上'),
-                      _buildNumberField(customerController, '来客数'),
-                      _buildNumberField(
-                          staffCountController, 'スタッフ数'),
-                      SizedBox(
-                        width: double.infinity,
-                        child: _buildStaffMultiSelect()),
-                      _buildEventDropdown(),
+                      _buildDatePicker(isDarkMode),
+                      _buildNumberField(salesController, '売上', isDarkMode),
+                      _buildNumberField(customerController, '来客数', isDarkMode),
+                      _buildNumberField(staffCountController, 'スタッフ数', isDarkMode),
+                      _buildStaffMultiSelect(isDarkMode),
+                      _buildEventDropdown(isDarkMode),
                     ],
                   );
                 },
               ),
               const SizedBox(height: 24),
 
-              // === Buttons ===
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -290,7 +337,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ElevatedButton.icon(
                     onPressed: _saveDataAndRefresh,
                     icon: const Icon(Icons.save, color: Colors.white),
-                    label: const Text('保存して更新',style: TextStyle(color: Colors.white),),
+                    label: const Text('保存して更新',
+                        style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade600,
                       padding: const EdgeInsets.symmetric(
@@ -308,10 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // === Individual Form Fields ===
-
-  /// Date picker field
-  Widget _buildDatePicker() {
+  Widget _buildDatePicker(bool isDarkMode) {
     return _formFieldWrapper(
       label: "日付",
       child: TextFormField(
@@ -320,10 +365,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: //change color for dark mode
-              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
-                  ? Colors.grey.shade800
-                  : Colors.grey.shade50,
+          fillColor: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade50,
           hintText: 'yyyy/mm/dd',
           suffixIcon: IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -344,14 +386,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
         ),
-        validator: (value) =>
+        validator: (_) =>
             _selectedDate == null ? '日付を選択してください' : null,
       ),
     );
   }
 
-  /// Number input field
-  Widget _buildNumberField(TextEditingController controller, String label) {
+  Widget _buildNumberField(
+      TextEditingController controller, String label, bool isDarkMode) {
     return _formFieldWrapper(
       label: label,
       child: TextFormField(
@@ -361,13 +403,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           hintText: '数値を入力してください',
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-        fillColor: //change color for dark mode
-              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
-                  ? Colors.grey.shade800
-                  : Colors.grey.shade50,
+          fillColor: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade50,
         ),
         validator: (value) {
-          if (value == null || value.isEmpty) return '$label is required';
+          if (value == null || value.isEmpty) return '$label を入力してください';
           if (int.tryParse(value) == null) return '有効な数値を入力してください';
           return null;
         },
@@ -375,20 +414,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Staff multi-select
-  Widget _buildStaffMultiSelect() {
+  Widget _buildStaffMultiSelect(bool isDarkMode) {
     return _formFieldWrapper(
-      label: "スタフ",
+      label: "スタッフ",
       child: MultiSelectDialogField<String>(
         items: availableStaffNames
             .map((name) => MultiSelectItem<String>(name, name))
             .toList(),
-        title: const Text("スタフ選択"),
+        title: const Text("スタッフ選択"),
         selectedColor: Colors.blueAccent,
-      itemsTextStyle: TextStyle(
-          color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
-              ? Colors.white
-              : Colors.black,
+        itemsTextStyle: TextStyle(
+          color: isDarkMode ? Colors.white : Colors.black,
         ),
         buttonText: const Text("選択"),
         initialValue: selectedStaffNames,
@@ -398,14 +434,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
         chipDisplay: MultiSelectChipDisplay(
-          chipColor: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
-              ? Colors.blue.shade700
-              : Colors.blue.shade200,
-              textStyle: TextStyle(
-                color: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
-                    ? Colors.white
-                    : Colors.black,
-              ),
+          chipColor: isDarkMode ? Colors.blue.shade700 : Colors.blue.shade200,
+          textStyle: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
           items: selectedStaffNames
               .map((name) => MultiSelectItem<String>(name, name))
               .toList(),
@@ -425,8 +455,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Event dropdown
-  Widget _buildEventDropdown() {
+  Widget _buildEventDropdown(bool isDarkMode) {
     return _formFieldWrapper(
       label: "イベント",
       child: DropdownButtonFormField<String>(
@@ -441,16 +470,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-        fillColor: //change color for dark mode
-              Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark
-                  ? Colors.grey.shade800
-                  : Colors.grey.shade50,
+          fillColor: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade50,
         ),
       ),
     );
   }
 
-  /// Label + Field Wrapper
   Widget _formFieldWrapper({required String label, required Widget child}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

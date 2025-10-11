@@ -103,6 +103,38 @@ print("####################################fetched shift prediction${response.st
     }
   }
 
+// ---- GET predicted sales for today (client-side filter) ----
+static Future<List<Map<String, dynamic>>> getPredSalesToday() async {
+  final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
+  if (kDebugMode) {
+    print("[ApiService] GET /pred_sale/dashboard -> ${response.statusCode}");
+  }
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = json.decode(response.body);
+
+    // Format today's date (YYYY-MM-DD)
+    final today = DateTime.now();
+    final formattedToday =
+        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+
+    // Filter only today's prediction records
+    final filtered = data.where((item) {
+      final date = item['date']?.toString();
+      return date == formattedToday;
+    }).toList();
+
+    if (kDebugMode) {
+      print("[ApiService] Filtered today's predictions ($formattedToday): ${filtered.length}");
+    }
+
+    return List<Map<String, dynamic>>.from(filtered);
+  } else {
+    throw Exception("Failed to fetch predicted sales: ${response.statusCode}");
+  }
+}
+
+
   // ---- POST create staff ----
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
     return await http.post(
