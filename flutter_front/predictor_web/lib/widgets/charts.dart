@@ -1,219 +1,141 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-
 class ShiftChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> shiftSchedule;
 
   const ShiftChartWidget({super.key, required this.shiftSchedule});
 
-  // Helper to format date string to "MM/dd (Day)"
   String _formatDate(String dateString) {
     final date = DateTime.parse(dateString);
-    // Get the Japanese day of the week
     final dayOfWeek = ['月', '火', '水', '木', '金', '土', '日'][date.weekday - 1];
     return "${date.month}/${date.day} ($dayOfWeek)";
   }
 
   @override
   Widget build(BuildContext context) {
-    // Extract unique dates and sort
-    final dates =
-        shiftSchedule.map((e) => e['date']).toSet().toList()
-          ..sort((a, b) => DateTime.parse(a).compareTo(DateTime.parse(b)));
-
+    final dates = shiftSchedule.map((e) => e['date']).toSet().toList()
+      ..sort((a, b) => DateTime.parse(a).compareTo(DateTime.parse(b)));
     final shifts = ['morning', 'afternoon', 'night'];
-
-    // Define shift colors (Lighter shades for background fill)
-    final Map<String, Color> shiftColors = {
+    final shiftColors = {
       'morning': Colors.blue.shade50,
       'afternoon': Colors.green.shade50,
       'night': Colors.orange.shade50,
     };
 
-    // Responsive width calculation
     final screenWidth = MediaQuery.of(context).size.width;
-    // Calculate table width by subtracting card margins and padding
-    final double tableWidth = screenWidth - 12 * 2 - 16 * 2;
-    final double cellWidth = tableWidth / (dates.length + 1);
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    // Styling constants
-    const double rowVerticalPadding = 8;
-    const double cellMargin = 4;
-    const double cellPadding = 8;
+    // Adaptive sizing
+    final tableWidth = (screenWidth - 32).clamp(400, double.infinity);
+    final cellWidth = tableWidth / (dates.length + 1);
+    final rowHeight = (screenHeight * 0.08).clamp(60, 120);
+    final fontSize = (screenWidth / 50).clamp(10, 14);
 
     return Center(
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 6, // Increased elevation for a clearer lift
+        elevation: 6,
         margin: const EdgeInsets.all(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "シフト一覧表（7日間）",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: fontSize + 6, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-
-              // Table Layout - Use SingleChildScrollView for horizontal scrolling
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Table(
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                   columnWidths: {
-                    0: FixedColumnWidth(cellWidth * 0.8), // Shift labels column
-                    for (int i = 1; i <= dates.length; i++)
-                      i: FixedColumnWidth(cellWidth),
+                    0: FixedColumnWidth(cellWidth * 0.8),
+                    for (int i = 1; i <= dates.length; i++) i: FixedColumnWidth(cellWidth),
                   },
-                  // Use horizontal dividers but no vertical ones
                   border: const TableBorder(
-                    horizontalInside: BorderSide(
-                      width: 0.5,
-                    //  color: Colors.grey,
-                    ),
+                    horizontalInside: BorderSide(width: 0.5),
                   ),
                   children: [
-                    // Header Row
                     TableRow(
-                      // decoration: BoxDecoration(
-                      //   color:
-                      //       Colors.grey.shade100, // Light background for header
-                      // ),
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: rowVerticalPadding,
-                            horizontal: 8,
-                          ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: rowHeight * 0.1, horizontal: 8),
                           child: Text(
                             "シフト",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize.toDouble()),
                           ),
                         ),
-                        ...dates.map((d) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: rowVerticalPadding,
-                                horizontal: 4,
-                              ),
-                              child: Text(
-                                _formatDate(d),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                        ...dates.map((d) => Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: rowHeight * 0.1, horizontal: 4),
+                                child: Text(
+                                  _formatDate(d),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize - 1),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
+                            )),
                       ],
                     ),
-
-                    // Shift Rows
-                    //  "morning": list(range(9, 14)),      # 9:00 to 13:59
-                    // "afternoon": list(range(14, 19)),   # 14:00 to 18:59
-                    // "night": list(range(19, 24))        # 19:00 to 23:59
                     ...shifts.map((shift) {
-                      final shiftJp =
-                          shift == "morning"
-                              ? "朝 (9:00 to 13:59)"
-                              : shift == "afternoon"
-                              ? "昼 (14:00 to 18:59)"
-                              : "夜 (19:00 to 23:59)";
+                      final shiftJp = shift == "morning"
+                          ? "朝 (9:00-13:59)"
+                          : shift == "afternoon"
+                              ? "昼 (14:00-18:59)"
+                              : "夜 (19:00-23:59)";
                       return TableRow(
                         children: [
-                          // Shift label (Styled background)
                           Container(
-                            // color: Colors.blueGrey.shade50, // Subtle background for the label column
-                            padding: const EdgeInsets.symmetric(
-                              vertical: rowVerticalPadding,
-                              horizontal: 8,
-                            ),
+                            padding: EdgeInsets.symmetric(vertical: rowHeight * 0.1, horizontal: 8),
                             child: Text(
                               shiftJp,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.blueGrey,
-                              ),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: fontSize.toDouble(),
+                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
                             ),
                           ),
-
-                          // Cells for each date
                           ...dates.map((d) {
-                            final names =
-                                shiftSchedule
-                                    .where(
-                                      (e) =>
-                                          e['date'] == d && e['shift'] == shift,
-                                    )
-                                    .map((e) => e['Name'])
-                                    .toList();
-
+                            final names = shiftSchedule
+                                .where((e) => e['date'] == d && e['shift'] == shift)
+                                .map((e) => e['Name'])
+                                .toList();
                             return Container(
-                              margin: const EdgeInsets.all(cellMargin),
+                              margin: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 color: shiftColors[shift],
-                                borderRadius: BorderRadius.circular(
-                                  6,
-                                ), // Rounded corners for cells
-                                border: Border.all(
-                                  color: shiftColors[shift]!,
-                                  width: 1,
-                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: shiftColors[shift]!, width: 1),
                               ),
-                              constraints: const BoxConstraints(
-                                minHeight: 80,
-                              ), // Set minimum height for cells
-                              child:
-                                  names.isEmpty
-                                      ? Center(
-                                        child: Text(
-                                          "---",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      )
-                                      : Padding(
-                                        padding: const EdgeInsets.all(
-                                          cellPadding,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children:
-                                              names
-                                                  .map(
-                                                    (n) => Text(
-                                                      n,
-                                                      style: TextStyle(
-color: Colors.black87,
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  )
-                                                  .toList(),
-                                        ),
+                              constraints: BoxConstraints(minHeight: rowHeight * 0.8),
+                              child: names.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        "---",
+                                        style: TextStyle(fontSize: fontSize - 2),
                                       ),
+                                    )
+                                  : Padding(
+                                      padding: const EdgeInsets.all(6),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: names
+                                            .map((n) => Text(
+                                                  n,
+                                                  style: TextStyle(
+                                                    color: Colors.black87,
+                                                      fontSize: fontSize - 2,
+                                                      fontWeight: FontWeight.w600),
+                                                  textAlign: TextAlign.center,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
                             );
                           }),
                         ],
@@ -222,8 +144,6 @@ color: Colors.black87,
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              
             ],
           ),
         ),
@@ -231,7 +151,6 @@ color: Colors.black87,
     );
   }
 }
-
 
 class SalesPredictionChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> salesData;

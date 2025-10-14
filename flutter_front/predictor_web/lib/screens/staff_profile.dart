@@ -274,48 +274,94 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// --- FORM SECTION ---
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        '新規スタッフ',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+       Card(
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  elevation: 2,
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '新規スタッフ',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // If width is less than 600, use single column
+              bool useSingleColumn = constraints.maxWidth < 600;
+
+              if (useSingleColumn) {
+                return Column(
+                  children: [
+                    _buildTextField(_nameController, '名前'),
+                    const SizedBox(height: 10),
+                    _buildNumberField(_ageController, '年齢', 18, 100),
+                    const SizedBox(height: 10),
+                    _buildNumberField(_levelController, 'レベル(1-5)', 1, 5),
+                    const SizedBox(height: 10),
+                    _buildEditEmailField(_emailController, 'メール'),
+                    const SizedBox(height: 10),
+                    _buildGenderDropdown(),
+                    const SizedBox(height: 10),
+                    _buildStatusDropdown(),
+                  ],
+                );
+              } else {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _buildTextField(_nameController, '名前'),
+                          const SizedBox(height: 10),
+                          _buildNumberField(_ageController, '年齢', 18, 100),
+                          const SizedBox(height: 10),
+                          _buildNumberField(_levelController, 'レベル(1-5)', 1, 5),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      _buildTextField(_nameController, '名前'),
-                      const SizedBox(height: 10),
-                      _buildNumberField(_ageController, '年齢', 18, 100),
-                      const SizedBox(height: 10),
-                      _buildNumberField(_levelController, 'レベル(1-5)', 1, 5),
-                      const SizedBox(height: 10),
-                      _buildEditEmailField(_emailController, 'メール'),
-                     // _buildTextField(_emailController, 'Email', isEmail: true),
-                      const SizedBox(height: 10),
-                      _buildGenderDropdown(),
-                      const SizedBox(height: 10),
-                      _buildStatusDropdown(),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _submitProfile,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('登録'),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          _buildEditEmailField(_emailController, 'メール'),
+                          const SizedBox(height: 10),
+                          _buildGenderDropdown(),
+                          const SizedBox(height: 10),
+                          _buildStatusDropdown(),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
+
+          const SizedBox(height: 20),
+          Center(
+            child: ElevatedButton(
+              onPressed: _submitProfile,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
               ),
+              child: const Text('登録'),
             ),
+          ),
+        ],
+      ),
+    ),
+  ),
+)
+,
 
             const SizedBox(height: 30),
             const Text(
@@ -351,6 +397,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                         child: ListTile(
                           leading: const Icon(Icons.person, color: Colors.blue),
                           title: Text(name),
+                          
                           trailing: Wrap(
                             spacing: 8,
                             children: [

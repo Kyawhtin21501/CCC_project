@@ -58,7 +58,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) =>StaffProfileForm() ),
+                MaterialPageRoute(builder: (context) =>StaffProfileScreen() ),
               );
             },
           ),
