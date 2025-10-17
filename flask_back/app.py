@@ -163,6 +163,8 @@ def save_shift_preferences():
         print(e)
         return jsonify({"error": str(e)}), 500
     
+#route for shift preference page
+@app.route('/shift_preference', methods=['POST'])
 
 # ---------------------------------------
 # Predict sales and assign shifts based on input dates and location
