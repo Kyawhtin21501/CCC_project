@@ -1,0 +1,45 @@
+# ================================
+# Python / Flask
+# ================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite
+instance/
+.env
+.venv/
+*.log
+
+# ================================
+# Data & Models
+# ================================
+data/
+*.csv
+*.xlsx
+*.h5
+*.pkl
+*.joblib
+model/
+*.npy
+
+# ================================
+# Flutter
+# ================================
+flutter_front/build/
+flutter_front/.dart_tool/
+flutter_front/.packages
+flutter_front/pubspec.lock
+flutter_front/ios/Pods/
+flutter_front/ios/Flutter/Flutter.framework/
+flutter_front/android/.gradle/
+flutter_front/android/app/build/
+flutter_front/web/
+
+# ================================
+# OS / IDE files
+# ================================
+.DS_Store
+.vscode/
+.idea/
+*.swp
