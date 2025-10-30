@@ -4,6 +4,7 @@ Flask-SQLAlchemy==3.1.1
 gunicorn==23.0.0
 python-dotenv==1.2.1
 requests_cache==1.2.1
+retry-requests
 
 numpy==2.3.3
 pandas==2.3.3
