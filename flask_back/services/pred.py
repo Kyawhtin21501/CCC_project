@@ -23,7 +23,7 @@ class ShiftCreator:
         # Define root directories for data and models
         base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services/
         self.data_dir = os.path.normpath(os.path.join(base_dir, '../../data'))
-        self.model_dir = os.path.normpath(os.path.join(base_dir, '../../model'))
+        self.model_dir = os.path.normpath(os.path.join(base_dir, '../model'))
         self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data/data_for_dashboard'))
 
     def date_data_from_user(self):
