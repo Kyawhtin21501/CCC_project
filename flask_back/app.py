@@ -212,7 +212,7 @@ def shift():
     print("ここまでok")
     #base_dir = os.path.dirname(os.path.dirname(__file__))  
     data_path_preferences = os.path.join(BASE_DIR, "data", "shift_preferences.csv")
-    data_path_staff_db = os.path.join(BASE_DIR, "data", "staff_database.csv")
+    data_path_staff_db = os.path.join(BASE_DIR, "data", "staff_dataBase.csv")
     
     #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
     # Check if files exist
