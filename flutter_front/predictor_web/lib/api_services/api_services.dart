@@ -4,7 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:5000'; // update for production
+  // Automatically switch baseUrl depending on debug mode
+  static final String baseUrl = kDebugMode
+      ? 'http://127.0.0.1:5000' // local dev
+      : 'https://ccc-project.onrender.com'; // production (Render)
 
   // ---- GET staff list ----
   static Future<List<String>> fetchStaffList() async {
@@ -43,11 +46,14 @@ class ApiService {
     );
   }
 
-//updated shift prediction for  usage in dashboard
+  // ---- GET shift table (dashboard) ----
   static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
     final url = Uri.parse("$baseUrl/shift_table/dashboard");
     final response = await http.get(url);
-print("####################################fetched shift prediction${response.statusCode}#####${response.body}##in api_service.dart###########################################");
+    if (kDebugMode) {
+      print("Fetched shift prediction ${response.statusCode}: ${response.body}");
+    }
+
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data.map((e) => e as Map<String, dynamic>).toList();
@@ -70,14 +76,9 @@ print("####################################fetched shift prediction${response.st
         "end_date": formatter.format(end),
       }),
     );
-    //added for debug
 
     if (kDebugMode) {
-      print(
-          "[ApiService] POST /shift with start: ${formatter.format(start)}, end: ${formatter.format(end)} -> ${response.statusCode}");
-    }
-    //add response body for debug
-    if (kDebugMode) {
+      print("[ApiService] POST /shift with start: ${formatter.format(start)}, end: ${formatter.format(end)} -> ${response.statusCode}");
       print("[ApiService] Response body: ${response.body}");
     }
 
@@ -103,37 +104,34 @@ print("####################################fetched shift prediction${response.st
     }
   }
 
-// ---- GET predicted sales for today (client-side filter) ----
-static Future<List<Map<String, dynamic>>> getPredSalesToday() async {
-  final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
-  if (kDebugMode) {
-    print("[ApiService] GET /pred_sale/dashboard -> ${response.statusCode}");
-  }
-
-  if (response.statusCode == 200) {
-    final List<dynamic> data = json.decode(response.body);
-
-    // Format today's date (YYYY-MM-DD)
-    final today = DateTime.now();
-    final formattedToday =
-        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-
-    // Filter only today's prediction records
-    final filtered = data.where((item) {
-      final date = item['date']?.toString();
-      return date == formattedToday;
-    }).toList();
-
+  // ---- GET predicted sales for today ----
+  static Future<List<Map<String, dynamic>>> getPredSalesToday() async {
+    final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
     if (kDebugMode) {
-      print("[ApiService] Filtered today's predictions ($formattedToday): ${filtered.length}");
+      print("[ApiService] GET /pred_sale/dashboard -> ${response.statusCode}");
     }
 
-    return List<Map<String, dynamic>>.from(filtered);
-  } else {
-    throw Exception("Failed to fetch predicted sales: ${response.statusCode}");
-  }
-}
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
 
+      final today = DateTime.now();
+      final formattedToday =
+          "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+
+      final filtered = data.where((item) {
+        final date = item['date']?.toString();
+        return date == formattedToday;
+      }).toList();
+
+      if (kDebugMode) {
+        print("[ApiService] Filtered today's predictions ($formattedToday): ${filtered.length}");
+      }
+
+      return List<Map<String, dynamic>>.from(filtered);
+    } else {
+      throw Exception("Failed to fetch predicted sales: ${response.statusCode}");
+    }
+  }
 
   // ---- POST create staff ----
   static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
