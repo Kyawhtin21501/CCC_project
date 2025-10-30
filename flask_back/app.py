@@ -5,7 +5,7 @@ import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pprint import pprint
-from flask_sqlalchemy import SQLAlchemy
+#from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv  #
 
 load_dotenv()
@@ -37,8 +37,8 @@ from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
 CORS(app)  # Enable CORS to allow requests from frontend (e.g. Flutter)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
-db = SQLAlchemy(app)
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+#db = SQLAlchemy(app)
 # ---------------------------------------
 # Health check endpoint
 # ---------------------------------------
