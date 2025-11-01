@@ -117,7 +117,7 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
           ),
         ],
       ),
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(currentScreen: DrawerScreen.shiftCreate),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),

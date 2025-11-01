@@ -168,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
         ],
       ),
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(currentScreen: DrawerScreen.dashboard),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

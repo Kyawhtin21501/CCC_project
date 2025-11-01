@@ -267,7 +267,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           ),
         ],
       ),
-      drawer: AppDrawer(),
+      drawer: AppDrawer(currentScreen: DrawerScreen.staffProfile),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
