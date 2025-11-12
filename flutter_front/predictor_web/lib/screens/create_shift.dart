@@ -105,7 +105,7 @@ class _CreatedShiftScreenState extends State<CreatedShiftScreen> {
           ),
         ],
       ),
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(currentScreen: DrawerScreen.shiftRequest),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/daily_report.dart';
+
+import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/shift_auto_generate.dart';
+import 'package:predictor_web/screens/staff_profile.dart' ;
 
-import 'package:predictor_web/screens/staff_profile.dart' hide CreatedShiftScreen;
-
-
+enum DrawerScreen { dashboard, shiftCreate, shiftRequest, staffProfile }
 
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({super.key});
+  final DrawerScreen currentScreen;
+
+  const AppDrawer({super.key, required this.currentScreen});
 
   @override
   Widget build(BuildContext context) {
@@ -18,53 +20,72 @@ class AppDrawer extends StatelessWidget {
         children: [
           const DrawerHeader(
             decoration: BoxDecoration(color: Colors.blue),
-            child: Text('メニュー', style: TextStyle(color: Colors.white, fontSize: 24)),
+            child: Text(
+              'メニュー',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.dashboard),
-            title: const Text('ダッシュボード'),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const DashboardScreen()),
-              );
-            },
+          _buildDrawerTile(
+            context,
+            icon: Icons.dashboard,
+            title: 'ダッシュボード',
+            screen: DrawerScreen.dashboard,
+            destination: const DashboardScreen(),
           ),
-          ListTile(
-            leading: const Icon(Icons.trending_up),
-            title: const Text('シフト作成'),
-            onTap: () {
-              Navigator.pop(context);
-             Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ShiftAutoScreen()
-              ));
-            },
+          _buildDrawerTile(
+            context,
+            icon: Icons.trending_up,
+            title: 'シフト作成',
+            screen: DrawerScreen.shiftCreate,
+            destination: const ShiftAutoScreen(),
           ),
-          ListTile(
-            leading: const Icon(Icons.work_history),
-            title: const Text('シフト希望登録'),
-           onTap: () {
-              Navigator.pop(context);
-             Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreatedShiftScreen(),
-              ));
-            },
+          _buildDrawerTile(
+            context,
+            icon: Icons.work_history,
+            title: 'シフト希望登録',
+            screen: DrawerScreen.shiftRequest,
+            destination: const CreatedShiftScreen(),
           ),
-          ListTile(
-            leading: const Icon(Icons.account_box_outlined),
-            title: const Text('新規スタッフ登録'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) =>StaffProfileScreen() ),
-              );
-            },
+          _buildDrawerTile(
+            context,
+            icon: Icons.account_box_outlined,
+            title: '新規スタッフ登録',
+            screen: DrawerScreen.staffProfile,
+            destination: const StaffProfileScreen(),
           ),
         ],
       ),
     );
   }
-}
 
+  Widget _buildDrawerTile(BuildContext context,
+      {required IconData icon,
+      required String title,
+      required DrawerScreen screen,
+      required Widget destination}) {
+    final bool isSelected = currentScreen == screen;
+
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? Colors.blue : null),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isSelected ? Colors.blue : null,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      tileColor: isSelected ? Colors.blue.withOpacity(0.1) : null,
+      onTap: () {
+        if (!isSelected) {
+          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => destination),
+          );
+        } else {
+          Navigator.pop(context); // just close drawer if already selected
+        }
+      },
+    );
+  }
+}
