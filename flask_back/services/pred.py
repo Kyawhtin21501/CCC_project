@@ -127,7 +127,7 @@ class ShiftCreator:
         df["season"] = df["month"].apply(assign_season)
 
         # Load season encoder safely
-        season_encoder_path = os.path.join(self.model_dir, 'season_encoder0.1.pkl')
+        season_encoder_path = os.path.join(self.model_dir, 'xgb_season_encoder.pkl')
         if not os.path.exists(season_encoder_path):
             raise FileNotFoundError(f"Season encoder not found at {season_encoder_path}")
         season_encoder = joblib.load(season_encoder_path)
