@@ -140,7 +140,7 @@ class ShiftChartWidget extends StatelessWidget {
                           }),
                         ],
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),

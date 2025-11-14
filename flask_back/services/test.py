@@ -8,8 +8,8 @@ from pprint import pprint
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def shift():
     #data = request.get_json()
-    start_date = "2025-09-05"
-    end_date = "2025-09-12"
+    start_date = "2025-9-16"
+    end_date = "2025-9-22"
     
     #latitude = data.get("latitude", 35.6762) #kyipyar hlaing
     #longitude = data.get("longitude", 139.6503)#kyipyar hlaing
@@ -45,8 +45,8 @@ def shift():
     #data_path_preferences = os.path.join(BASE_DIR,  "../../data", "shift_preferences.csv")
     #data_path_preferences = os.path.join(BASE_DIR, "..", "..", "data", "staff_dataBase.csv")
     #data_path_preferences = os.path.join(BASE_DIR, "..", "..", "data", "shift_preferences.csv")
-    staff_database_df = pd.read_csv("/Users/khein21502/Documents/project_root/CCC_project/CCC_project/data/staff_dataBase.csv")
-    shift_preferences_df = pd.read_csv("/Users/khein21502/Documents/project_root/CCC_project/CCC_project/data/shift_preferences.csv")
+    staff_database_df = pd.read_csv("/Users/khein21502/Documents/project_root/CCC_project/data/staff_dataBase.csv")
+    shift_preferences_df = pd.read_csv("/Users/khein21502/Documents/project_root/CCC_project/data/shift_preferences.csv")
     #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
     # Check if files exist
     
@@ -62,22 +62,31 @@ def shift():
     result_df = pd.DataFrame(result_df)
     required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
     shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
+    #staff_database_df["level"] = staff_database_df["level"].astype(int)
     
     shift_preferences_df = shift_preferences_df[(shift_preferences_df["date"] >= start) & (shift_preferences_df["date"] <= end)]
     print("shift_preferences_df")
     print(shift_preferences_df)
+    
+    
+    
     if (shift_preferences_df["date"] >= start).any() and (shift_preferences_df["date"] <= end).any():
         shift_preferences_df = (shift_preferences_df[shift_preferences_df["date"] >= start])
         if shift_preferences_df.empty:
             print("empty")
             #continue  # or handle it differently
         #match_row = filtered.iloc[0]
+        
         try:
             shift_operator = ShiftOperator(
                 shift_preferences=shift_preferences_df,
                 staff_dataBase=staff_database_df,
                 required_level=required_level_dict
             )
+            for col in shift_operator.shift_preferences.columns:
+                print(f"{col}: {shift_operator.shift_preferences[col].dtype}")
+                print(shift_operator.shift_preferences[col].head())
+                
             shift_schedule = shift_operator.assign_shifts()
         except Exception as e:
             import traceback
@@ -94,6 +103,7 @@ def shift():
     pprint("----------------------------pred_df_final_end_point----------------------------")
     pprint(pred_df_final_end_point)
     
+
     
     # Return both shift schedule and prediction to frontend
     return ({

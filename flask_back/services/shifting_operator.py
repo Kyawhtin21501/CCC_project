@@ -22,7 +22,7 @@ class ShiftOperator:
 
     def assign_shifts(self):
         # Guard clause: ensure data is not empty
-        if self.shift_preferences.empty or self.staff_dataBase.empty:
+        if self.shift_preferences.empty and self.staff_dataBase.empty:
             print(" No shift preferences or staff database provided.")
             return pd.DataFrame()
         print(self.shift_preferences)
@@ -31,6 +31,7 @@ class ShiftOperator:
         final_df = pd.merge(self.shift_preferences, self.staff_dataBase, on="ID", how="left")
         print("final data for shift operation")
         print(final_df.columns)
+        
         # Define Linear Programming problem
         model = LpProblem("Basic_Shift_Assignment", LpMaximize)
 
@@ -62,10 +63,13 @@ class ShiftOperator:
 
                 # Max staff per shift
                 model += lpSum(shift_vars) <= max_staff_per_shift
+                
+
 
                 # Minimum required staff level (predicted from ML model)
                 if date in self.required_level:
-                    model += lpSum([var * lvl for var, lvl in shift_levels]) >= self.required_level[date][shift]
+                    model += lpSum([var * lvl for var, lvl in shift_levels]) >= self.required_level[date]
+
 
         # Constraint: Weekly 28-hour cap for international students
         for staff_id in final_df["ID"].unique():

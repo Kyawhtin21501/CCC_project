@@ -45,7 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final staffList = await ApiService.fetchStaffList();
       setState(() {
-        availableStaffNames = staffList?.map((e) => e.toString()).toList() ?? [];
+        availableStaffNames = staffList.map((e) => e.toString()).toList() ?? [];
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -168,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
         ],
       ),
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(currentScreen: DrawerScreen.dashboard),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
