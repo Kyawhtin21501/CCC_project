@@ -298,7 +298,8 @@ def get_shift_table_dashboard():
         csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'temporary_shift_database_for_dashboard.csv')
         csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
         csv_path = os.path.abspath(csv_path)
-        
+        csv_path_pred = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'predicted_sales.csv')
+        csv_path_pred = os.path.abspath(csv_path_pred)
 
         # Read the CSV into a DataFrame
         df = pd.read_csv(csv_path)
