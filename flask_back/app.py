@@ -5,6 +5,11 @@ import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pprint import pprint
+#from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv  #
+
+load_dotenv()
+
 # Get project root (one folder above flask_back)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,7 +37,8 @@ from datetime import date, timedelta
 import pandas as pd
 app = Flask(__name__)
 CORS(app)  # Enable CORS to allow requests from frontend (e.g. Flutter)
-
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+#db = SQLAlchemy(app)
 # ---------------------------------------
 # Health check endpoint
 # ---------------------------------------
@@ -206,7 +212,7 @@ def shift():
     print("ここまでok")
     #base_dir = os.path.dirname(os.path.dirname(__file__))  
     data_path_preferences = os.path.join(BASE_DIR, "data", "shift_preferences.csv")
-    data_path_staff_db = os.path.join(BASE_DIR, "data", "staff_database.csv")
+    data_path_staff_db = os.path.join(BASE_DIR, "data", "staff_dataBase.csv")
     
     #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
     # Check if files exist
@@ -292,7 +298,8 @@ def get_shift_table_dashboard():
         csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'temporary_shift_database_for_dashboard.csv')
         csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
         csv_path = os.path.abspath(csv_path)
-        
+        csv_path_pred = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'predicted_sales.csv')
+        csv_path_pred = os.path.abspath(csv_path_pred)
 
         # Read the CSV into a DataFrame
         df = pd.read_csv(csv_path)
@@ -451,6 +458,7 @@ def search_staff():
 # ---------------------------------------
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # RenderがPORTを渡す
+    app.run(host="0.0.0.0", port=port)
 

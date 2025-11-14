@@ -166,9 +166,9 @@ class ShiftCreator:
         model = joblib.load(sales_model_path)
 
         df["predicted_sales"] = model.predict(model_input)
-        dishboard_pred_path = os.path.join(self.display_dir, 'predicted_sales.csv')
         #dishboard_pred_path = os.path.join(self.display_dir, 'predicted_sales.csv')
-        if os.path.exists(dishboard_pred_path) and os.stat(dishboard_pred_path).st_size > 0:
+        dishboard_pred_path = os.path.join(self.display_dir, 'predicted_sales.csv')
+        if os.path.exists(dishboard_pred_path) or os.stat(dishboard_pred_path).st_size > 0:
             df_f =df[["date","predicted_sales"]]
             df_f.to_csv(dishboard_pred_path, index=False)
 
