@@ -39,12 +39,13 @@ class ShiftCreator:
 
     def get_festival_days(self):
         """Load festival dates from CSV and return set of 'MM-DD' strings."""
-        file_path = os.path.join(self.data_dir, "project2.csv")
+        file_path = os.path.join(self.data_dir, "complex_restaurant_sales.csv")
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Festival CSV not found at {file_path}")
         festival_data = pd.read_csv(file_path)
-        festival_data['month_day'] = pd.to_datetime(festival_data['date']).dt.strftime("%m-%d")
-        festival_md = festival_data[festival_data['is_festival'] == True]['month_day'].tolist()
+        
+        festival_data['date'] = pd.to_datetime(festival_data['date']).dt.strftime("%m-%d")
+        festival_md = festival_data[festival_data['festival'] == True]['day'].tolist()
         return set(festival_md)
 
     def check_festival_range(self, start, end):
@@ -92,27 +93,42 @@ class ShiftCreator:
             "rain_sum": daily.Variables(0).ValuesAsNumpy(),
             "snowfall_sum": daily.Variables(1).ValuesAsNumpy(),
             "weather_code": daily.Variables(2).ValuesAsNumpy(),
-            "temperature": daily.Variables(3).ValuesAsNumpy()
+            "temperature_2m_max": daily.Variables(3).ValuesAsNumpy()
         }
-
+        def weather_code_to_str(code):
+            if code in range(0, 25):
+                return "Sunny"
+            elif code in range(25, 65):
+                return "Cloudy"
+            elif code in range(65, 80):
+                return "Rainy"
+            else:
+                return "Snowy"
         df = pd.DataFrame(data=daily_data)
         df["date"] = df["date"].dt.tz_localize(None)  # Remove timezone
+        df["weather_code"] = df["weather_code"].apply(weather_code_to_str)
+        df = df.rename(columns={
+            
+            "temperature_2m_max": "temperature",
+            "rain_sum": "rain",
+            "weather_code": "weather"
+        })
+        print("weather_data")
         print(df)
         return df
 
-    def pred_from_model(self, start, end, is_festival, weather_df):
+    def pred_from_model(self,start, end, is_festival, weather_df):
         """Predict sales using trained ML model and merged features."""
+        
         date_range = pd.date_range(start=start, end=end)
         df = pd.DataFrame({
             "date": date_range,
-            "is_festival": is_festival
+            "festival": is_festival
         })
 
-        df["weekday"] = df["date"].dt.weekday
+        df["weekday"] = df["date"].dt.day_name()
         df["month"] = df["date"].dt.month
         df["day"] = df["date"].dt.day
-        df["year"] = df["date"].dt.isocalendar().year
-        df["weekofyear"] = df["date"].dt.isocalendar().week
 
         def assign_season(month):
             if month in [12, 1, 2]:
@@ -127,23 +143,24 @@ class ShiftCreator:
         df["season"] = df["month"].apply(assign_season)
 
         # Load season encoder safely
-        season_encoder_path = os.path.join(self.model_dir, 'xgb_season_encoder.pkl')
-        if not os.path.exists(season_encoder_path):
-            raise FileNotFoundError(f"Season encoder not found at {season_encoder_path}")
-        season_encoder = joblib.load(season_encoder_path)
-        df["season"] = season_encoder.transform(df["season"])
-
+        #season_encoder_path = os.path.join(self.model_dir, 'xgb_season_encoder.pkl')
+        #if not os.path.exists(season_encoder_path):
+        #    raise FileNotFoundError(f"Season encoder not found at {season_encoder_path}")
+        #season_encoder = joblib.load(season_encoder_path)
+        #df["season"] = season_encoder.transform(df["season"])
+        df["date"] = df["date"].dt.date
+        weather_df["date"] = weather_df["date"].dt.date
         # Merge with weather
         df = df.merge(weather_df, on="date", how="left")
-
+        print("Merged DataFrame for prediction:")
+        print(df)
         features = [
-            "weekday", "month", "is_festival", "season",
-            "weather_code", "temperature", "snowfall_sum", "rain_sum",
-            "year", "day", "weekofyear"
+            "month", "day", "weekday", "temperature", "rain","weather","festival","season"
         ]
         model_input = df[features]
-
-        sales_model_path = os.path.join(self.model_dir, 'sales_model0_1.pkl')
+        print("Model input features:")
+        print(model_input)
+        sales_model_path = os.path.join(self.model_dir, 'xgb_sales_model.joblib')
         if not os.path.exists(sales_model_path):
             raise FileNotFoundError(f"Sales model not found at {sales_model_path}")
         model = joblib.load(sales_model_path)
@@ -174,6 +191,7 @@ class ShiftCreator:
         
         
         
-        
+        print("Final predictions with staff levels:")
         print(sales_preds[["date", "predicted_sales", "predicted_staff_level"]])
+        print("type of sales_preds:", type("predicted_staff_level"))
         return sales_preds[["date", "predicted_sales", "predicted_staff_level"]].to_dict(orient="records")
