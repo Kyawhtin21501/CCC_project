@@ -5,13 +5,17 @@ import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pprint import pprint
+from sqlalchemy import create_engine ,Table, MetaData #for connecting to database
 #from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv  #
+import logging
 
 load_dotenv()
 
 # Get project root (one folder above flask_back)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Database connection setup
+engine = create_engine('postgresql+psycopg2://khein21502:@localhost/ccc_project')
 
 # Centralize CSV paths here
 # PATHS = {
@@ -87,13 +91,20 @@ def staff_list():
 def save_data():    
     # Get the data submitted by the frontend (usually from Dashboard)
     data = request.get_json()
+    #check data from frontend
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+        
+    
     
     # Use helper classes to clean/process and save the data
-    staff_manager = StaffManager()
-    handler = UserInputHandler(data, staff_manager)
-    cleaned_names = handler.process_and_save()
+    try:
+        StaffManager.clean_data()
+        UserInputHandler.save_to_database()
+    except Exception as e:
+        logging.exception("Data saving failed")  
+        return jsonify({"error": f"Data saving error: {str(e)}"}), 500
 
-    print(cleaned_names)  # For debug
     
     # Check if retraining is needed
     

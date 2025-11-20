@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from datetime import datetime, timedelta
+from sqlalchemy import create_engine  #for connecting to database
 class UserInputHandler:
     """
     This class handles user-submitted daily input data (e.g., from Dashboard screen),
@@ -20,57 +21,32 @@ class UserInputHandler:
             csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'user_input.csv'))
         #if not os.path.exists(csv_path):
             #pd.DataFrame(columns=['date', 'is_festival', 'sales', 'guests', 'staff_count', 'assigned_staff', 'total_staff_level']).to_csv(csv_path, index=False)
-        self.csv_path = csv_path
-        print(f"[UserInputHandler] Writing to: {self.csv_path}")
-
+       
+      
     def process_and_save(self):
-        """
-        Process the input:
-        - Clean assigned staff names
-        - Calculate total staff level
-        - Save all data as a new row in user_input.csv
-        """
         input_row = {
-            'date': self.data.get('date'),                        # e.g., "2025-07-25"
-            'is_festival': self.data.get('event'),               # Boolean or 1/0
-            'sales': self.data.get('sales'),                     # Predicted or actual sales
-            'guests': self.data.get('customer_count'),           # Number of guests
-            'staff_count': self.data.get('staff_count'),         # Number of assigned staff
-            'assigned_staff': self.data.get('staff_names'),      # List of staff names
+            'date': self.data.get('date'),
+            'is_festival': self.data.get('event'),
+            'sales': self.data.get('sales'),
+            'guests': self.data.get('customer_count'),
+            'staff_count': self.data.get('staff_count'),
+            'assigned_staff': self.data.get('staff_names'),
         }
+
         
-        
-        # Clean and normalize names (e.g., full-width to half-width, remove extra spaces)
+    # Clean and normalize names
         cleaned_names = self.staff_manager.clean_names(input_row['assigned_staff'])
         
-        # Calculate total staff level from cleaned names
-        input_row['assigned_staff'] = cleaned_names
-        input_row['total_staff_level'] = self.staff_manager.calculate_total_level(cleaned_names)
-
-        # Create a DataFrame with just one row
-        df = pd.DataFrame([input_row])
-        season_map = {
-            'summer': range(6, 9),  # June to August
-            'winter': range(12, 3),  # December to February
-            'spring': range(3, 6),   # March to May
-            'autumn': range(9, 12)   # September to November
-          
+        
+        return {
+            'date': input_row['date'],
+            'is_festival': True if self.data.get('event') == "True" else False, # Convert to boolean
+            'sales': input_row['sales'],
+            'guests': input_row['guests'],
+            'staff_count': input_row['staff_count'],
+            'assigned_staff': ', '.join(cleaned_names),
         }
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
-        df["year"] = df["date"].dt.isocalendar().year
-        df["month"] = df["date"].dt.month
-        df["day"] = df["date"].dt.day
-        df["weekday"] = df["date"].dt.weekday
-        df["weekofyear"] = df["date"].dt.isocalendar().week
-        df['season'] = df['month'].apply(lambda x : next((season for season, months in season_map.items() if x in months), 'unknown'))
-        # Save to CSV in append mode. Add header only if file doesn't already exist
-        print(df)
-        columns = df.columns.tolist()
-        print(columns)
-        file_exists = os.path.isfile(self.csv_path)
-        df.to_csv(self.csv_path, mode="a", header=not file_exists,index=False, columns=columns)
 
-        return cleaned_names
 
 
 """
