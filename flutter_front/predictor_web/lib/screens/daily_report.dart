@@ -74,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return {
       "date": _selectedDate?.toIso8601String().split('T').first ?? '',
       "day": _selectedDate?.weekday.toString() ?? '',
-      "event": festivalStatus == '1' ? "True" : "False",
+      "event": festivalStatus == '1' ? true : false,
       "customer_count": int.tryParse(customerController.text) ?? 0,
       "sales": int.tryParse(salesController.text) ?? 0,
       "staff_names": selectedStaffNames,

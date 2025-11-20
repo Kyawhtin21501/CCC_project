@@ -89,26 +89,65 @@ def staff_list():
 
 @app.route('/user_input', methods=['POST'])
 def save_data():    
-    # Get the data submitted by the frontend (usually from Dashboard)
+    # Receive JSON data sent from the frontend dashboard
     data = request.get_json()
-    #check data from frontend
+    
+    print(f"Received data: {data}")  # Debug print to inspect incoming data
+
+    # Validate that data exists
     if not data:
+        print("f{data}がありません")
         return jsonify({"error": "No data provided"}), 400
+
+    # Required fields that must exist in the incoming JSON
+    required_columns = ("date", "event", "sales", "customer_count", "staff_count")
+
+    # Find any missing fields
+    missing = [col for col in required_columns if col not in data]
+
+    # If any required field is missing, return error
+    if missing:
+        return jsonify({"error": f"Missing required fields: {missing}"}), 400
+
+    # Convert date from string to date object if necessary
+    if not isinstance(data["date"], date):
+        data["date"] = date.fromisoformat(data["date"])
         
+    # Validate sales data type (must be integer)
+    if not isinstance(data["sales"], int):
+        print("f{data}のsalesは整数ではありません")
+        return jsonify({"error": "sales must be an integer"}), 400
     
+    # Validate customer_count data type (must be integer)
+    if not isinstance(data["customer_count"], int):
+        print("f{data}のcustomer_countは整数ではありません")
+        return jsonify({"error": "customer_count must be an integer"}), 400
     
-    # Use helper classes to clean/process and save the data
+    # Validate event flag (must be boolean)
+    if not isinstance(data["event"], bool):
+        print("f{data}のeventはブール値ではありません")
+        return jsonify({"error": "event must be a boolean"}), 400
+
+    # Process and clean the data using helper classes
     try:
-        StaffManager.clean_data()
-        UserInputHandler.save_to_database()
+        manager = StaffManager()
+        manager = StaffManager()  # Initialize StaffManager
+
+        # Clean staff names before saving
+        data["staff_names"] = manager.clean_names(data["staff_names"])
+
+        # Prepare data processor for saving and validation
+        save_processor = UserInputHandler(input_data=data, staff_manager=manager)
+
+        # Process the data and return cleaned/validated version
+        data = save_processor.process_and_save()
+
     except Exception as e:
-        logging.exception("Data saving failed")  
+        # Log any unexpected error during save
+        logging.exception("Data saving failed")
         return jsonify({"error": f"Data saving error: {str(e)}"}), 500
 
-    
-    # Check if retraining is needed
-    
-    
+    # If reached here, saving is successful
     return jsonify({"message": "Data saved successfully"}), 200
 
 

@@ -22,7 +22,7 @@ class StaffManager:
         self.staff_df = pd.read_csv(staff_csv_path)
         print(f"[StaffManager] Loaded staff database from: {staff_csv_path}")
 
-    def clean_names(self, names):
+    def clean_names(self, names = None):
         """
         Clean a list of staff names:
         - Normalize Unicode (e.g., full-width to half-width)
@@ -35,12 +35,12 @@ class StaffManager:
             name = re.sub(r"\s+", " ", name).title()                    # Remove extra spaces and capitalize
             cleaned.append(name)
         return cleaned
-
+"""
     def calculate_total_level(self, names):
-        """
+        
         Given a list of staff names, return the total of their skill levels.
         Useful for checking combined team capacity.
-        """
+    
         total = 0
         for name in names:
             match = self.staff_df[self.staff_df['Name'] == name]
@@ -50,3 +50,4 @@ class StaffManager:
                 except ValueError:
                     print(f"[StaffManager] Warning: Invalid level for {name}")
         return total
+"""
