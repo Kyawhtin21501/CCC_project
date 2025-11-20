@@ -12,14 +12,13 @@ class ShiftPreferences:
 
     def save_to_database(self):
      
-        os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+        #os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
 
 
         self.data['date'] = pd.to_datetime(self.data['date']).dt.strftime('%Y-%m-%d')
 
     
-        if not os.path.exists(self.staff_database_path):
-            raise FileNotFoundError(f"Staff database not found: {self.staff_database_path}")
+        
         
         staff_database = pd.read_csv(self.staff_database_path)
         print("[DEBUG] staff_database loaded:")

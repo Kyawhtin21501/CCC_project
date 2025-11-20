@@ -130,8 +130,7 @@ def save_data():
 
     # Process and clean the data using helper classes
     try:
-        manager = StaffManager()
-        manager = StaffManager()  # Initialize StaffManager
+        manager = StaffManager() # Initialize StaffManager
 
         # Clean staff names before saving
         data["staff_names"] = manager.clean_names(data["staff_names"])
@@ -141,7 +140,9 @@ def save_data():
 
         # Process the data and return cleaned/validated version
         data = save_processor.process_and_save()
-
+        df = pd.DataFrame([data])
+        df.to_sql('user_input', engine, if_exists='append', index=False)
+        
     except Exception as e:
         # Log any unexpected error during save
         logging.exception("Data saving failed")
@@ -207,8 +208,8 @@ def save_shift_preferences():
         #print(df)
 
         # Step 3: Save the DataFrame to CSV using the ShiftPreferences class
-        save_path = os.path.join(app.root_path, '../data', 'shift_preferences.csv')
-        saver = ShiftPreferences(df, save_path)
+        
+        saver = ShiftPreferences(df, engine)
         saver.save_to_database()
 
         # Step 4: Return success response
