@@ -1,437 +1,115 @@
-import sys
+# app.py (PostgreSQL version)
 import os
-from datetime import date, timedelta
+import sys
+import logging
+from datetime import date, timedelta, datetime
 import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
 from pprint import pprint
-from sqlalchemy import create_engine ,Table, MetaData #for connecting to database
-#from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv  #
-import logging
 
+# Load env
 load_dotenv()
 
-# Get project root (one folder above flask_back)
+# Logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+# Database
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://khein21502:@localhost/ccc_project")
+engine = create_engine(DATABASE_URL)
+
+# Project paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Database connection setup
-engine = create_engine('postgresql+psycopg2://khein21502:@localhost/ccc_project')
-
-# Centralize CSV paths here
-# PATHS = {
-#     "shift_preferences": os.path.join(BASE_DIR, "data", "shift_preferences.csv"),
-#     "shift_data_base": os.path.join(BASE_DIR, "data", "shift_data_base.csv"),
-#     "staff_database": os.path.join(BASE_DIR, "data", "staff_dataBase.csv"),
-#     "user_input": os.path.join(BASE_DIR, "data", "user_input.csv"),
-#     "project": os.path.join(BASE_DIR, "data", "project.csv")
-# }
-
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import all necessary service modules
+# Services (keep using your existing services if needed)
 from services.staff_manager import StaffManager
 from services.user_input_handler import UserInputHandler
 from services.pred import ShiftCreator
-from services.staff_pro import CreateStaff, DeleteStaff, EditStaff, SearchStaff, StaffProfileOperation
 from services.shifting_operator import ShiftOperator
 from services.shift_preferences import ShiftPreferences
-#from services.retrain import reTrain_model
-from datetime import date, timedelta
-import pandas as pd
+
 app = Flask(__name__)
-CORS(app)  # Enable CORS to allow requests from frontend (e.g. Flutter)
-#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
-#db = SQLAlchemy(app)
-# ---------------------------------------
-# Health check endpoint
-# ---------------------------------------
+CORS(app)  # allow from all origins (restrict in production)
+
+staff_manager = StaffManager()  # uses DB inside as we designed
+
+# -------------------------
+# Health check
+# -------------------------
 @app.route('/')
 def home():
-    # This is a basic check to confirm the server is running
     return "API Server is Running"
 
-# ---------------------------------------
-# Save user input (e.g. sales, staff count)
-# add retrain model start point
-# --------------------------------------
-#_________________________________________staff list for user list show off__________________________
-
+# -------------------------
+# staff_list (existing route name)
+# -------------------------
 @app.route('/staff_list', methods=['GET'])
 def staff_list():
     try:
-        
-
-        staff_df = pd.read_sql("SELECT * FROM staff_profile", engine)
-        
-        if "name" in staff_df.columns:
-            names = staff_df["name"].dropna().unique().tolist()
-            return jsonify(names)
+        df = pd.read_sql("SELECT * FROM staff_profile", engine)
+        # handle possible column name variations
+        if "name" in df.columns:
+            names = df["name"].dropna().unique().tolist()
+        elif "Name" in df.columns:
+            names = df["Name"].dropna().unique().tolist()
         else:
-            return jsonify({"error": "No 'Name' column found"}), 400
+            return jsonify({"error": "No 'name' column found in staff_profile"}), 500
+        return jsonify(names)
     except Exception as e:
+        logging.exception("Failed to load staff_list")
         return jsonify({"error": str(e)}), 500
 
-
-# --------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-#-------------------------------------------data end point for dashboard----------------------------------
-
-
-@app.route('/user_input', methods=['POST'])
-def save_data():    
-    # Receive JSON data sent from the frontend dashboard
-    data = request.get_json()
-    
-    print(f"Received data: {data}")  # Debug print to inspect incoming data
-
-    # Validate that data exists
-    if not data:
-        print("f{data}がありません")
-        return jsonify({"error": "No data provided"}), 400
-
-    # Required fields that must exist in the incoming JSON
-    required_columns = ("date", "event", "sales", "customer_count", "staff_count")
-
-    # Find any missing fields
-    missing = [col for col in required_columns if col not in data]
-
-    # If any required field is missing, return error
-    if missing:
-        return jsonify({"error": f"Missing required fields: {missing}"}), 400
-
-    # Convert date from string to date object if necessary
-    if not isinstance(data["date"], date):
-        data["date"] = date.fromisoformat(data["date"])
-        
-    # Validate sales data type (must be integer)
-    if not isinstance(data["sales"], int):
-        print("f{data}のsalesは整数ではありません")
-        return jsonify({"error": "sales must be an integer"}), 400
-    
-    # Validate customer_count data type (must be integer)
-    if not isinstance(data["customer_count"], int):
-        print("f{data}のcustomer_countは整数ではありません")
-        return jsonify({"error": "customer_count must be an integer"}), 400
-    
-    # Validate event flag (must be boolean)
-    if not isinstance(data["event"], bool):
-        print("f{data}のeventはブール値ではありません")
-        return jsonify({"error": "event must be a boolean"}), 400
-
-    # Process and clean the data using helper classes
-    try:
-        manager = StaffManager() # Initialize StaffManager
-
-        # Clean staff names before saving
-        data["staff_names"] = manager.clean_names(data["staff_names"])
-
-        # Prepare data processor for saving and validation
-        save_processor = UserInputHandler(input_data=data, staff_manager=manager)
-
-        # Process the data and return cleaned/validated version
-        data = save_processor.process_and_save()
-        df = pd.DataFrame([data])
-        df.to_sql('user_input', engine, if_exists='append', index=False)
-        
-    except Exception as e:
-        # Log any unexpected error during save
-        logging.exception("Data saving failed")
-        return jsonify({"error": f"Data saving error: {str(e)}"}), 500
-
-    # If reached here, saving is successful
-    return jsonify({"message": "Data saved successfully"}), 200
-
-
-#/////data end point for shift table in dashboard
-# ---------------------------------------
-"""
-[
-  {
-    "date": "2025-08-06",
-    "shift": "morning",
-    "name_level": "Kyaw Htin Hein (Lv5), Lisa (Lv4)"
-  },
-  {
-    "date": "2025-08-06",
-    "shift": "afternoon",
-    "name_level": "Yan Shin Shein (Lv5)"
-  },
-  {
-    "date": "2025-08-06",
-    "shift": "night",
-    "name_level": "Kyaw Htin Hein (Lv5), Kyi Pyar (Lv3)"
-  }
-]
-example response of shift assignment and sale prediction 
-
-"""
-
-
-
-# ---------------------------------------Save shift preferences to CSV file for create shift screen ----------------------------------------
-# This endpoint receives shift preferences from the frontend and saves them to a CSV file.
-# The preferences are expected to be in a specific format, and the date is also provided.
-# The CSV file is saved in the 'data' directory of the Flask application.
-@app.route('/save_shift_preferences', methods=['POST'])
-def save_shift_preferences():
-    """
-    Endpoint to receive shift preferences from the frontend and save them to a CSV file.
-    
-    """
-    """
-    """
-    try:
-        # Step 1: Parse JSON data from request
-        data = request.get_json()
-        date_str = data.get("date")
-        preferences = data.get("preferences")
-
-        # Debug print to verify incoming data
-        #print(f"Received date: {date_str}, preferences: {preferences}")
-
-        # Step 2: Convert preferences dictionary into a DataFrame
-        df = pd.DataFrame.from_dict(preferences, orient='index').reset_index()
-        df.rename(columns={'index': 'staff'}, inplace=True)
-        df["date"] = date_str
-
-        # Debug print the first few rows of the DataFrame
-        #print(df)
-
-        # Step 3: Save the DataFrame to CSV using the ShiftPreferences class
-        
-        saver = ShiftPreferences(df)
-        saver.save_to_database()
-
-        # Step 4: Return success response
-        return jsonify({"message": "Shift preferences saved"}), 200
-
-    except Exception as e:
-        # Print error details for debugging
-        print(e)
-        return jsonify({"error": str(e)}), 500
-    
-
-# ---------------------------------------
-# Predict sales and assign shifts based on input dates and location
-# ---------------------------------------
-
-@app.route('/shift', methods=['POST', 'GET'])
-def shift():
-    data = request.get_json()
-    start_date = data.get("start_date")
-    end_date = data.get("end_date")
-    
-    #latitude = data.get("latitude", 35.6762) #kyipyar hlaing
-    #longitude = data.get("longitude", 139.6503)#kyipyar hlaing
-    #latitude = 52.52
-    #longitude = 13.41
-    
-    # --- Step 1: Predict daily required staff level ---
-    creator = ShiftCreator(start_date, end_date)
-
-    # Get start/end date objects
-    start, end = creator.date_data_from_user()
-    
-    print ("from user start and end " , start,end)
-    if not start or not end:
-        return ({"error": "Invalid date range"})
-    # Get external data
-    festivals = creator.check_festival_range(start, end) 
-    # Check if each day has a festival
-    start_wea ,end_wea= start +timedelta(days=1) , end + timedelta(days=1)
-    weather_df = creator.weather_data(start_wea, end_wea)         # Get weather data for each day
-
-    # Predict sales and required staff levels
-    pred_df = creator.pred_from_model(start, end, festivals, weather_df)
-    result_df = creator.pred_staff_count(pred_df)
-    
-
-    # Get required staff level by hour for each day
-    print("----------------------------pred_df----------------------------")
-    #pprint(type(result_df))
-    # --- Step 2: Load staff preferences and staff profile info ---
-    print("ここまでok")
-    #base_dir = os.path.dirname(os.path.dirname(__file__))  
-  
-    
-    #result_df["predicted_staff_level"] = result_df[result_df["predicted_staff_level"]].astype(int)
-    # Check if files exist
-    
-    print("data colect ok")
-    
-    # Load CSVs
-    shift_preferences_df = pd.read_sql_table("staff_schedule", engine)
-    staff_database_df = pd.read_sql_table("staff_profile", engine)
-      # Convert to DataFrame for easier manipulation
- 
-    #pprint(result_df["predicted_staff_level"])
-    # --- Step 3: Run shift optimization (LP) ---
-    result_df = pd.DataFrame(result_df)
-    required_level_dict = result_df.set_index("date")["predicted_staff_level"].astype(int).to_dict()
-    
-    shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
-    
-    #dishboard_pred_path = os.path.join(BASE_DIR,"data/data_for_dashboard/" 'temporary_shift_database_for_dashboard.csv')
-    print("Kyaw Htin Hein")
-    shift_preferences_df = shift_preferences_df[(shift_preferences_df["date"] >= start) & (shift_preferences_df["date"] <= end)]
-  
-        #shift_preferences_df = shift_preferences_df["date"].between(start, end)
-    print("final data check" ,shift_preferences_df)
-    if shift_preferences_df.empty:
-            print("empty")
-            #continue  # or handle it differently
-        #match_row = filtered.iloc[0]
-    try:
-            shift_operator = ShiftOperator(
-                shift_preferences=shift_preferences_df,
-                staff_dataBase=staff_database_df,
-                required_level=result_df
-            )
-            shift_schedule = shift_operator.assign_shifts()
-            
-                
-            #staff_database_df
-            pd.read_sql_table("predicted_sales", engine)
-            print("File saved successfully!")
-                
-    # ファイルが存在しないか空の場合、新規保存
-                   
-    except Exception as e:
-                print(f"Failed to save CSV: {e}")
-
-        
-    except Exception as e:
-            import traceback
-            print("ShiftOperator failed:", e)
-            traceback.print_exc()
-            return {"error": str(e)}, 500
-   
-    # --- Step 4: Return results as JSON-like dict ---
-    # Convert predicted staff level (from ML model) to list of dicts
-    pred_df_final_end_point = pred_df.to_dict(orient="records")
-    pprint("----------------------------pred_df_final_end_point----------------------------")
-    pprint(pred_df_final_end_point)
-    
-    
-    # Return both shift schedule and prediction to frontend
-    return jsonify({
-        "shift_schedule": shift_schedule.to_dict(orient="records"),  # Shift assignment result
-        "prediction": pred_df_final_end_point                        # Staff requirement prediction
-    }),200
-    
-
-
-
-
-# ---------------------------------------------------------------------------------------------------------------------------------
-
-
-@app.route('/shift_table/dashboard', methods=['GET' , 'POST'])
-def get_shift_table_dashboard():
-    """
-    Endpoint to retrieve the shift table for the dashboard.
-    Returns a JSON response with the shift assignments.
-    """
-    try:
-        # Load the CSV file containing shift assignments
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'temporary_shift_database_for_dashboard.csv')
-        csv_path_staff = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
-        csv_path = os.path.abspath(csv_path)
-        csv_path_pred = os.path.join(base_dir, '..', 'data/data_for_dashboard/', 'predicted_sales.csv')
-        csv_path_pred = os.path.abspath(csv_path_pred)
-
-        # Read the CSV into a DataFrame
-        df = pd.read_sql_table(
-            table_name='temporary_shift_for_dashboard',  # 読み込みたいテーブル名
-            con=engine,                   # 接続エンジン
-            schema='public'               # スキーマ名 (PostgreSQLなどの場合)
-)
-        #df_staff = pd.read_csv(csv_path_staff)
-        
-        # Convert DataFrame to a list of dictionaries for JSON response
-        shift_data = df.to_dict(orient='records')
-        #staff_data = pd.read_csv(csv_path_staff).to_dict(orient='records')
-        #result = pd.DataFrame(shift_data).merge(pd.DataFrame(staff_data), left_on='ID', right_on='ID', how='left')
-        pprint(shift_data)
-        return jsonify(shift_data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-
-#////data end point for pred_sale in dashboard
-@app.route('/pred_sale/dashboard', methods=['GET' , 'POST'])
-def get_pred_sale_dashboard():
-    """
-    Endpoint to retrieve the predicted sales data for the dashboard.
-    Returns a JSON response with the predicted sales.
-    """
-    try:
-        # Load the CSV file containing predicted sales
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, '..', 'data/data_for_dashboard', 'predicted_sales.csv')
-        csv_path = os.path.abspath(csv_path)
-
-        # Read the CSV into a DataFrame
-        df = pd.read_sql("SELECT * FROM predicted_sales", engine)
-
-        # Convert DataFrame to a list of dictionaries for JSON response
-        pred_data = df.to_dict(orient='records')
-        
-        return jsonify(pred_data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-
-
-#------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-# ---------------------------------------Staff profile operations (CRUD)----------------------------------------
-# ---------------------------------------
-# Create a new staff profile (from StaffProfile screen)
-# ---------------------------------------
+# -------------------------
+# Create staff (matches original /services/staff POST)
+# -------------------------
 @app.route('/services/staff', methods=['POST'])
 def create_staff():
-    data = request.get_json()
-    print(f"Received JSON: {data}")  # Debug
-
     try:
-        new_staff = CreateStaff(
-            name=data["Name"],
-            level=int(data["Level"]),
-            gender=data["Gender"],
-            age=int(data["Age"]),
-            email=data["Email"],
-            status=data.get("status") or data.get("Status") or "",
-        )
-        result = new_staff.operate()
-        return jsonify({"message": f"Staff created: {result}"}), 200
+        data = request.get_json(force=True)
+        logging.info(f"Create staff request: {data}")
+
+        # Basic validation
+        required = ["Name", "Level", "Gender", "Age", "Email"]
+        missing = [k for k in required if k not in data]
+        if missing:
+            return jsonify({"error": f"Missing fields: {missing}"}), 400
+
+        # Clean / normalize
+        name = data["Name"].strip()
+        level = int(data["Level"])
+        gender = data["Gender"]
+        age = int(data["Age"])
+        email = data["Email"]
+        status = data.get("status") or data.get("Status") or ""
+
+        # Upsert into staff_profile
+        query = text("""
+            INSERT INTO staff_profile (name, level, gender, age, email, status)
+            VALUES (:name, :level, :gender, :age, :email, :status)
+            RETURNING id, name
+        """)
+        with engine.begin() as conn:
+            res = conn.execute(query, {
+                "name": name, "level": level, "gender": gender,
+                "age": age, "email": email, "status": status
+            })
+            row = res.fetchone()
+            # If your table uses different column names, adjust accordingly.
+
+        return jsonify({"message": "Staff created", "staff": {"id": row[0], "name": row[1]}}), 200
+
     except Exception as e:
-        print(f"Error: {e}")
+        logging.exception("Failed to create staff")
         return jsonify({"error": str(e)}), 400
 
-# ---------------------------------------
-# Edit existing staff info by ID
-# ---------------------------------------
-# Khh ok 
-
-@app.route('/services/staff/<int:staff_id>', methods=['PUT','GET','POST'])
+# -------------------------
+# Update / Get staff by ID (matches original route and methods)
+# PUT: update, GET/POST: get info
+# -------------------------
+@app.route('/services/staff/<int:staff_id>', methods=['PUT', 'GET', 'POST'])
 def update_staff_by_id(staff_id):
     try:
         if request.method == 'PUT':
@@ -440,76 +118,336 @@ def update_staff_by_id(staff_id):
             updates = request.get_json(silent=True) or {}
             if not isinstance(updates, dict) or not updates:
                 return jsonify({"error": "Request body must be a non-empty JSON object"}), 400
-            if 'ID' in updates:
+            if 'ID' in updates or 'id' in updates:
                 return jsonify({"error": "ID cannot be updated"}), 400
 
-            editor = EditStaff(staff_id=staff_id, updates=updates)
-            ok = editor.operate()
-            if not ok:
-                return jsonify({"error": "Staff ID not found or no updates made"}), 404
+            # Build update SQL dynamically but safely
+            allowed = {"Name", "Level", "Gender", "Age", "Email", "status", "name", "level"}
+            set_parts = []
+            params = {"staff_id": staff_id}
+            for k, v in updates.items():
+                if k not in allowed:
+                    continue
+                col = k.lower() if k[0].isupper() else k
+                param_name = f"p_{col}"
+                set_parts.append(f"{col} = :{param_name}")
+                params[param_name] = v
+
+            if not set_parts:
+                return jsonify({"error": "No valid fields to update"}), 400
+
+            query = text(f"UPDATE staff_profile SET {', '.join(set_parts)} WHERE id = :staff_id RETURNING id")
+            with engine.begin() as conn:
+                res = conn.execute(query, params)
+                updated = res.fetchone()
+                if not updated:
+                    return jsonify({"error": "Staff ID not found or no update made"}), 404
+
             return jsonify({"message": f"Staff {staff_id} updated successfully"}), 200
 
-        elif request.method in ('GET', 'POST'): 
-            DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '..', 'data', 'staff_dataBase.csv')
-            csv_path = os.path.abspath(DATA_PATH)
-            df = pd.read_csv(csv_path, dtype={'ID': str})
-            staff = df[df['ID'] == str(staff_id)]
-            if staff.empty:
+        else:
+            # GET or POST -> fetch staff info by id
+            query = text("SELECT * FROM staff_profile WHERE id = :staff_id")
+            df = pd.read_sql_query(query, engine, params={"staff_id": staff_id})
+            if df.empty:
                 return jsonify({"error": "Staff not found"}), 404
-            return jsonify(staff.iloc[0].to_dict()), 200
-
-    
-        return jsonify({"error": "Method not allowed"}), 405
+            # convert row to dict
+            record = df.iloc[0].to_dict()
+            # normalize keys for frontend if needed (keep original casing)
+            return jsonify(record), 200
 
     except Exception as e:
+        logging.exception("Update/Get staff failed")
         return jsonify({'error': str(e)}), 500
 
-# -------------------------------
-
-
-
-
-# ---------------------------------------
-# Delete staff record by ID
-# ---------------------------------------
+# -------------------------
+# Delete staff (matches original /services/staff/<id> DELETE)
+# -------------------------
 @app.route('/services/staff/<int:staff_id>', methods=['DELETE'])
-      
 def delete_staff(staff_id):
     try:
-        #base_dir = os.path.dirname(os.path.abspath(__file__))
-        #csv_path = os.path.join(base_dir, '..', 'data', 'staff_dataBase.csv')
-        #csv_path = os.path.abspath(csv_path)
-        #print(f"Looking for CSV at: {csv_path}")
-        deleter = DeleteStaff(staff_id=staff_id)
-        result = deleter.operate()
-        return jsonify({"message": f"Staff {result} deleted successfully"}), 200
+        # Remove staff from staff_profile and related schedules (transactional)
+        with engine.begin() as conn:
+            # Delete from staff_schedule (or staff_shift) where staff id referenced
+            # adjust column names depending on your schema
+            conn.execute(text("DELETE FROM staff_schedule WHERE id = :staff_id"), {"staff_id": staff_id})
+            res = conn.execute(text("DELETE FROM staff_profile WHERE id = :staff_id RETURNING id"), {"staff_id": staff_id})
+            deleted = res.fetchone()
+            if not deleted:
+                return jsonify({"error": "Staff not found"}), 404
+
+        return jsonify({"message": f"Staff {staff_id} deleted successfully"}), 200
+
     except Exception as e:
+        logging.exception("Delete staff failed")
         return jsonify({"error": str(e)}), 400
 
-# ---------------------------------------
-# Search staff by ID or Name
-# ---------------------------------------
+# -------------------------
+# Search staff (matches original route)
+# GET ?term=... & ?by=ID|Name
+# -------------------------
 @app.route('/services/staff/search', methods=['GET'])
 def search_staff():
-    
     term = request.args.get("term")
-    by = request.args.get("by", "ID")  # Default search by ID
+    by = request.args.get("by", "ID")
     try:
-        searcher = SearchStaff(search_term=term, by=by)
-        result = searcher.operate()
-        if result == "error":
+        if by.upper() == "ID":
+            # ensure integer
+            try:
+                staff_id = int(term)
+            except Exception:
+                return jsonify({"error": "Invalid ID"}), 400
+            df = pd.read_sql_query(text("SELECT * FROM staff_profile WHERE id = :id"), engine, params={"id": staff_id})
+        else:
+            # search by name (case-insensitive)
+            df = pd.read_sql_query(text("SELECT * FROM staff_profile WHERE name ILIKE :name"), engine, params={"name": f"%{term}%"})
+
+        if df.empty:
             return jsonify({"message": "Not found"}), 404
-        return jsonify(result), 200
+        return jsonify(df.to_dict(orient="records")), 200
     except Exception as e:
+        logging.exception("Search staff failed")
         return jsonify({"error": str(e)}), 400
 
-# ---------------------------------------
-# Run the Flask app
-# ---------------------------------------
+# -------------------------
+# Save dashboard user input (/user_input)
+# -------------------------
+@app.route('/user_input', methods=['POST'])
+def save_data():
+    data = request.get_json(force=True)
+    logging.info(f"Received /user_input: {data}")
 
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
 
+    required_columns = ("date", "event", "sales", "customer_count", "staff_count")
+    missing = [col for col in required_columns if col not in data]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {missing}"}), 400
+
+    # Normalize types
+    try:
+        # date: accept date string or date object
+        if not isinstance(data["date"], (date, datetime)):
+            data["date"] = date.fromisoformat(data["date"])
+        # numeric fields
+        data["sales"] = int(data["sales"])
+        data["customer_count"] = int(data["customer_count"])
+        data["staff_count"] = int(data["staff_count"])
+        # event -> bool (support 1/0/"True"/True)
+        ev = data["event"]
+        if isinstance(ev, bool):
+            data["event"] = ev
+        elif isinstance(ev, (int, float)):
+            data["event"] = bool(int(ev))
+        else:
+            data["event"] = str(ev).lower() in ("true", "1", "yes")
+    except Exception as e:
+        logging.exception("Validation failed")
+        return jsonify({"error": f"Invalid data types: {str(e)}"}), 400
+
+    try:
+        # Clean staff names and compute any additional fields with service classes
+        data["staff_names"] = staff_manager.clean_names(data.get("staff_names", []))
+        save_processor = UserInputHandler(input_data=data, staff_manager=staff_manager)
+        processed = save_processor.process_and_save()  # should return dict ready to save
+
+        # Save to DB user_input table
+        # Ensure processed keys map to columns: date, is_festival, sales, guests, staff_count, assigned_staff, total_staff_level (if present)
+        columns = list(processed.keys())
+        placeholders = ", ".join([f":{c}" for c in columns])
+        colnames = ", ".join(columns)
+        insert_sql = text(f"INSERT INTO user_input ({colnames}) VALUES ({placeholders})")
+        with engine.begin() as conn:
+            conn.execute(insert_sql, processed)
+
+        return jsonify({"message": "Data saved successfully"}), 200
+
+    except Exception as e:
+        logging.exception("Data saving failed")
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------
+# Save shift preferences (/save_shift_preferences) — write into staff_schedule
+# -------------------------
+@app.route('/save_shift_preferences', methods=['POST'])
+def save_shift_preferences():
+    try:
+        data = request.get_json(force=True)
+        date_str = data.get("date")
+        preferences = data.get("preferences")
+        if not date_str or preferences is None:
+            return jsonify({"error": "date and preferences required"}), 400
+
+        # Build DataFrame from the preferences dict (keyed by staff name or id)
+        df = pd.DataFrame.from_dict(preferences, orient='index').reset_index()
+        df.rename(columns={'index': 'staff'}, inplace=True)
+        df["date"] = date_str
+
+        # Merge with staff_profile to attach IDs (if staff names provided)
+        staff_df = pd.read_sql("SELECT id, name FROM staff_profile", engine)
+        merged = df.merge(staff_df, left_on="staff", right_on="name", how="left")
+
+        # For each row, insert or update into staff_schedule table (id, date, morning, afternoon, night)
+        with engine.begin() as conn:
+            # delete existing for date and same ids to avoid duplicates (simple strategy)
+            unique_date = date_str
+            conn.execute(text("DELETE FROM staff_schedule WHERE date = :d"), {"d": unique_date})
+            # insert rows
+            for _, row in merged.iterrows():
+                insert = text("""
+                    INSERT INTO staff_schedule (id, date, morning, afternoon, night)
+                    VALUES (:id, :date, :morning, :afternoon, :night)
+                """)
+                params = {
+                    "id": int(row["id"]) if pd.notna(row.get("id")) else None,
+                    "date": row["date"],
+                    "morning": bool(row.get("morning")) if "morning" in row else False,
+                    "afternoon": bool(row.get("afternoon")) if "afternoon" in row else False,
+                    "night": bool(row.get("night")) if "night" in row else False
+                }
+                # if id is None, skip or handle differently; here we skip rows without id
+                if params["id"] is None:
+                    logging.warning(f"Skipping preference for unknown staff: {row.get('staff')}")
+                    continue
+                conn.execute(insert, params)
+
+        return jsonify({"message": "Shift preferences saved"}), 200
+
+    except Exception as e:
+        logging.exception("Save shift preferences failed")
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------
+# /shift endpoint: predict and assign shifts (keeps original route name)
+# -------------------------
+@app.route('/shift', methods=['POST', 'GET'])
+def shift():
+    try:
+        data = request.get_json(force=True)
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        if not start_date or not end_date:
+            return jsonify({"error": "start_date and end_date required"}), 400
+
+        # Use ShiftCreator (expects strings in YYYY-MM-DD)
+        creator = ShiftCreator(start_date, end_date)
+        start, end = creator.date_data_from_user()
+        if not start or not end:
+            return jsonify({"error": "Invalid date range"}), 400
+
+        # festivals, weather
+        festivals = creator.check_festival_range(start, end)
+        # open-meteo expects next-day range in your earlier code; keep same behavior
+        weather_df = creator.weather_data(start + timedelta(days=1), end + timedelta(days=1))
+
+        pred_df = creator.pred_from_model(start, end, festivals, weather_df)
+        result_df = creator.pred_staff_count(pred_df)  # returns DataFrame or list of dicts per earlier impl
+
+        # Load staff schedule & profile from DB
+        shift_preferences_df = pd.read_sql_table("staff_schedule", engine)
+        staff_database_df = pd.read_sql_table("staff_profile", engine)
+        shift_preferences_df["date"] = pd.to_datetime(shift_preferences_df["date"]).dt.date
+
+        # Filter by requested date range
+        shift_preferences_df = shift_preferences_df[(shift_preferences_df["date"] >= start) & (shift_preferences_df["date"] <= end)]
+
+        # Run shift optimization
+        # Pass required_level as DataFrame (ShiftOperator implementation should handle)
+        shift_operator = ShiftOperator(
+            shift_preferences=shift_preferences_df,
+            staff_dataBase=staff_database_df,
+            required_level=result_df
+        )
+        shift_schedule = shift_operator.assign_shifts()
+
+        # Save temporary shift schedule into temporary_shift_for_dashboard table
+        # Example: create rows with date, shift, name_level columns (adapt as needed)
+        if not shift_schedule.empty:
+            # Convert date column to datetime
+            df_to_save = shift_schedule.copy()
+            # Ensure columns: date, shift, id, level, name (depending on your ShiftOperator output)
+            # Here we store as-is into temporary_shift_for_dashboard (adjust columns as DB schema)
+            with engine.begin() as conn:
+                # delete existing for date range
+                conn.execute(text("DELETE FROM temporary_shift_for_dashboard WHERE date >= :start AND date <= :end"),
+                             {"start": start, "end": end})
+                # insert rows
+                for _, row in df_to_save.iterrows():
+                    insert = text("""
+                        INSERT INTO temporary_shift_for_dashboard (date, shift, staff_id, staff_name, level)
+                        VALUES (:date, :shift, :staff_id, :staff_name, :level)
+                    """)
+                    params = {
+                        "date": str(row.get("date")),
+                        "shift": row.get("shift"),
+                        "staff_id": int(row.get("id")) if pd.notna(row.get("id")) else None,
+                        "staff_name": row.get("name", None),
+                        "level": int(row.get("level")) if pd.notna(row.get("level")) else None
+                    }
+                    conn.execute(insert, params)
+
+        pred_df_records = pred_df.to_dict(orient="records") if isinstance(pred_df, pd.DataFrame) else pred_df
+        # Return both schedule and predictions
+        return jsonify({
+            "shift_schedule": shift_schedule.to_dict(orient="records") if isinstance(shift_schedule, pd.DataFrame) else shift_schedule,
+            "prediction": pred_df_records
+        }), 200
+
+    except Exception as e:
+        logging.exception("Shift generation failed")
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------
+# GET shift table for dashboard (existing route)
+# -------------------------
+@app.route('/shift_table/dashboard', methods=['GET', 'POST'])
+def get_shift_table_dashboard():
+    try:
+        df = pd.read_sql("SELECT * FROM temporary_shift_for_dashboard ORDER BY date ASC", engine)
+        return jsonify(df.to_dict(orient="records")), 200
+    except Exception as e:
+        logging.exception("Failed to fetch temporary shift table")
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------
+# GET predicted sales for dashboard (existing route)
+# -------------------------
+@app.route('/pred_sale/dashboard', methods=['GET', 'POST'])
+def get_pred_sale_dashboard():
+    try:
+        df = pd.read_sql("SELECT * FROM predicted_sales ORDER BY date ASC", engine)
+        return jsonify(df.to_dict(orient="records")), 200
+    except Exception as e:
+        logging.exception("Failed to fetch predicted sales")
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------
+# Staff search helper that mirrors older CSV-based SearchStaff route (keeps original name)
+# -------------------------
+@app.route('/services/staff/search_csv_compat', methods=['GET'])
+def search_staff_csv_compat():
+    """
+    Optional backward-compatible route if something relies on CSV-style search.
+    Still reads from DB.
+    """
+    term = request.args.get("term")
+    by = request.args.get("by", "ID")
+    try:
+        if by.upper() == "ID":
+            df = pd.read_sql_query(text("SELECT * FROM staff_profile WHERE id = :id"), engine, params={"id": int(term)})
+        else:
+            df = pd.read_sql_query(text("SELECT * FROM staff_profile WHERE name ILIKE :name"), engine, params={"name": f"%{term}%"})
+        if df.empty:
+            return jsonify("error"), 404
+        return jsonify(df.to_dict(orient="records")), 200
+    except Exception as e:
+        logging.exception("CSV compatibility search failed")
+        return jsonify({"error": str(e)}), 500
+
+# -------------------------
+# Main
+# -------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # RenderがPORTを渡す
+    port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
