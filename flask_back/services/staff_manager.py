@@ -2,7 +2,13 @@ import os
 import pandas as pd
 import re
 import unicodedata
+from sqlalchemy import create_engine ,Table, MetaData #for connecting to database
+#from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv  #
+import logging
 
+load_dotenv()
+engine = create_engine('postgresql+psycopg2://khein21502:@localhost/ccc_project')
 class StaffManager:
     """
     Handles loading and processing of staff data from CSV.
@@ -19,7 +25,7 @@ class StaffManager:
             base_dir = os.path.dirname(os.path.abspath(__file__))  # current file → /flask_back/services/
             staff_csv_path = os.path.abspath(os.path.join(base_dir, '..', '..', 'data', 'staff_dataBase.csv'))
 
-        self.staff_df = pd.read_csv(staff_csv_path)
+        self.staff_df = pd.read_sql("SELECT * FROM staff_profile", engine)
         print(f"[StaffManager] Loaded staff database from: {staff_csv_path}")
 
     def clean_names(self, names = None):

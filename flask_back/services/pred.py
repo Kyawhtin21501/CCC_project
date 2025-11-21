@@ -6,7 +6,10 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 import joblib
-
+from sqlalchemy import create_engine ,Table, MetaData #for connecting to database
+from dotenv import load_dotenv 
+load_dotenv()
+engine = create_engine('postgresql+psycopg2://khein21502:@localhost/ccc_project')
 class ShiftCreator:
     """
     This class handles the prediction of daily sales and staff levels
@@ -167,10 +170,10 @@ class ShiftCreator:
 
         df["predicted_sales"] = model.predict(model_input)
         #dishboard_pred_path = os.path.join(self.display_dir, 'predicted_sales.csv')
-        dishboard_pred_path = os.path.join(self.display_dir, 'predicted_sales.csv')
-        if os.path.exists(dishboard_pred_path) or os.stat(dishboard_pred_path).st_size > 0:
+        dishboard_pred_path = pd.read_sql("SELECT * FROM predicted_sales", engine)
+        if dishboard_pred_path.size > 0:
             df_f =df[["date","predicted_sales"]]
-            df_f.to_csv(dishboard_pred_path, index=False)
+            pd.read_sql_table("predicted_sales", engine)
 
         
         
