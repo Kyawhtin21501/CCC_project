@@ -1,7 +1,0 @@
-# CCC_project
-
-
-
-
-
-
