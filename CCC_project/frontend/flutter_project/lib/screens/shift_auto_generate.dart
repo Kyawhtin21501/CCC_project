@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:predictor_web/services/api_services.dart';
-import 'package:provider/provider.dart';
-
-import 'package:predictor_web/theme_provider/them.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
+import 'package:predictor_web/widgets/custom_menubar.dart';
+import 'package:provider/provider.dart';
+import 'package:predictor_web/theme_provider/them.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ShiftAutoScreen extends StatefulWidget {
@@ -22,20 +22,15 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
 
   bool _loading = false;
   String? _error;
-
   List<Map<String, dynamic>> _shiftTable = [];
 
-  /// Load data from API
   Future<void> _loadShiftTable() async {
-    print("Loading shift table from $_start to $_end");
-
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final data = await ApiService.fetchAutoShiftTableDashboard(_start, _end);
-      print("Fetched shift table: $data");
       setState(() {
         _shiftTable = data;
       });
@@ -50,7 +45,6 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
     }
   }
 
-  /// Clear results
   void _clear() {
     setState(() {
       _shiftTable = [];
@@ -59,36 +53,19 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
     });
   }
 
-  void _save() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('保存機能は未実装です')),
-    );
-  }
-
-  /// Group by date → shift → staff list (id + name)
   Map<String, Map<String, List<Map<String, dynamic>>>> _groupByDateShift(
       List<Map<String, dynamic>> data) {
     final Map<String, Map<String, List<Map<String, dynamic>>>> grouped = {};
-
     for (var item in data) {
       String date = item['date'].toString();
       String shift = item['shift'].toString();
-
       int staffId = int.tryParse(item['ID'].toString()) ?? 0;
       String staffName = item['Name']?.toString() ?? 'Unknown';
-
       if (staffId == 0) continue;
-
       grouped.putIfAbsent(date, () => {});
       grouped[date]!.putIfAbsent(shift, () => []);
-
-      grouped[date]![shift]!.add({
-        "ID": staffId,
-        "Name": staffName,
-      });
+      grouped[date]![shift]!.add({"ID": staffId, "Name": staffName});
     }
-
-    print("✅ Grouped data: $grouped"); // debug
     return grouped;
   }
 
@@ -97,160 +74,155 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
     final df = DateFormat('MM/dd');
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = Theme.of(context);
-
     final grouped = _groupByDateShift(_shiftTable);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text("シフト自動作成"),
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.themeMode == ThemeMode.dark
-                  ? Icons.light_mode
-                  : Icons.dark_mode,
-            ),
-            onPressed: () {
-              final isDark = themeProvider.themeMode == ThemeMode.dark;
-              themeProvider.toggleTheme(!isDark);
-            },
-          ),
-        ],
-      ),
-      drawer: AppDrawer(currentScreen: DrawerScreen.shiftCreate),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
+       drawer: const AppDrawer(currentScreen: DrawerScreen.shiftCreate),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Builder(
+        builder: (context) {
+          return Column(
             children: [
-              /// === Input Card ===
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("シフト自動作成",
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 30),
-
-                      Text("日付範囲",
-                          style: theme.textTheme.bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _DateBox(
-                              text: df.format(_start),
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _start,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime(2030),
-                                );
-                                if (picked != null) {
-                                  setState(() => _start = picked);
-                                }
-                              }),
-                          const SizedBox(width: 12),
-                          _DateBox(
-                              text: df.format(_end),
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _end,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime(2030),
-                                );
-                                if (picked != null) {
-                                  setState(() => _end = picked);
-                                }
-                              }),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      FilledButton.icon(
-                        onPressed: _loadShiftTable,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
-                        label: const Text('シフト作成'),
-                        icon: const Icon(Icons.auto_awesome),
-                      ),
-                    ],
-                  ),
-                ),
+              /// Custom Menu Bar
+              CustomMenuBar(
+                title: 'シフト自動作成',
+                onMenuPressed: () {
+                 Scaffold.of(context).openDrawer();
+                },
               ),
-              const SizedBox(height: 16),
-
-              /// === Output Card ===
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("シフト結果",
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-
-                      if (_loading)
-                        _buildShimmerPlaceholder()
-                      else if (_error != null)
-                        Text(_error!, style: const TextStyle(color: Colors.red))
-                      else if (_shiftTable.isEmpty)
-                        Text("結果なし",
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: theme.hintColor))
-                      else
-                        _buildShiftTable(grouped, df),
-
-                      const SizedBox(height: 12),
-                      Text("注意:",
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 6),
-                      Text("シフトなし    :スタッフが不足しているか、"
-                          "そのシフトに利用可能なスタッフがいないこと、"
-                          "スタフが希望日まだ記入してないことを意味します。",
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.hintColor)),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          OutlinedButton(
-                              onPressed: _clear, child: const Text('クリア')),
-                          const SizedBox(width: 8),
-                          // OutlinedButton(
-                          //     onPressed: _save, child: const Text('保存')),
-                        ],
-                      ),
-                    ],
+          
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1000),
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        /// === Input Card ===
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("シフト自動作成",
+                                    style: theme.textTheme.titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 30),
+                                Text("日付範囲",
+                                    style: theme.textTheme.bodyLarge
+                                        ?.copyWith(fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    _DateBox(
+                                        text: df.format(_start),
+                                        onTap: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: _start,
+                                            firstDate: DateTime(2020),
+                                            lastDate: DateTime(2030),
+                                          );
+                                          if (picked != null) {
+                                            setState(() => _start = picked);
+                                          }
+                                        }),
+                                    const SizedBox(width: 12),
+                                    _DateBox(
+                                        text: df.format(_end),
+                                        onTap: () async {
+                                          final picked = await showDatePicker(
+                                            context: context,
+                                            initialDate: _end,
+                                            firstDate: DateTime(2020),
+                                            lastDate: DateTime(2030),
+                                          );
+                                          if (picked != null) {
+                                            setState(() => _end = picked);
+                                          }
+                                        }),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                FilledButton.icon(
+                                  onPressed: _loadShiftTable,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 24, vertical: 12),
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  label: const Text('シフト作成'),
+                                  icon: const Icon(Icons.auto_awesome),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+          
+                        /// === Output Card ===
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("シフト結果",
+                                    style: theme.textTheme.titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 12),
+                                if (_loading)
+                                  _buildShimmerPlaceholder()
+                                else if (_error != null)
+                                  Text(_error!,
+                                      style:
+                                          const TextStyle(color: Colors.red))
+                                else if (_shiftTable.isEmpty)
+                                  Text("結果なし",
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(color: theme.hintColor))
+                                else
+                                  _buildShiftTable(grouped, df),
+                                const SizedBox(height: 12),
+                                Text("注意:",
+                                    style: theme.textTheme.bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 6),
+                                Text(
+                                    "シフトなし    :スタッフが不足しているか、そのシフトに利用可能なスタッフがいないこと、スタフが希望日まだ記入してないことを意味します。",
+                                    style: theme.textTheme.bodySmall
+                                        ?.copyWith(color: theme.hintColor)),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    OutlinedButton(
+                                        onPressed: _clear, child: const Text('クリア')),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ],
-          ),
-        ),
+          );
+        }
       ),
     );
   }
 
-  /// Extracted widget for shift table
   Widget _buildShiftTable(
       Map<String, Map<String, List<Map<String, dynamic>>>> grouped, DateFormat df) {
     return SingleChildScrollView(
@@ -267,16 +239,11 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
           (i) {
             final currentDate = _start.add(Duration(days: i));
             final dateStr = currentDate.toIso8601String().split("T").first;
-
             final shifts = grouped[dateStr] ?? {};
-
             String formatNames(List<Map<String, dynamic>>? staffList) {
-              if (staffList == null || staffList.isEmpty) {
-                return "シフトなし";
-              }
+              if (staffList == null || staffList.isEmpty) return "シフトなし";
               return staffList.map((s) => s["Name"]).join(", ");
             }
-
             return DataRow(cells: [
               DataCell(Text(df.format(currentDate))),
               DataCell(Text(formatNames(shifts["morning"]))),
@@ -289,7 +256,6 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
     );
   }
 
-  /// Shimmer placeholder while loading
   Widget _buildShimmerPlaceholder() {
     return Shimmer.fromColors(
       baseColor: Colors.grey.shade300,
@@ -308,7 +274,6 @@ class _ShiftAutoScreenState extends State<ShiftAutoScreen> {
   }
 }
 
-/// Date selector box
 class _DateBox extends StatelessWidget {
   final String text;
   final VoidCallback onTap;

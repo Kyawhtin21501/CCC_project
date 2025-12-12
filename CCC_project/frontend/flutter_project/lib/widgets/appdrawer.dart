@@ -1,54 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:predictor_web/screens/daily_report.dart';
+// Note: Assuming DashboardScreen is located in daily_report.dart based on original usage context
+import 'package:predictor_web/screens/daily_report.dart'; 
 
 import 'package:predictor_web/screens/create_shift.dart';
 import 'package:predictor_web/screens/shift_auto_generate.dart';
 import 'package:predictor_web/screens/staff_profile.dart' ;
 
+/// Enum defining the available screens/destinations in the application drawer.
 enum DrawerScreen { dashboard, shiftCreate, shiftRequest, staffProfile }
 
+/// A custom widget representing the application's navigation drawer.
+/// It displays a list of main screens and highlights the current active screen.
 class AppDrawer extends StatelessWidget {
+  /// The currently active screen, used to highlight the corresponding tile.
   final DrawerScreen currentScreen;
 
   const AppDrawer({super.key, required this.currentScreen});
 
   @override
   Widget build(BuildContext context) {
+    // Get theme colors
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
+    final Color onPrimaryColor = Theme.of(context).colorScheme.onPrimary;
+    // Use the AppBar's theme background color for a consistent header look
+    final Color headerColor = Theme.of(context).appBarTheme.backgroundColor ?? primaryColor; 
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
+          // Custom Drawer Header styled using the application theme
+          Container(
+            height: 120, // Reduced height for a compact look
+            padding: const EdgeInsets.only(top: 40, left: 16),
+            decoration: BoxDecoration(color: headerColor),
             child: Text(
               'メニュー',
-              style: TextStyle(color: Colors.white, fontSize: 24),
+              style: TextStyle(
+                color: onPrimaryColor, // Text color contrasts with header background
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
+          
           _buildDrawerTile(
             context,
-            icon: Icons.dashboard,
+            icon: Icons.dashboard_outlined, // Changed icon for a clearer dashboard look
             title: 'ダッシュボード',
             screen: DrawerScreen.dashboard,
             destination: const DashboardScreen(),
           ),
+          
+          // Divider for visual separation of Shift Management section
+          const Divider(height: 1, thickness: 1),
+
           _buildDrawerTile(
             context,
-            icon: Icons.trending_up,
-            title: 'シフト作成',
+            icon: Icons.schedule, 
+            title: 'シフト作成（自動）',
             screen: DrawerScreen.shiftCreate,
             destination: const ShiftAutoScreen(),
           ),
           _buildDrawerTile(
             context,
-            icon: Icons.work_history,
+            icon: Icons.edit_calendar,
             title: 'シフト希望登録',
             screen: DrawerScreen.shiftRequest,
             destination: const CreatedShiftScreen(),
           ),
+          
+          // Divider for visual separation of Staff Management section
+          const Divider(height: 1, thickness: 1),
+
           _buildDrawerTile(
             context,
-            icon: Icons.account_box_outlined,
+            icon: Icons.person_add_alt_1_outlined,
             title: '新規スタッフ登録',
             screen: DrawerScreen.staffProfile,
             destination: const StaffProfileScreen(),
@@ -58,32 +85,43 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
+  /// Builds a single, themed ListTile for navigation.
+  /// It highlights the tile if it corresponds to the [currentScreen].
   Widget _buildDrawerTile(BuildContext context,
       {required IconData icon,
       required String title,
       required DrawerScreen screen,
       required Widget destination}) {
     final bool isSelected = currentScreen == screen;
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
+    final Color onSurfaceColor = Theme.of(context).colorScheme.onSurface;
 
     return ListTile(
-      leading: Icon(icon, color: isSelected ? Colors.blue : null),
+      leading: Icon(
+        icon,
+        color: isSelected ? primaryColor : onSurfaceColor.withOpacity(0.7),
+      ),
       title: Text(
         title,
         style: TextStyle(
-          color: isSelected ? Colors.blue : null,
+          color: isSelected ? primaryColor : onSurfaceColor,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
-      tileColor: isSelected ? Colors.blue.withOpacity(0.1) : null,
+      // Use primary color with low opacity for selection highlight
+      tileColor: isSelected ? primaryColor.withOpacity(0.1) : null,
       onTap: () {
         if (!isSelected) {
-          Navigator.pop(context);
+          // Close the drawer before navigating
+          Navigator.pop(context); 
+          // Use pushReplacement to prevent building up the navigation stack
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => destination),
           );
         } else {
-          Navigator.pop(context); // just close drawer if already selected
+          // If already selected, just close the drawer
+          Navigator.pop(context); 
         }
       },
     );
