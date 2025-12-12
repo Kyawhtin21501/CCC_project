@@ -41,7 +41,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
   void _loadStaffList() {
     setState(() {
-      _staffList = ApiService.fetchStaffList() as Future<List<String>>;
+      _staffList = ApiService.fetchStaffList().then((data) => data.map((s) => s['Name'] as String).toList());
     });
   }
 
