@@ -1,5 +1,5 @@
 from flask import Flask
-from back_end.routes.staff_routes import staff_bp
+from .routes.staff_routes import staff_bp
 from flask_cors import CORS
 
 def create_app():

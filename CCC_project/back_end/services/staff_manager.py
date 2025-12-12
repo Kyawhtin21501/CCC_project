@@ -1,6 +1,6 @@
 # services/staff_service.py
 from sqlalchemy.orm import Session
-from back_end.models.staff_model import Staff
+from ..models.staff_model import Staff
 from back_end.utils.db import get_db
 
 class StaffService:

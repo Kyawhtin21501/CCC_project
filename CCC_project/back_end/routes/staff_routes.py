@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify
-from back_end.services.staff_manager import StaffService
+from ..services.staff_manager import StaffService
 
 staff_bp = Blueprint("staff", __name__)
 
 # GET 全スタッフ
-@staff_bp.get("/staff", methods = ("GET"))
+@staff_bp.get("/staff")
 def get_all_staff():
     staff_list = StaffService.get_all_staff()
     return jsonify([s.to_dict() for s in staff_list])
