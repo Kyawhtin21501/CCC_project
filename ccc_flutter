@@ -1,0 +1,8 @@
+export PATH="$PATH:$HOME/Documents/flutter/bin"
+export PATH="$PATH:$HOME/Documents/flutter/bin"
+export PATH="/usr/local/mysql/bin:$PATH"
+export PATH="$PATH:$HOME/flutter/bin"
+export PATH="$PATH:$HOME/flutter/bin"
+export PATH="$PATH:/Users/khein21502/Documents/flutter/bin"
+export PATH="$PATH:/Users/khein21502/Documents/flutter/flutter/bin"
+

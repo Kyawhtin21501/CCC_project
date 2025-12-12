@@ -39,4 +39,4 @@ def delete_staff(id):
     deleted = StaffService.delete_staff(id)
     if not deleted:
         return jsonify({"error": "staff not found"}), 404
-    return jsonify({"message": "deleted"})
+    return jsonify({"message": "deleted"}) , 204

@@ -1,23 +1,23 @@
 # services/staff_service.py
 from sqlalchemy.orm import Session
 from ..models.staff_model import Staff
-from back_end.utils.db import get_db
+from ..utils.db import get_db
 
 class StaffService:
 
-    # 全てのスタッフ取得
+    #take all staff data frome db
     @staticmethod
     def get_all_staff():
         db: Session = next(get_db())
         return db.query(Staff).all()
 
-    # 1人のスタッフ取得
+    #just only one and forever 
     @staticmethod
     def get_staff_by_id(staff_id: int):
         db: Session = next(get_db())
         return db.query(Staff).filter(Staff.id == staff_id).first()
 
-    # 新規スタッフ追加 (INSERT)
+    # reg new member( insert )
     @staticmethod
     def create_staff(data: dict):
         db: Session = next(get_db())
@@ -33,7 +33,7 @@ class StaffService:
         db.refresh(new_staff)
         return new_staff
 
-    # スタッフ更新 (UPDATE)
+    # update/ changing data 
     @staticmethod
     def update_staff(staff_id: int, data: dict):
         db: Session = next(get_db())
@@ -48,7 +48,7 @@ class StaffService:
         db.refresh(staff)
         return staff
 
-    # スタッフ削除 (DELETE)
+    # delete data 
     @staticmethod
     def delete_staff(staff_id: int):
         db: Session = next(get_db())
