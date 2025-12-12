@@ -1,0 +1,13 @@
+<<<<<<< HEAD
+__pycache__/
+*.pyc
+=======
+*.pyc
+__pycache__/
+<<<<<<< HEAD
+>>>>>>> develop
+=======
+__pycache__/
+>>>>>>> feacture/back_end_app.py
+.cache.sqlite
+.DS_Store
