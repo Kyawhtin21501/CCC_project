@@ -10,3 +10,4 @@ __pycache__/
 __pycache__/
 >>>>>>> feacture/back_end_app.py
 .cache.sqlite
+.DS_Store
