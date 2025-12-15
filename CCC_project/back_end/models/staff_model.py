@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from ..utils.db import Base
-
+from sqlalchemy.orm import relationship
 class Staff(Base):
     __tablename__ = "staff"
 
@@ -10,7 +10,11 @@ class Staff(Base):
     level = Column(Integer, nullable=False)
     status = Column(String(50), nullable=False)
     e_mail = Column(String(100), unique=True, nullable=False)
-
+    shift_preferences = relationship(
+        "ShiftPre",
+        back_populates="staff",
+        cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         return {
