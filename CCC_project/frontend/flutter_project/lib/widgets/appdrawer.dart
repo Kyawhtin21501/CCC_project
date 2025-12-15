@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 // Note: Assuming DashboardScreen is located in daily_report.dart based on original usage context
 import 'package:predictor_web/screens/daily_report.dart'; 
-
-import 'package:predictor_web/screens/create_shift.dart';
-import 'package:predictor_web/screens/shift_auto_generate.dart';
 import 'package:predictor_web/screens/staff_profile.dart' ;
+import 'package:predictor_web/screens/shfit_managment.dart';
 
 /// Enum defining the available screens/destinations in the application drawer.
-enum DrawerScreen { dashboard, shiftCreate, shiftRequest, staffProfile }
+enum DrawerScreen { dashboard, shiftCreate, shiftRequest, staffProfile, shiftManagement }
 
 /// A custom widget representing the application's navigation drawer.
 /// It displays a list of main screens and highlights the current active screen.
@@ -51,26 +49,16 @@ class AppDrawer extends StatelessWidget {
             screen: DrawerScreen.dashboard,
             destination: const DashboardScreen(),
           ),
-          
-          // Divider for visual separation of Shift Management section
-          const Divider(height: 1, thickness: 1),
+                const Divider(height: 1, thickness: 1),
 
           _buildDrawerTile(
             context,
-            icon: Icons.schedule, 
-            title: 'シフト作成（自動）',
-            screen: DrawerScreen.shiftCreate,
-            destination: const ShiftAutoScreen(),
+            icon: Icons.manage_accounts_outlined,
+            title: 'シフト作成・管理',
+            screen: DrawerScreen.shiftManagement,
+            destination: const ShiftManagementScreen(),
           ),
-          _buildDrawerTile(
-            context,
-            icon: Icons.edit_calendar,
-            title: 'シフト希望登録',
-            screen: DrawerScreen.shiftRequest,
-            destination: const CreatedShiftScreen(),
-          ),
-          
-          // Divider for visual separation of Staff Management section
+         
           const Divider(height: 1, thickness: 1),
 
           _buildDrawerTile(
@@ -80,6 +68,7 @@ class AppDrawer extends StatelessWidget {
             screen: DrawerScreen.staffProfile,
             destination: const StaffProfileScreen(),
           ),
+    
         ],
       ),
     );
