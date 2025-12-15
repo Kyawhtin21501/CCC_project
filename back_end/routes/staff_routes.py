@@ -7,6 +7,7 @@ staff_bp = Blueprint("staff", __name__)
 @staff_bp.get("/staff")
 def get_all_staff():
     staff_list = StaffService.get_all_staff()
+    print(f"-----------------------staff_list from staff_routes.py------------------------", staff_list)
     return jsonify([s.to_dict() for s in staff_list])
 
 # GET 1人
