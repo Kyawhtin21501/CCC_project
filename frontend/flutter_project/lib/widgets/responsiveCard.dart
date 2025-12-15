@@ -8,11 +8,11 @@ class ResponsiveBodyCard extends StatelessWidget {
   final Widget shiftCard;
 
   const ResponsiveBodyCard({
-    Key? key,
+    super.key,
     required this.formCard,
     required this.salesCard,
     required this.shiftCard,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

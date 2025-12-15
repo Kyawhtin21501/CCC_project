@@ -57,21 +57,19 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       print(staffList);
       final names = <String>[];
 
-      if (staffList is List) {
-        for (final item in staffList) {
-          print(item);
-          if (item is String) {
-            names.add(item as String);
-          } else if (item is Map && item.containsKey('name')) {
-            names.add(item['name'].toString());
-          } else {
-            if (item != null) {
-              names.add(item.toString());
-            }
+      for (final item in staffList) {
+        print(item);
+        if (item is String) {
+          names.add(item as String);
+        } else if (item is Map && item.containsKey('name')) {
+          names.add(item['name'].toString());
+        } else {
+          if (item != null) {
+            names.add(item.toString());
           }
         }
       }
-
+    
       // // APIが空の場合にダミーデータを使用
       // if (names.isEmpty) {
       //   names.addAll(['佐藤 太郎', '田中 花子', '山本 健太', '中村 美咲']);

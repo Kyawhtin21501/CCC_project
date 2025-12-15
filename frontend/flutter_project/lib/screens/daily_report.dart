@@ -89,21 +89,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       print(staffList);
       final names = <String>[];
 
-      if (staffList is List) {
-        for (final item in staffList) {
-          print(item);
-          if (item is String) {
-            names.add(item as String);
-          } else if (item is Map && item.containsKey('name')) {
-            names.add(item['name'].toString());
-          } else {
-            if (item != null) {
-              names.add(item.toString());
-            }
+      for (final item in staffList) {
+        print(item);
+        if (item is String) {
+          names.add(item as String);
+        } else if (item is Map && item.containsKey('name')) {
+          names.add(item['name'].toString());
+        } else {
+          if (item != null) {
+            names.add(item.toString());
           }
         }
       }
-
+    
       // // APIが空の場合にダミーデータを使用
       // if (names.isEmpty) {
       //   names.addAll(['佐藤 太郎', '田中 花子', '山本 健太', '中村 美咲']);
@@ -129,12 +127,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final salesData = await ApiService.getPredSales();
 
       setState(() {
-        _shiftScheduleCache = (shiftData is List && shiftData.isNotEmpty)
+        _shiftScheduleCache = (shiftData.isNotEmpty)
             ? List<Map<String, dynamic>>.from(
                 shiftData.cast<Map<String, dynamic>>())
             : null;
 
-        _salesDataCache = (salesData is List && salesData.isNotEmpty)
+        _salesDataCache = (salesData.isNotEmpty)
             ? List<Map<String, dynamic>>.from(
                 salesData.cast<Map<String, dynamic>>())
             : null;
@@ -186,12 +184,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() => _loading = true);
       final response = await ApiService.postUserInput(payload);
 
-      if (response == null ||
-          response.statusCode! < 200 ||
-          response.statusCode! >= 300) {
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('保存エラー: ${response?.statusCode ?? '不明'}')));
+              content: Text('保存エラー: ${response.statusCode ?? '不明'}')));
         }
         return;
       }

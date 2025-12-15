@@ -9,10 +9,10 @@ class CustomMenuBar extends StatelessWidget {
   final String title;
 
   const CustomMenuBar({
-    Key? key,
+    super.key,
     required this.onMenuPressed,
     this.title = 'Dashboard',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

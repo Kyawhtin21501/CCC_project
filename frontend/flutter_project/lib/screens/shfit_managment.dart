@@ -64,22 +64,18 @@ class _ShiftManagementFormState extends State<_ShiftManagementForm> {
     try {
       final data = await ApiService.fetchStaffList();
 
-      if (data is List) {
-        final List<String> names = data.map<String>((s) {
-          if (s is Map && s.containsKey('name')) {
-            return s['name'].toString();
-          }
-          return s.toString();
-        }).toList();
+      final List<String> names = data.map<String>((s) {
+        if (s is Map && s.containsKey('name')) {
+          return s['name'].toString();
+        }
+        return s.toString();
+      }).toList();
 
-        setState(() {
-          staffList = names;
-          _manualLoading = false;
-        });
-      } else {
-        throw Exception("API returned data in an unexpected format.");
-      }
-    } catch (e) {
+      setState(() {
+        staffList = names;
+        _manualLoading = false;
+      });
+        } catch (e) {
       if (mounted) {
         setState(() {
           _manualError = 'スタッフ一覧の取得に失敗しました: $e';
@@ -374,7 +370,7 @@ class _ShiftManagementFormState extends State<_ShiftManagementForm> {
         // Staff Cards
         ...staffList.map((staff) {
           return _buildStaffPreferenceCard(theme, dateKey, staff);
-        }).toList(),
+        }),
       ],
     );
   }
