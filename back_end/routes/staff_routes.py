@@ -1,16 +1,17 @@
 from flask import Blueprint, request, jsonify
-from ..services.staff_manager import StaffService
+from back_end.services.staff_manager import StaffService
+
 
 staff_bp = Blueprint("staff", __name__)
 
-# GET 全スタッフ
+# GET all staff data 
 @staff_bp.get("/staff")
 def get_all_staff():
     staff_list = StaffService.get_all_staff()
     print(f"-----------------------staff_list from staff_routes.py------------------------", staff_list)
     return jsonify([s.to_dict() for s in staff_list])
 
-# GET 1人
+# GET one person from staff data
 @staff_bp.get("/staff/<int:id>")
 def get_staff(id):
     s = StaffService.get_staff_by_id(id)
@@ -18,14 +19,14 @@ def get_staff(id):
         return jsonify({"error": "staff not found"}), 404
     return jsonify(s.to_dict())
 
-# POST 作成
+# create / reg new staff to staff data base
 @staff_bp.post("/staff")
 def create_staff():
     data = request.json
     new_s = StaffService.create_staff(data)
     return jsonify(new_s.to_dict()), 201
 
-# PUT 更新
+# changeing/ update to staff database
 @staff_bp.put("/staff/<int:id>")
 def update_staff(id):
     data = request.json
@@ -34,7 +35,7 @@ def update_staff(id):
         return jsonify({"error": "staff not found"}), 404
     return jsonify(updated.to_dict())
 
-# DELETE 削除
+# DELETE staff data from staff database
 @staff_bp.delete("/staff/<int:id>")
 def delete_staff(id):
     deleted = StaffService.delete_staff(id)

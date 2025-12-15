@@ -1,7 +1,7 @@
 from flask import Flask
+from back_end.routes.staff_routes import staff_bp
+#from  back_end.routes.shift_pre_routes import shift_pre_bp
 
-
-from CCC_project.back_end.routes.staff_routes import staff_bp
 
 from flask_cors import CORS
 
@@ -12,7 +12,7 @@ def create_app():
     CORS(app)
 
     app.register_blueprint(staff_bp)
-    
+    #app.register_blueprint(shift_pre_bp)
     return app
 
 if __name__ == "__main__":

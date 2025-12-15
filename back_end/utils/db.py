@@ -5,8 +5,14 @@ import os
 
 Base = declarative_base()
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_FILE = os.path.join(BASE_DIR, "../../ccc_project.db")
+DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
 
-DATABASE_URL = "sqlite:///ccc_project.db"
+
+
+
+
 
 
 engine = create_engine(
