@@ -11,7 +11,8 @@ class Staff(Base):
     level = Column(Integer, nullable=False)
     status = Column(String(50), nullable=False)
     e_mail = Column(String(100), unique=True, nullable=False)
-  
+    gender = Column(String, nullable=True)
+
 
     def to_dict(self):
         return {
@@ -20,5 +21,6 @@ class Staff(Base):
             "age": self.age,
             "level": self.level,
             "status": self.status,
-            "e_mail": self.e_mail
+            "e_mail": self.e_mail,
+            "gender": self.gender
         }

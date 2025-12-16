@@ -26,12 +26,14 @@ class StaffService:
         db: Session = next(get_db())
 
         new_staff = Staff(
-            name=data["name"],
-            age=data["age"],
-            level=data["level"],
-            status=StaffService.status_map.get(data["status"], "other"),
-            e_mail=data["e_mail"]
+            name=data.get("name"),
+            age=data.get("age"),
+            level=data.get("aevel"),
+            status=StaffService.status_map.get(data.get("status"), "other"),
+            gender = data.get("gender"),
+            e_mail=data.get("e_mail")
         )
+
 
         db.add(new_staff)
         db.commit()
