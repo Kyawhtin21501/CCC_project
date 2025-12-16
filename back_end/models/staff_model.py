@@ -12,7 +12,7 @@ class Staff(Base):
     status = Column(String(50), nullable=False)
     e_mail = Column(String(100), unique=True, nullable=False)
     gender = Column(String, nullable=True)
-
+    staff = relationship("Staff", back_populates="shift_preferences")
 
     def to_dict(self):
         return {
