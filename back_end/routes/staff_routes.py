@@ -18,11 +18,12 @@ def get_staff(staff_id):
 @staff_bp.post("/staff")
 def create_staff():
     data = request.get_json()
-    print(data)
+    print("check data " , data)
     if not data:
         return jsonify({"error": "invalid json"}), 400
     new_s = StaffService.create_staff(data)
     return jsonify(new_s.to_dict()), 201
+
 
 @staff_bp.patch("/staff/<int:staff_id>")
 def update_staff(staff_id):

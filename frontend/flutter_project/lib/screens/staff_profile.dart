@@ -57,21 +57,19 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       print(staffList);
       final names = <String>[];
 
-      if (staffList is List) {
-        for (final item in staffList) {
-          print(item);
-          if (item is String) {
-            names.add(item as String);
-          } else if (item is Map && item.containsKey('name')) {
-            names.add(item['name'].toString());
-          } else {
-            if (item != null) {
-              names.add(item.toString());
-            }
+      for (final item in staffList) {
+        print(item);
+        if (item is String) {
+          names.add(item as String);
+        } else if (item is Map && item.containsKey('name')) {
+          names.add(item['name'].toString());
+        } else {
+          if (item != null) {
+            names.add(item.toString());
           }
         }
       }
-
+    
       // // APIが空の場合にダミーデータを使用
       // if (names.isEmpty) {
       //   names.addAll(['佐藤 太郎', '田中 花子', '山本 健太', '中村 美咲']);
@@ -118,12 +116,12 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     }
 
     final staffData = {
-      'ID': null, // 新規登録のためIDはnull
-      'Name': _nameController.text,
-      'Age': int.tryParse(_ageController.text),
-      'Level': int.tryParse(_levelController.text),
-      'Gender': _selectedGender,
-      'Email': _emailController.text,
+     // 'ID': null, // 新規登録のためIDはnull
+      'name': _nameController.text,
+      'age': int.tryParse(_ageController.text),
+      'level': int.tryParse(_levelController.text),
+      'gender': _selectedGender,
+      'email': _emailController.text,
       'status': _convertStatusToEnglish(_selectedStatus), // 日本語→英語キーに変換
     };
 

@@ -7,11 +7,11 @@ class CardBox extends StatelessWidget {
   final double elevation;
 
   const CardBox({
-    Key? key,
+    super.key,
     required this.child,
     this.padding = 18,
     this.elevation = 4,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
