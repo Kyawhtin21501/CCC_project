@@ -116,12 +116,12 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     }
 
     final staffData = {
-      'ID': null, // 新規登録のためIDはnull
-      'Name': _nameController.text,
-      'Age': int.tryParse(_ageController.text),
-      'Level': int.tryParse(_levelController.text),
-      'Gender': _selectedGender,
-      'Email': _emailController.text,
+     // 'ID': null, // 新規登録のためIDはnull
+      'name': _nameController.text,
+      'age': int.tryParse(_ageController.text),
+      'level': int.tryParse(_levelController.text),
+      'gender': _selectedGender,
+      'email': _emailController.text,
       'status': _convertStatusToEnglish(_selectedStatus), // 日本語→英語キーに変換
     };
 
