@@ -6,10 +6,10 @@ class ShiftPre(Base):
     __tablename__ = "shift_pre"
 
 
-    id = Column(Integer, primary_key=True, index=True)
+    
 
  
-    staff_id = Column(Integer, ForeignKey("staff.id"), nullable=False)
+    id = Column(Integer, ForeignKey("staff.id"), nullable=False)
     date = Column(String, nullable=False)
 
 
@@ -21,5 +21,5 @@ class ShiftPre(Base):
 
 
     __table_args__ = (
-        UniqueConstraint("staff_id", "date", name="uq_staff_date"),
+        UniqueConstraint("id", "date", name="uq_staff_date"),
     )
