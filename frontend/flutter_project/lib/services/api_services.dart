@@ -80,11 +80,11 @@ class ApiService {
   /// POST user input (for predictions)
   static Future<http.Response> postUserInput(Map<String, dynamic> payload) async {
     if (kDebugMode) {
-      print("[ApiService] POST /user_input payload: $payload");
+      print("[ApiService] POST /daily_report payload: $payload");
     }
 
     return await http.post(
-      Uri.parse('$baseUrl/user_input'),
+      Uri.parse('$baseUrl/daily_report'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(payload),
     );
