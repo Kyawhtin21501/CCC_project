@@ -33,7 +33,7 @@ class ShiftPreferences:
             # DB制約と相性いいチェック
             if new_shift.start_time >= new_shift.end_time:
                 raise ValueError("start_time must be before end_time")
-
+            
             db.add(new_shift)
             db.commit()
             db.refresh(new_shift)

@@ -34,7 +34,9 @@ def save_shift_pre():
         }), 422
 
 
-    except Exception:
+    except Exception as e:
+        
         return jsonify({
+            
             "error": "Internal Server Error"
         }), 500

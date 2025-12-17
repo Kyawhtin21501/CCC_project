@@ -11,17 +11,19 @@ class StaffService:
         "パートタイム" : "part-time"
     }
     #take all staff data from database for using dashboard or something like that
+    
     @staticmethod
     def get_all_staff():
         db: Session = next(get_db())
         return db.query(Staff).all()
     #take one person frome database like searching with staff id 
+    
     @staticmethod
     def get_staff_by_id(staff_id: int):
         db: Session = next(get_db())
         return db.query(Staff).filter(Staff.id == staff_id).first()
-    #create staff data 
     
+    #create staff data 
     @staticmethod
     def create_staff(data: dict):
         db: Session = next(get_db())

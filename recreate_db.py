@@ -1,0 +1,6 @@
+from back_end.utils.db import Base, engine
+from back_end.models.staff_model import Staff
+from back_end.models.shift_pref_model import ShiftPre
+
+Base.metadata.create_all(bind=engine)
+print("DB recreated")

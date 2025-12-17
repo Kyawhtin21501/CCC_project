@@ -12,8 +12,12 @@ class Staff(Base):
     status = Column(String(50), nullable=False)
     e_mail = Column(String(100), unique=True, nullable=False)
     gender = Column(String, nullable=True)
-    staff = relationship("Staff", back_populates="shift_preferences")
-
+    #staff = relationship("Staff", back_populates="shift_preferences")
+    shift_preferences = relationship(
+        "ShiftPre",
+        back_populates="staff",
+        cascade="all, delete-orphan"
+    )
     def to_dict(self):
         return {
             "id": self.id,

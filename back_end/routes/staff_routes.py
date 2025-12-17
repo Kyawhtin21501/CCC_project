@@ -15,6 +15,7 @@ def get_staff(staff_id):
         return jsonify({"error": "staff not found"}), 404
     return jsonify(s.to_dict()), 200
 
+
 @staff_bp.post("/staff")
 def create_staff():
     data = request.get_json()

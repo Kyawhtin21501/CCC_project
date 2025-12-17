@@ -14,8 +14,8 @@ class ShiftPre(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
 
+    
     staff = relationship("Staff", back_populates="shift_preferences")
-
     __table_args__ = (
         UniqueConstraint("staff_id", "date", name="uq_staff_date"),
         CheckConstraint("start_time < end_time", name="ck_start_before_end"),
