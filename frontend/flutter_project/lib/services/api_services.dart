@@ -4,175 +4,37 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-  /// Automatically switch baseUrl depending on debug or release
   static final String baseUrl = kDebugMode
-      ? 'http://127.0.0.1:5000'  // Local Flask server
-      : 'https://ccc-project.onrender.com';  // Production (Render)
+      ? 'http://127.0.0.1:5000'
+      : 'https://ccc-project.onrender.com';
+
+  // Helper for headers to avoid repetition
+  static Map<String, String> get _headers => {
+        'Content-Type': 'application/json',
+      };
 
   // ============================================================
-  // STAFF API (Matches Flask: /staff, /staff/<id>)
+  // STAFF API
   // ============================================================
 
   /// GET all staff
-  /// Flask endpoint: GET /staff
   static Future<List<Map<String, dynamic>>> fetchStaffList() async {
-    final response = await http.get(Uri.parse('$baseUrl/staff'));
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/staff'));
 
-    if (kDebugMode) {
-      print("[ApiService] GET /staff -> ${response.statusCode}");
-      print("[ApiService] Body: ${response.body}");
-    }
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body);
-      return jsonList.map((s) => s as Map<String, dynamic>).toList();
-    } else {
-      throw Exception('Failed to load staff list [${response.statusCode}]');
-    }
-  }
-
-  /// GET staff by ID
-  /// Flask endpoint: GET /staff/<id>
-  static Future<Map<String, dynamic>> fetchStaffById(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/staff/$id'));
-
-    if (kDebugMode) {
-      print("[ApiService] GET /staff/$id -> ${response.statusCode}");
-    }
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception("Failed to fetch staff ID=$id: ${response.body}");
-    }
-  }
-
-  /// POST create new staff
-  /// Flask: POST /staff
-  static Future<http.Response> postStaffProfile(Map<String, dynamic> payload) async {
-    return await http.post(
-      Uri.parse('$baseUrl/staff'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    );
-  }
-
-  /// PUT update staff info
-  /// Flask: PUT /staff/<id>
-  static Future<http.Response> updateStaffProfile(int id, Map<String, dynamic> updates) async {
-    return await http.put(
-      Uri.parse('$baseUrl/staff/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(updates),
-    );
-  }
-
-  /// DELETE staff by ID
-  /// Flask: DELETE /staff/<id>
-  static Future<http.Response> deleteStaffProfile(int id) async {
-    return await http.delete(Uri.parse('$baseUrl/staff/$id'));
-  }
-
-  // ============================================================
-  // PREDICTION + SHIFT API
-  // ============================================================
-
-  /// POST user input (for predictions)
-  static Future<http.Response> postUserInput(Map<String, dynamic> payload) async {
-    if (kDebugMode) {
-      print("[ApiService] POST /user_input payload: $payload");
-    }
-
-    return await http.post(
-      Uri.parse('$baseUrl/user_input'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(payload),
-    );
-  }
-
-  /// GET shift table (dashboard)
-  static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
-    final url = Uri.parse("$baseUrl/shift_table/dashboard");
-    final response = await http.get(url);
-
-    if (kDebugMode) {
-      print("[ApiService] GET /shift_table/dashboard -> ${response.statusCode}");
-    }
-
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return List<Map<String, dynamic>>.from(data);
-    } else {
-      throw Exception("Failed to load shift table");
-    }
-  }
-
-  /// POST auto shift generation
-  static Future<List<Map<String, dynamic>>> fetchAutoShiftTableDashboard(
-      DateTime start, DateTime end) async {
-    final formatter = DateFormat('yyyy-MM-dd');
-
-    final response = await http.post(
-      Uri.parse("$baseUrl/shift"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "start_date": formatter.format(start),
-        "end_date": formatter.format(end),
-      }),
-    );
-
-    if (kDebugMode) {
-      print("[ApiService] POST /shift -> ${response.statusCode}");
-      print("[ApiService] Body: ${response.body}");
-    }
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonData = jsonDecode(response.body);
-      return List<Map<String, dynamic>>.from(jsonData["shift_schedule"]);
-    } else {
-      throw Exception("Failed to fetch auto shift table: ${response.body}");
-    }
-  }
-
-  // ============================================================
-  // SALES PREDICTION API
-  // ============================================================
-
-  /// GET all predicted sales
-  static Future<List<Map<String, dynamic>>> getPredSales() async {
-    final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
-
-    if (kDebugMode) {
-      print("[ApiService] GET /pred_sale/dashboard -> ${response.statusCode}");
-    }
-
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    } else {
-      throw Exception("Failed to fetch predicted sales");
-    }
-  }
-
-  /// GET today's predicted sales
-  static Future<List<Map<String, dynamic>>> getPredSalesToday() async {
-    final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
-
-    if (kDebugMode) {
-      print("[ApiService] GET /pred_sale/dashboard -> ${response.statusCode}");
-    }
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-
-      final today = DateTime.now();
-      final formattedToday =
-          "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-
-      final filtered = data.where((item) => item['date'] == formattedToday).toList();
-
-      return List<Map<String, dynamic>>.from(filtered);
-    } else {
-      throw Exception("Failed to fetch predicted sales");
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          // Ensure every item in the list is a Map<String, dynamic>
+          return data.map((item) => Map<String, dynamic>.from(item)).toList();
+        }
+        return [];
+      } else {
+        throw 'サーバーエラー: ${response.statusCode}';
+      }
+    } catch (e) {
+      debugPrint("[ApiService] fetchStaffList Error: $e");
+      rethrow;
     }
   }
 
@@ -181,15 +43,84 @@ class ApiService {
   // ============================================================
 
   /// POST shift preferences
-  static Future<void> saveShiftPreferences(Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/save_shift_preferences'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(data),
-    );
+  /// Expects: { date: "YYYY-MM-DD", staff_id: "...", start_time: "...", end_time: "..." }
+  static Future<void> saveShiftPreferences(Map<String, dynamic> payload) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/save_shift_preferences'),
+        headers: _headers,
+        body: jsonEncode(payload),
+      );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to save shift preferences');
+      if (response.statusCode != 200) {
+        final errorBody = jsonDecode(response.body);
+        throw errorBody['error'] ?? '保存に失敗しました';
+      }
+    } catch (e) {
+      debugPrint("[ApiService] saveShiftPreferences Error: $e");
+      rethrow;
     }
   }
+
+  // ============================================================
+  // AUTO SHIFT GENERATION
+  // ============================================================
+
+  /// POST to trigger AI Shift Generation
+  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(
+      DateTime start, DateTime end) async {
+    try {
+      final formatter = DateFormat('yyyy-MM-dd');
+      final response = await http.post(
+        Uri.parse("$baseUrl/shift"),
+        headers: _headers,
+        body: jsonEncode({
+          "start_date": formatter.format(start),
+          "end_date": formatter.format(end),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = jsonDecode(response.body);
+        final List? schedule = jsonData["shift_schedule"];
+        
+        // Safe mapping to List of Maps
+        return schedule?.map((item) => Map<String, dynamic>.from(item)).toList() ?? [];
+      } else {
+        throw "AIシフトの生成に失敗しました (${response.statusCode})";
+      }
+    } catch (e) {
+      debugPrint("[ApiService] fetchAutoShiftTable Error: $e");
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // SALES PREDICTION
+  // ============================================================
+
+  static Future<List<Map<String, dynamic>>> getPredSales() async {
+    try {
+      final response = await http.get(Uri.parse("$baseUrl/pred_sale/dashboard"));
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      }
+      throw "予測データの取得に失敗しました";
+    } catch (e) {
+      debugPrint("[ApiService] getPredSales Error: $e");
+      rethrow;
+    }
+  }
+
+  static Future<dynamic> postUserInput(Map<String, dynamic> payload) async {}
+
+  static Future<dynamic> fetchShiftTableDashboard() async {}
+
+  static Future<dynamic> postStaffProfile(Map<String, Object?> staffData) async {}
+
+  static Future<dynamic> deleteStaffProfile(int intId) async {}
+
+  static Future<dynamic> fetchAutoShiftTableDashboard(DateTime autoStart, DateTime autoEnd) async {}
 }

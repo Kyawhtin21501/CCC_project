@@ -131,7 +131,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
       if (!mounted) return;
       _showMessage(
-        response.statusCode == 200 ? '✅ 成功' : '❌ エラー',
+        response.statusCode == 200 ? '成功' : 'エラー',
         res['message'] ?? '不明なレスポンス',
       );
 
@@ -141,7 +141,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       }
     } catch (e) {
       if (!mounted) return;
-      _showMessage('❌ エラー', '登録失敗: $e');
+      _showMessage('エラー', '登録失敗: $e');
     }
   }
 
@@ -149,7 +149,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
   Future<void> _deleteProfileById(String id) async {
     final intId = int.tryParse(id);
     if (intId == null) {
-      _showMessage('❌ エラー', 'IDが無効です');
+      _showMessage('エラー', 'IDが無効です');
       return;
     }
 
@@ -159,7 +159,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
       if (!mounted) return;
       _showMessage(
-        response.statusCode == 200 ? '✅ 削除成功' : '❌ エラー',
+        response.statusCode == 200 ? '削除成功' : 'エラー',
         res['message'] ?? 'メッセージなし',
       );
 
@@ -168,14 +168,14 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       }
     } catch (e) {
       if (!mounted) return;
-      _showMessage('❌ エラー', '削除失敗: $e');
+      _showMessage('エラー', '削除失敗: $e');
     }
   }
 
   /// 削除確認ダイアログ（現状はID要求で未実装メッセージを表示）。
   void _confirmDeleteWithIdPrompt(String name) {
     _showMessage(
-        '⚠️ 未実装', 'スタッフ名 "$name" を削除するには、まずIDを取得する必要があります。');
+        '未実装', 'スタッフ名 "$name" を削除するには、まずIDを取得する必要があります。');
     // TODO: 今後、名前からIDを検索するか、IDを保持するロジックを実装する必要があります。
   }
 
