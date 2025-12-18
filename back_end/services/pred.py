@@ -1,15 +1,8 @@
 import os
-import pandas as pd
-from datetime import datetime, timedelta
-import requests
-import openmeteo_requests
-import requests_cache
-from retry_requests import retry
-import joblib
-from sqlalchemy import create_engine ,Table, MetaData #for connecting to database
-from dotenv import load_dotenv 
-load_dotenv()
-engine = create_engine('postgresql+psycopg2://khein21502:@localhost/ccc_project')
+data = { 
+        "start_date" : "12-12-12",
+        "end_date" : "12-12-31"
+        }
 class ShiftCreator:
     """
     This class handles the prediction of daily sales and staff levels
@@ -24,8 +17,7 @@ class ShiftCreator:
         self.longitude = 13.41
 
         # Define root directories for data and models
-        base_dir = os.path.dirname(os.path.abspath(__file__))  # /flask_back/services/
-        self.data_dir = os.path.normpath(os.path.join(base_dir, '../../data'))
+        base_dir = os.path.dirname(os.path.abspath(__file__))
         self.model_dir = os.path.normpath(os.path.join(base_dir, '../../model'))
         self.display_dir = os.path.normpath(os.path.join(base_dir, '../../data/data_for_dashboard'))
 
@@ -42,6 +34,9 @@ class ShiftCreator:
 
     def get_festival_days(self):
         """Load festival dates from CSV and return set of 'MM-DD' strings."""
+  
+          # /flask_back/services/
+        self.data_dir = os.path.normpath(os.path.join(base_dir, '../../data'))
         file_path = os.path.join(self.data_dir, "complex_restaurant_sales.csv")
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Festival CSV not found at {file_path}")
