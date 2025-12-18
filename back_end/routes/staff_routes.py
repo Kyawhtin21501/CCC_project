@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from back_end.services.staff_manager import StaffService
+from ..services.staff_manager import StaffService
 
 staff_bp = Blueprint("staff", __name__)
 
@@ -16,14 +16,16 @@ def get_staff(staff_id):
         return jsonify({"error": "staff not found"}), 404
     return jsonify(s.to_dict()), 200
 
+
 @staff_bp.post("/staff")
 def create_staff():
     data = request.get_json()
-    print(data)
+    print("check data " , data)
     if not data:
         return jsonify({"error": "invalid json"}), 400
     new_s = StaffService.create_staff(data)
     return jsonify(new_s.to_dict()), 201
+
 
 @staff_bp.patch("/staff/<int:staff_id>")
 def update_staff(staff_id):

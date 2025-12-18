@@ -121,7 +121,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       'age': int.tryParse(_ageController.text),
       'level': int.tryParse(_levelController.text),
       'gender': _selectedGender,
-      'email': _emailController.text,
+      'e_mail': _emailController.text,
       'status': _convertStatusToEnglish(_selectedStatus), // 日本語→英語キーに変換
     };
 
