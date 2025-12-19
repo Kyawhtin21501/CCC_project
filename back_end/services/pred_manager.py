@@ -20,7 +20,7 @@ class DataPrepare:
         self.end_date = end_date
         self.date_format = date_format
 
-        # Tokyo（必要なら外から渡してもOK）
+    
         self.latitude = 35.6895
         self.longitude = 139.6917
 
