@@ -32,7 +32,7 @@ class StaffService:
             name=data["name"],
             age=data["age"],
             level=data["level"],
-            status=StaffService.status_map.get(data["status"]),
+            status=data["status"],
             e_mail=data["e_mail"],
             gender = data["gender"]
         )
