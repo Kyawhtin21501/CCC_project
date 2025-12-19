@@ -22,3 +22,9 @@ class DailyReport:
         db.commit()
         db.refresh(new_data)
         return new_data
+    
+    
+    @staticmethod
+    def get_daily_report():
+        db : Session = next(get_db())
+        return db.query(Daily_data).all()

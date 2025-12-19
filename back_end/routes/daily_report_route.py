@@ -12,4 +12,8 @@ def create_new_daily():
     new_d = DailyReport.create_daily_report(data)
     return jsonify(new_d.to_dict()), 201
     
+@daily_report_bp.get("/daily_report")
+def get_dr_data():
+    dr = DailyReport.get_daily_report()
+    return jsonify([d.to_dict() for d in dr]), 200
     

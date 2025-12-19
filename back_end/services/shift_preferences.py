@@ -30,7 +30,7 @@ class ShiftPreferences:
                 end_time=self.change_time(self.data["end_time"])
             )
 
-            # DB制約と相性いいチェック
+            
             if new_shift.start_time >= new_shift.end_time:
                 raise ValueError("start_time must be before end_time")
             
