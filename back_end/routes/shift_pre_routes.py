@@ -40,3 +40,9 @@ def save_shift_pre():
             
             "error": "Internal Server Error"
         }), 500
+        
+        
+@shift_pre_bp.get("/shift_pre")
+def get_shift_pre():
+    shift_d = ShiftPreferences.get_shift_pre()
+    return jsonify([r.to_dict() for r in shift_d]), 200

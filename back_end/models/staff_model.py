@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from ..utils.db import Base,engine
 from sqlalchemy.orm import relationship
-Base.metadata.create_all(bind=engine)
+
 class Staff(Base):
     __tablename__ = "staff"
 

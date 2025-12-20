@@ -43,3 +43,9 @@ class ShiftPreferences:
         except Exception as e:
             db.rollback()
             raise e
+
+
+    @staticmethod
+    def get_shift_pre():
+        db: Session = next(get_db())
+        return db.query(ShiftPre).all()

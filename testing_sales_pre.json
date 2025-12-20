@@ -1,0 +1,54 @@
+[
+    { "date": "Fri, 19 Dec 2025 00:00:00 GMT", "predicted_sales": 189455.484375 },
+    { "date": "Sat, 20 Dec 2025 00:00:00 GMT", "predicted_sales": 239434.625 },
+    { "date": "Sun, 21 Dec 2025 00:00:00 GMT", "predicted_sales": 254088.71875 },
+    { "date": "Mon, 22 Dec 2025 00:00:00 GMT", "predicted_sales": 200141.875 },
+    { "date": "Tue, 23 Dec 2025 00:00:00 GMT", "predicted_sales": 188711.984375 },
+    { "date": "Wed, 24 Dec 2025 00:00:00 GMT", "predicted_sales": 256509.109375 },
+    { "date": "Thu, 25 Dec 2025 00:00:00 GMT", "predicted_sales": 251318.484375 },
+    { "date": "Fri, 26 Dec 2025 00:00:00 GMT", "predicted_sales": 189052.40625 },
+  
+    { "date": "Sat, 27 Dec 2025 00:00:00 GMT", "predicted_sales": 241883.3125 },
+    { "date": "Sun, 28 Dec 2025 00:00:00 GMT", "predicted_sales": 262145.9375 },
+    { "date": "Mon, 29 Dec 2025 00:00:00 GMT", "predicted_sales": 198334.75 },
+    { "date": "Tue, 30 Dec 2025 00:00:00 GMT", "predicted_sales": 192551.34375 },
+    { "date": "Wed, 31 Dec 2025 00:00:00 GMT", "predicted_sales": 268912.53125 },
+  
+    { "date": "Thu, 01 Jan 2026 00:00:00 GMT", "predicted_sales": 275441.84375 },
+    { "date": "Fri, 02 Jan 2026 00:00:00 GMT", "predicted_sales": 233118.1875 },
+    { "date": "Sat, 03 Jan 2026 00:00:00 GMT", "predicted_sales": 261004.625 },
+    { "date": "Sun, 04 Jan 2026 00:00:00 GMT", "predicted_sales": 269882.09375 },
+    { "date": "Mon, 05 Jan 2026 00:00:00 GMT", "predicted_sales": 201884.15625 },
+    { "date": "Tue, 06 Jan 2026 00:00:00 GMT", "predicted_sales": 193552.8125 },
+    { "date": "Wed, 07 Jan 2026 00:00:00 GMT", "predicted_sales": 198118.40625 },
+    { "date": "Thu, 08 Jan 2026 00:00:00 GMT", "predicted_sales": 205441.53125 },
+    { "date": "Fri, 09 Jan 2026 00:00:00 GMT", "predicted_sales": 214882.9375 },
+  
+    { "date": "Sat, 10 Jan 2026 00:00:00 GMT", "predicted_sales": 248331.78125 },
+    { "date": "Sun, 11 Jan 2026 00:00:00 GMT", "predicted_sales": 259772.40625 },
+    { "date": "Mon, 12 Jan 2026 00:00:00 GMT", "predicted_sales": 197441.125 },
+    { "date": "Tue, 13 Jan 2026 00:00:00 GMT", "predicted_sales": 191552.59375 },
+    { "date": "Wed, 14 Jan 2026 00:00:00 GMT", "predicted_sales": 199884.34375 },
+    { "date": "Thu, 15 Jan 2026 00:00:00 GMT", "predicted_sales": 203118.8125 },
+    { "date": "Fri, 16 Jan 2026 00:00:00 GMT", "predicted_sales": 212991.46875 },
+  
+    { "date": "Sat, 17 Jan 2026 00:00:00 GMT", "predicted_sales": 245118.9375 },
+    { "date": "Sun, 18 Jan 2026 00:00:00 GMT", "predicted_sales": 258771.59375 },
+    { "date": "Mon, 19 Jan 2026 00:00:00 GMT", "predicted_sales": 198223.28125 },
+    { "date": "Tue, 20 Jan 2026 00:00:00 GMT", "predicted_sales": 190884.90625 },
+    { "date": "Wed, 21 Jan 2026 00:00:00 GMT", "predicted_sales": 196771.125 },
+    { "date": "Thu, 22 Jan 2026 00:00:00 GMT", "predicted_sales": 204552.6875 },
+    { "date": "Fri, 23 Jan 2026 00:00:00 GMT", "predicted_sales": 215882.28125 },
+  
+    { "date": "Sat, 24 Jan 2026 00:00:00 GMT", "predicted_sales": 249772.9375 },
+    { "date": "Sun, 25 Jan 2026 00:00:00 GMT", "predicted_sales": 261118.40625 },
+    { "date": "Mon, 26 Jan 2026 00:00:00 GMT", "predicted_sales": 199552.8125 },
+    { "date": "Tue, 27 Jan 2026 00:00:00 GMT", "predicted_sales": 192118.4375 },
+    { "date": "Wed, 28 Jan 2026 00:00:00 GMT", "predicted_sales": 197883.75 },
+    { "date": "Thu, 29 Jan 2026 00:00:00 GMT", "predicted_sales": 205118.96875 },
+    { "date": "Fri, 30 Jan 2026 00:00:00 GMT", "predicted_sales": 213441.53125 },
+  
+    { "date": "Sat, 31 Jan 2026 00:00:00 GMT", "predicted_sales": 252118.125 },
+    { "date": "Sun, 01 Feb 2026 00:00:00 GMT", "predicted_sales": 263882.9375 }
+  ]
+  
