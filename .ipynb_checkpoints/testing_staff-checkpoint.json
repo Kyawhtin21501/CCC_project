@@ -1,51 +1,5 @@
 [
-    
-        {
-            "age": 23,
-            "e_mail": "test1@gmail.com",
-            "gender": "Male",
-            "id": 1,
-            "level": 3,
-            "name": "testing1(inter student)",
-            "status": "international"
-        },
-        {
-            "age": 35,
-            "e_mail": "testing2@gmail.com",
-            "gender": "Female",
-            "id": 2,
-            "level": 3,
-            "name": "testing2(full)",
-            "status": "full-time"
-        },
-        {
-            "age": 19,
-            "e_mail": "tesing3@gmail.com",
-            "gender": "Female",
-            "id": 3,
-            "level": 2,
-            "name": "testing3(highschool)",
-            "status": "high-school"
-        },
-        {
-            "age": 25,
-            "e_mail": "tesing4@gmail.com",
-            "gender": "Female",
-            "id": 4,
-            "level": 3,
-            "name": "testing4(part)",
-            "status": "part-time"
-        },
-        {
-            "age": 40,
-            "e_mail": "testing@gmail.com",
-            "gender": "Male",
-            "id": 5,
-            "level": 5,
-            "name": "testing5(manager)",
-            "status": "full-time"
-        }
-        ,
+ 
     
     {
             "age": 22,

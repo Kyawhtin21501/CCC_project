@@ -1,0 +1,122 @@
+[
+    { "date": "2025-12-19", "shift_id": 1, "staff_id": 1, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-19", "shift_id": 2, "staff_id": 2, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-19", "shift_id": 3, "staff_id": 3, "start_time": "19:00", "end_time": "21:30" },
+    { "date": "2025-12-19", "shift_id": 4, "staff_id": 4, "start_time": "11:00", "end_time": "18:00" },
+    { "date": "2025-12-19", "shift_id": 5, "staff_id": 5, "start_time": "09:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-20", "shift_id": 6, "staff_id": 6, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-20", "shift_id": 7, "staff_id": 7, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-20", "shift_id": 8, "staff_id": 8, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-20", "shift_id": 9, "staff_id": 9, "start_time": "16:00", "end_time": "21:00" },
+    { "date": "2025-12-20", "shift_id": 10, "staff_id": 10, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-21", "shift_id": 11, "staff_id": 11, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-21", "shift_id": 12, "staff_id": 12, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-21", "shift_id": 13, "staff_id": 13, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-21", "shift_id": 14, "staff_id": 14, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-21", "shift_id": 15, "staff_id": 15, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-22", "shift_id": 16, "staff_id": 16, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-22", "shift_id": 17, "staff_id": 17, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-22", "shift_id": 18, "staff_id": 18, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-22", "shift_id": 19, "staff_id": 19, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2025-12-22", "shift_id": 20, "staff_id": 20, "start_time": "11:00", "end_time": "20:00" },
+  
+    { "date": "2025-12-23", "shift_id": 21, "staff_id": 21, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-23", "shift_id": 22, "staff_id": 22, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-23", "shift_id": 23, "staff_id": 23, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-23", "shift_id": 24, "staff_id": 24, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-23", "shift_id": 25, "staff_id": 25, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-24", "shift_id": 26, "staff_id": 1, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-24", "shift_id": 27, "staff_id": 2, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-24", "shift_id": 28, "staff_id": 3, "start_time": "16:00", "end_time": "21:00" },
+    { "date": "2025-12-24", "shift_id": 29, "staff_id": 4, "start_time": "11:00", "end_time": "18:00" },
+    { "date": "2025-12-24", "shift_id": 30, "staff_id": 5, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-25", "shift_id": 31, "staff_id": 6, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-25", "shift_id": 32, "staff_id": 7, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-25", "shift_id": 33, "staff_id": 8, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-25", "shift_id": 34, "staff_id": 9, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2025-12-25", "shift_id": 35, "staff_id": 10, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-26", "shift_id": 36, "staff_id": 11, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-26", "shift_id": 37, "staff_id": 12, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-26", "shift_id": 38, "staff_id": 13, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-26", "shift_id": 39, "staff_id": 14, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-26", "shift_id": 40, "staff_id": 15, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-27", "shift_id": 41, "staff_id": 16, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-27", "shift_id": 42, "staff_id": 17, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-27", "shift_id": 43, "staff_id": 18, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-27", "shift_id": 44, "staff_id": 19, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2025-12-27", "shift_id": 45, "staff_id": 20, "start_time": "11:00", "end_time": "20:00" },
+  
+    { "date": "2025-12-28", "shift_id": 46, "staff_id": 21, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-28", "shift_id": 47, "staff_id": 22, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-28", "shift_id": 48, "staff_id": 23, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-28", "shift_id": 49, "staff_id": 24, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-28", "shift_id": 50, "staff_id": 25, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-29", "shift_id": 51, "staff_id": 1, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-29", "shift_id": 52, "staff_id": 2, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-29", "shift_id": 53, "staff_id": 3, "start_time": "16:00", "end_time": "21:00" },
+    { "date": "2025-12-29", "shift_id": 54, "staff_id": 4, "start_time": "11:00", "end_time": "18:00" },
+    { "date": "2025-12-29", "shift_id": 55, "staff_id": 5, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-30", "shift_id": 56, "staff_id": 6, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-30", "shift_id": 57, "staff_id": 7, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-30", "shift_id": 58, "staff_id": 8, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-30", "shift_id": 59, "staff_id": 9, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2025-12-30", "shift_id": 60, "staff_id": 10, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2025-12-31", "shift_id": 61, "staff_id": 11, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-31", "shift_id": 62, "staff_id": 12, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2025-12-31", "shift_id": 63, "staff_id": 13, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2025-12-31", "shift_id": 64, "staff_id": 14, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2025-12-31", "shift_id": 65, "staff_id": 15, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2026-01-01", "shift_id": 66, "staff_id": 16, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-01", "shift_id": 67, "staff_id": 17, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-01", "shift_id": 68, "staff_id": 18, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2026-01-01", "shift_id": 69, "staff_id": 19, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2026-01-01", "shift_id": 70, "staff_id": 20, "start_time": "11:00", "end_time": "20:00" },
+  
+    { "date": "2026-01-02", "shift_id": 71, "staff_id": 21, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 72, "staff_id": 22, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2026-01-02", "shift_id": 73, "staff_id": 23, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-02", "shift_id": 74, "staff_id": 24, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 75, "staff_id": 25, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2026-01-02", "shift_id": 76, "staff_id": 1, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-02", "shift_id": 77, "staff_id": 2, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 78, "staff_id": 3, "start_time": "16:00", "end_time": "21:00" },
+    { "date": "2026-01-02", "shift_id": 79, "staff_id": 4, "start_time": "11:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 80, "staff_id": 5, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2026-01-02", "shift_id": 81, "staff_id": 6, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 82, "staff_id": 7, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2026-01-02", "shift_id": 83, "staff_id": 8, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-02", "shift_id": 84, "staff_id": 9, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2026-01-02", "shift_id": 85, "staff_id": 10, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2026-01-02", "shift_id": 86, "staff_id": 11, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 87, "staff_id": 12, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-02", "shift_id": 88, "staff_id": 13, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2026-01-02", "shift_id": 89, "staff_id": 14, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 90, "staff_id": 15, "start_time": "18:00", "end_time": "23:00" },
+  
+    { "date": "2026-01-02", "shift_id": 91, "staff_id": 16, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-02", "shift_id": 92, "staff_id": 17, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 93, "staff_id": 18, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2026-01-02", "shift_id": 94, "staff_id": 19, "start_time": "15:00", "end_time": "21:00" },
+    { "date": "2026-01-02", "shift_id": 95, "staff_id": 20, "start_time": "11:00", "end_time": "20:00" },
+  
+    { "date": "2026-01-02", "shift_id": 96, "staff_id": 21, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 97, "staff_id": 22, "start_time": "18:00", "end_time": "23:00" },
+    { "date": "2026-01-02", "shift_id": 98, "staff_id": 23, "start_time": "11:00", "end_time": "20:00" },
+    { "date": "2026-01-02", "shift_id": 99, "staff_id": 24, "start_time": "09:00", "end_time": "18:00" },
+    { "date": "2026-01-02", "shift_id": 100, "staff_id": 25, "start_time": "18:00", "end_time": "23:00" }
+  ]
+  

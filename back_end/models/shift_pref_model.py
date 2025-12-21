@@ -19,6 +19,7 @@ class ShiftPre(Base):
     __table_args__ = (
         UniqueConstraint("staff_id", "date", name="uq_staff_date"),
         CheckConstraint("start_time < end_time", name="ck_start_before_end"),
+        
     )
 
     def to_dict(self):
