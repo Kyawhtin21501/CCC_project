@@ -304,7 +304,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       );
 
   Widget _genderDropdown() => DropdownButtonFormField<String>(
-        value: _selectedGender,
+        initialValue: _selectedGender,
         decoration: const InputDecoration(labelText: '性別', border: OutlineInputBorder()),
         items: _genderOptions
             .map((g) => DropdownMenuItem(value: g, child: Text(g == 'Male' ? '男性' : '女性')))
@@ -313,7 +313,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       );
 
   Widget _statusDropdown() => DropdownButtonFormField<String>(
-        value: _selectedStatus,
+        initialValue: _selectedStatus,
         decoration: const InputDecoration(labelText: 'ステータス', border: OutlineInputBorder()),
         items: _statusOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
         onChanged: (v) => setState(() => _selectedStatus = v!),
