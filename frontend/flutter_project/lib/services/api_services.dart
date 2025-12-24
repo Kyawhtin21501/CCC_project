@@ -273,13 +273,13 @@ class ApiService {
   // ============================================================
 
   static Future<List<Map<String, dynamic>>> fetchPredSalesOneWeek() async {
-    final url = '$baseUrl/pred_sales';
+    final url = '$baseUrl/pred_sales_dash';
 
     try {
-      _logRequest(method: "GET", url: url, headers: _headers);
+      _logRequest(method: "POST", url: url, headers: _headers);
 
       final response =
-          await http.get(Uri.parse(url), headers: _headers);
+          await http.post(Uri.parse(url), headers: _headers);
 
       _logResponse(response);
 
