@@ -1,0 +1,6 @@
+# ① SQL生成
+python insert_shifts.py
+
+# ② DBに一括投入
+sqlite3 ccc_project.db
+.read insert_staff.sql
