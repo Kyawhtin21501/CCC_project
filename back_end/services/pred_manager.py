@@ -244,4 +244,8 @@ class GetPred:
             .order_by(Pred_sales.date)
             .all()
             )
-
+    
+    def get_all_pred():
+        db:Session = next(get_db())
+        
+        db.query(Pred_sales).all()

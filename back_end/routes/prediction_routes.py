@@ -14,15 +14,19 @@ def create_pred_sale():
     result = new_p.run_prediction()
     return jsonify(result), 201
 
-@pred_sales_bp.get("/pred_sales")
+@pred_sales_bp.post("/pred_sales_dash")
 def get_pred_for_one_week():
     from datetime import datetime, timedelta
-
+    date_format="%Y-%m-%d"
     start = datetime.now() - timedelta(days=1)
+    
     end = start + timedelta(days=7)
-    records = GetPred.get_one_week_pred(start, end)
-    print(records)
+    start = datetime.strftime(start,date_format)
+    end = datetime.strftime(end,date_format)
+    records = DataPrepare(start, end)
+    result = records.run_prediction()
+    
    
 
-    return jsonify([r.to_dict() for r in records]), 200
+    return jsonify(result), 200
 
