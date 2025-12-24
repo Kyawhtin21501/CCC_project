@@ -4,6 +4,7 @@ from ..services.shift_preferences import ShiftPreferences
 shift_pre_bp = Blueprint("shift_pre", __name__)
 
 @shift_pre_bp.post("/shift_pre")
+
 def save_shift_pre():
     data = request.get_json()
 

@@ -53,7 +53,7 @@ class StaffService:
 
         if "status" in data:
             data["status"] = StaffService.status_map.get(
-                data["status"], "other"
+                data["status"]
             )
 
         for key, value in data.items():

@@ -23,6 +23,7 @@ def create_staff():
     print("check data " , data)
     if not data:
         return jsonify({"error": "invalid json"}), 400
+    
     new_s = StaffService.create_staff(data)
     return jsonify(new_s.to_dict()), 201
 
