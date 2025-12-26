@@ -13,8 +13,7 @@ from back_end.services.shift_preferences import ShiftPreferences
 from back_end.services.pred_manager import DataPrepare
 from sqlalchemy.orm import Session
 import datetime
-start_date = "2025-12-20"
-end_date = "2025-12-27"
+
 
 class ShiftAss:
 
