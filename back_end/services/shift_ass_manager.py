@@ -25,6 +25,8 @@ class ShiftAss:
         staff = StaffService.get_all_staff()
         df = pd.DataFrame([s.to_dict() for s in staff])
         df = df[["id","name","level","status"]]
+        print("check staff data ")
+        print(df.isnull().sum())
         return df
 
     def get_shift_pre_df(self):
@@ -38,6 +40,8 @@ class ShiftAss:
             (df["date"] <= pd.to_datetime(self.end_date))
         ]
         df = df.rename(columns= {"staff_id" : "id"})
+        print("check shift pre data-----------------------")
+        print(df.isnull().sum())
         return df
 
     def get_pred_sale(self):
@@ -85,7 +89,8 @@ class ShiftAss:
             how="left",
             on="date"
         )
-
+        print("final check ---------------------")
+        print(df)
         df["start_dt"] = pd.to_datetime(
             df["date"].dt.strftime("%Y-%m-%d") + " " + df["start_time"]
         )
@@ -125,7 +130,8 @@ class ShiftAss:
         final_df["max_cost"] = final_df["pred_sale_per_hour"] * 0.25
         
         final_df["salary"] = final_df["level"].apply(self.salary)
-        print(f"check data-----------------------------{final_df.isnull().sum()}")
+        print("check data---------------")
+        print()
         return final_df
 
 
@@ -271,7 +277,7 @@ class ShiftAss:
                     else str(row["name"])
                 ),
                 level=(
-                    None
+                    0
                     if pd.isna(row["level"])
                     else int(row["level"])
                 ),
