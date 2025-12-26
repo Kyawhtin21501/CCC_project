@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:predictor_web/services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
@@ -80,9 +81,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (_) {}
   }
 
+  // ✅ FIXED PAYLOAD (day added)
   Map<String, dynamic> _buildPayload() {
     return {
       "date": _formatDateISO(_selectedDate!),
+
+      // 🔥 REQUIRED BY FLASK (KeyError FIX)
+      "day": DateFormat('EEEE').format(_selectedDate!), // Monday, Tuesday...
+
       "event": festivalStatus == '1',
       "customer_count": int.parse(customerController.text),
       "sales": double.parse(salesController.text),
@@ -94,7 +100,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _saveDailyReport() async {
     if (!_formKey.currentState!.validate() ||
         _selectedDate == null ||
-        festivalStatus == null) return;
+        festivalStatus == null) {
+      return;
+    }
 
     setState(() => _loading = true);
 
@@ -125,25 +133,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Positioned.fill(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.only(top: 96, left: 20, right: 20, bottom: 20),
+              padding: const EdgeInsets.only(
+                top: 96,
+                left: 20,
+                right: 20,
+                bottom: 20,
+              ),
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : ResponsiveBodyCard(
                       formCard: _buildForm(),
-                      salesCard: SalesPredictionChartWidget(salesData: _salesDataCache),
+                      salesCard: SalesPredictionChartWidget(
+                        salesData: _salesDataCache,
+                      ),
                       dailyReportCard: _buildDailyReportCard(),
-                     // shiftCard: _buildChartsSection(),
                     ),
             ),
           ),
+
+          /// FIXED MENU BAR
           Positioned(
             top: 28,
             left: 16,
             right: 16,
-            child: CustomMenuBar(
-              title: 'ダッシュボード',
-              onMenuPressed: () => Scaffold.of(context).openDrawer(),
+            child: Builder(
+              builder: (scaffoldContext) {
+                return CustomMenuBar(
+                  title: 'ダッシュボード',
+                  onMenuPressed: () {
+                    Scaffold.of(scaffoldContext).openDrawer();
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -157,9 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final latest = _dailyReportCache.last;
-
-    final bool hasEvent =
-        latest['event'] == true || latest['event'] == 1;
+    final bool hasEvent = latest['event'] == true || latest['event'] == 1;
 
     final List<String> staffNames =
         (latest['staff_names'] as List?)?.map((e) => e.toString()).toList() ?? [];
@@ -170,6 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text("最新の日報", style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         _infoRow("日付", latest['date']),
+        _infoRow("曜日", latest['day']),
         _infoRow("売上", "¥${latest['sales']}"),
         _infoRow("来客数", latest['customer_count']),
         _infoRow("スタッフ数", latest['staff_count']),
@@ -183,33 +203,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildChartsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("７日間売上予測", style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 280,
-          child: SalesPredictionChartWidget(salesData: _salesDataCache),
-        ),
-        const SizedBox(height: 32),
-        Text("最新シフト", style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 12),
-        ShiftTableWidget(shiftData: _shiftScheduleCache),
-      ],
-    );
-  }
-
   Widget _infoRow(String label, dynamic value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           SizedBox(
-              width: 90,
-              child:
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+            width: 90,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
           Expanded(child: Text(value.toString())),
         ],
       ),
@@ -223,7 +228,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _numberField(salesController, "売上", Icons.attach_money),
           const SizedBox(height: 12),
-          _numberField(customerController, "来客数", Icons.person, integer: true),
+          _numberField(
+            customerController,
+            "来客数",
+            Icons.person,
+            integer: true,
+          ),
           const SizedBox(height: 12),
           _datePicker(),
           const SizedBox(height: 12),
@@ -243,15 +253,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _numberField(TextEditingController c, String label, IconData icon,
-      {bool integer = false}) {
+  Widget _numberField(
+    TextEditingController c,
+    String label,
+    IconData icon, {
+    bool integer = false,
+  }) {
     return TextFormField(
       controller: c,
-      keyboardType:
-          TextInputType.numberWithOptions(decimal: !integer),
+      keyboardType: TextInputType.numberWithOptions(decimal: !integer),
       inputFormatters: [
         FilteringTextInputFormatter.allow(
-            RegExp(integer ? r'[0-9]' : r'[0-9.]'))
+          RegExp(integer ? r'[0-9]' : r'[0-9.]'),
+        )
       ],
       validator: (v) => v == null || v.isEmpty ? "必須項目です" : null,
       decoration: InputDecoration(

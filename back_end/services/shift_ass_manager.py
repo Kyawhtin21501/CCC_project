@@ -277,7 +277,8 @@ class ShiftAss:
                 "hour": row["hour"],
                 "staff_id": row["staff_id"],
                 "name": row["name"],
-                "level": row["level"],
+                #"level": row["level"],
+                "level": None if pd.isna(row["level"]) else row["level"],
                 "note": row.get("note"),
                  }
                 for _, row in shift_rows.iterrows()

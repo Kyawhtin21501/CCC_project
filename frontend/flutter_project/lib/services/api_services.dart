@@ -4,18 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-  // ============================================================
-  // BASE URL
-  // ============================================================
-  static String get baseUrl {
-    if (kReleaseMode) {
-      return 'https://ccc-project.onrender.com';
-    }
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5000';
-    }
-    return 'http://100.64.1.41:5000';
-  }
+static String get baseUrl { if (kReleaseMode) { return 'https://ccc-project.onrender.com'; } return 'http://127.0.0.1:5000'; }
+  // Common headers for all requests
 
   static Map<String, String> get _headers => {
         'Content-Type': 'application/json',
@@ -24,7 +14,6 @@ class ApiService {
 
   static bool _isSuccess(int statusCode) =>
       statusCode >= 200 && statusCode < 300;
-
   // ============================================================
   // PRETTY JSON DEBUG UTILITIES
   // ============================================================
@@ -229,44 +218,63 @@ class ApiService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(
-      DateTime start, DateTime end) async {
-    final url = '$baseUrl/shift';
-    final formatter = DateFormat('yyyy-MM-dd');
+static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(
+    DateTime start, DateTime end) async {
+  final url = '$baseUrl/shift_ass';
+  final formatter = DateFormat('yyyy-MM-dd');
 
-    final payload = {
-      "start_date": formatter.format(start),
-      "end_date": formatter.format(end),
-    };
+  final payload = {
+    "start_date": formatter.format(start),
+    "end_date": formatter.format(end),
+  };
 
-    try {
-      _logRequest(
-          method: "POST", url: url, headers: _headers, body: payload);
+  try {
+    _logRequest(
+      method: "POST",
+      url: url,
+      headers: _headers,
+      body: payload,
+    );
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: _headers,
-        body: jsonEncode(payload),
-      );
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
 
-      _logResponse(response);
+    _logResponse(response);
 
-      if (_isSuccess(response.statusCode)) {
-        final data =
-            jsonDecode(utf8.decode(response.bodyBytes));
-        final List? schedule = data["shift_schedule"];
-        return schedule
-                ?.map((e) => Map<String, dynamic>.from(e))
-                .toList() ??
-            [];
-      } else {
-        throw "AIシフト生成失敗";
+    if (_isSuccess(response.statusCode)) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+
+      List<Map<String, dynamic>> schedule;
+
+      // If backend returns a Map with "shift_schedule"
+      if (decoded is Map && decoded.containsKey("shift_schedule")) {
+        schedule = (decoded["shift_schedule"] as List)
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } 
+      // If backend returns a raw List
+      else if (decoded is List) {
+        schedule = decoded
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } 
+      // Otherwise, empty list
+      else {
+        schedule = [];
       }
-    } catch (e) {
-      debugPrint("[ApiService] fetchAutoShiftTable Error: $e");
-      rethrow;
+
+      return schedule;
+    } else {
+      throw "AI shift generation failed (${response.statusCode})";
     }
+  } catch (e) {
+    debugPrint("[ApiService] fetchAutoShiftTable Error: $e");
+    rethrow;
   }
+}
 
   // ============================================================
   // DASHBOARD
