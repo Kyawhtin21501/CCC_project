@@ -8,7 +8,7 @@ def shift_ass():
     data = request.get_json()
     start = data["start_date"]
     end = data["end_date"]
-
+    print("check api " , start ,end)
     s = ShiftAss(start, end)
     new_rows = s.shift_save_db()
 
