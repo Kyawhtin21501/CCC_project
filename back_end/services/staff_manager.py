@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from ..models.staff_model import Staff
+from ..models.shift_pref_model import ShiftPre
 from ..utils.db import get_db
 
 class StaffService:
@@ -67,10 +68,11 @@ class StaffService:
     def delete_staff(staff_id: int):
         db: Session = next(get_db())
         staff = db.query(Staff).filter(Staff.id == staff_id).first()
-
+        shift_pre = db.query(ShiftPre).filter(ShiftPre.staff_id == staff_id).all()
         if not staff:
             return None
 
         db.delete(staff)
+        db.delete(shift_pre)
         db.commit()
         return True
