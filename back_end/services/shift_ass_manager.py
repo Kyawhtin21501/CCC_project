@@ -125,7 +125,7 @@ class ShiftAss:
         final_df["max_cost"] = final_df["pred_sale_per_hour"] * 0.25
         
         final_df["salary"] = final_df["level"].apply(self.salary)
-
+        print(f"check data-----------------------------{final_df.isnull().sum()}")
         return final_df
 
 
@@ -250,21 +250,36 @@ class ShiftAss:
         db: Session = next(get_db())
 
      
-        db.query(ShiftMain).delete()
+        db.query(ShiftMain).filter(
+            ShiftMain.date >= self.start_date,
+            ShiftMain.date <= self.end_date
+            ).delete()
+
         db.commit()
 
         # ① DataFrame → ORM用オブジェクト
+        import pandas as pd
+
         objs = [
             ShiftMain(
                 date=row["date"],
                 hour=row["hour"],
-                staff_id=row["staff_id"],
-                name=row["name"],
-                level=row["level"],
-                note=row.get("note"),
-                )
+                staff_id=int(row["staff_id"]) if not pd.isna(row["staff_id"]) else -1,
+                name=(
+                    "not enough"
+                    if pd.isna(row["name"])
+                    else str(row["name"])
+                ),
+                level=(
+                    None
+                    if pd.isna(row["level"])
+                    else int(row["level"])
+                ),
+                note=row.get("note") or "",
+            )
             for _, row in shift_rows.iterrows()
             ]
+
 
         db.add_all(objs)
         db.commit()
@@ -276,8 +291,8 @@ class ShiftAss:
                 "hour": row["hour"],
                 "staff_id": row["staff_id"],
                 "name": row["name"],
-                #"level": row["level"],
-                "level": None if pd.isna(row["level"]) else row["level"],
+                "level": row["level"],
+                
                 "note": row.get("note"),
                  }
                 for _, row in shift_rows.iterrows()
