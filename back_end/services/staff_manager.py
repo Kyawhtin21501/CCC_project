@@ -69,10 +69,13 @@ class StaffService:
         db: Session = next(get_db())
         staff = db.query(Staff).filter(Staff.id == staff_id).first()
         shift_pre = db.query(ShiftPre).filter(ShiftPre.staff_id == staff_id)
+        print(shift_pre)
         if not staff:
             return None
+        
         for sp in shift_pre:
             db.delete(sp)
+        
         db.delete(staff)
         
         db.commit()
