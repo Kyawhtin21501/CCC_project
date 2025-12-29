@@ -31,6 +31,10 @@ def create_staff():
 @staff_bp.patch("/staff/<int:staff_id>")
 def update_staff(staff_id):
     data = request.get_json()
+    """
+    for d in data:
+        print(data[d])
+    """
     if not data:
         return jsonify({"error": "invalid json"}), 400
     updated = StaffService.update_staff(staff_id, data)

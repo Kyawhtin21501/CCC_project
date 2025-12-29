@@ -48,17 +48,16 @@ class StaffService:
     def update_staff(staff_id: int, data: dict):
         db: Session = next(get_db())
         staff = db.query(Staff).filter(Staff.id == staff_id).first()
+        print("PATCH data:", data)
+        print("RAW status:", data.get("status"))
+        print("status_map keys:", StaffService.status_map.keys())
 
         if not staff:
             return None
 
-        if "status" in data:
-            data["status"] = StaffService.status_map.get(
-                data["status"]
-            )
-
-        for key, value in data.items():
-            setattr(staff, key, value)
+       
+        if "level" in data:
+            staff.level = data["level"]
 
         db.commit()
         db.refresh(staff)
@@ -69,7 +68,7 @@ class StaffService:
         db: Session = next(get_db())
         staff = db.query(Staff).filter(Staff.id == staff_id).first()
         shift_pre = db.query(ShiftPre).filter(ShiftPre.staff_id == staff_id)
-        print(shift_pre)
+        
         if not staff:
             return None
         

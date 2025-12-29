@@ -24,9 +24,7 @@ class DataPrepare:
         self.latitude = 35.6895
         self.longitude = 139.6917
 
-    # =====================
-    # date properties
-    # =====================
+ 
     @property
     def start_date_obj(self):
         try:
@@ -52,9 +50,7 @@ class DataPrepare:
         except NameError:
             return os.getcwd()
 
-    # =====================
-    # festival
-    # =====================
+   
     @property
     def festival_md_set(self):
         data_dir = os.path.normpath(os.path.join(self.file_path, "../data"))
