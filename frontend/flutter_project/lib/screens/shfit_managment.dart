@@ -30,12 +30,18 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   DateTime _manualFocusedDay = DateTime.now();
   DateTime? _manualSelectedDay = DateTime.now();
-  
+
   Map<String, Map<String, Map<String, String>>> preferences = {};
   List<Map<String, dynamic>> _predictedShifts = [];
-  
+
   final DateTime _startDate = DateTime.now();
   final DateTime _endDate = DateTime.now().add(const Duration(days: 6));
+
+  final List<String> _timeOptions = List.generate(48, (index) {
+    final hour = (index ~/ 2).toString().padLeft(2, '0');
+    final minute = (index % 2 == 0) ? '00' : '30';
+    return "$hour:$minute";
+  });
 
   @override
   void initState() {
@@ -113,12 +119,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         children: [
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 96, left: 20, right: 20, bottom: 40),
+              padding: const EdgeInsets.only(top: 96, left: 16, right: 16, bottom: 40),
               child: _loading
                   ? const SizedBox(height: 300, child: Center(child: CircularProgressIndicator()))
                   : Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1000), // Adjusted for vertical layout
+                        constraints: const BoxConstraints(maxWidth: 1000),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -152,45 +158,45 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   Widget _buildDashboardHeader(ThemeData theme) {
     return Text(
       _selectedMode == ShiftMode.manual ? "スタッフの出勤希望入力" : "AIシフト自動生成・分析",
-      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
+      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
     );
   }
 
   Widget _buildModeToggle(ColorScheme colorScheme) {
-    return SegmentedButton<ShiftMode>(
-      segments: const [
-        ButtonSegment(value: ShiftMode.manual, label: Text('希望入力'), icon: Icon(Icons.edit_calendar)),
-        ButtonSegment(value: ShiftMode.auto, label: Text('AI予測'), icon: Icon(Icons.auto_awesome)),
-      ],
-      selected: {_selectedMode},
-      onSelectionChanged: (set) => setState(() => _selectedMode = set.first),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SegmentedButton<ShiftMode>(
+        segments: const [
+          ButtonSegment(value: ShiftMode.manual, label: Text('希望入力'), icon: Icon(Icons.edit_calendar)),
+          ButtonSegment(value: ShiftMode.auto, label: Text('AI予測'), icon: Icon(Icons.auto_awesome)),
+        ],
+        selected: {_selectedMode},
+        onSelectionChanged: (set) => setState(() => _selectedMode = set.first),
+      ),
     );
   }
 
-  // --- MANUAL VIEW (Staff under Calendar) ---
+  // --- MANUAL VIEW ---
 
   Widget _buildManualView(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Calendar at the top
         _buildCalendarCard(theme),
         const SizedBox(height: 32),
-        
-        // 2. Staff List Header
         Row(
           children: [
             const Icon(Icons.people_outline, size: 20),
             const SizedBox(width: 8),
-            Text(
-              "${DateFormat('MM月dd日').format(_manualSelectedDay ?? _manualFocusedDay)} のスタッフ希望",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Text(
+                "${DateFormat('MM月dd日').format(_manualSelectedDay ?? _manualFocusedDay)} のスタッフ希望",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        
-        // 3. Staff Cards
         ...staffList.map((staff) => _buildStaffCard(staff, theme)),
       ],
     );
@@ -203,9 +209,9 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: theme.colorScheme.outlineVariant)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
         child: TableCalendar(
-          calendarFormat: CalendarFormat.month, // Keep it monthly
+          calendarFormat: CalendarFormat.month,
           firstDay: DateTime.utc(2024, 1, 1),
           lastDay: DateTime.utc(2030, 12, 31),
           focusedDay: _manualFocusedDay,
@@ -224,46 +230,51 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     final prefs = _getPrefs(staff.id);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
-      child: Row(
+      child: Column(
         children: [
-          CircleAvatar(
-            backgroundColor: theme.colorScheme.primaryContainer,
-            child: Text(staff.name[0], style: TextStyle(color: theme.colorScheme.onPrimaryContainer)),
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: theme.colorScheme.primaryContainer,
+                child: Text(staff.name[0], style: TextStyle(color: theme.colorScheme.onPrimaryContainer)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(staff.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(staff.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _timeChip(prefs['startTime']!, () => _pickTime(staff.id, 'startTime'), theme),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text("〜", style: TextStyle(color: Colors.grey)),
-                    ),
-                    _timeChip(prefs['endTime']!, () => _pickTime(staff.id, 'endTime'), theme),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton.icon(
-            icon: _isSaving ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.save, size: 16),
-            onPressed: _isSaving ? null : () => _savePreference(staff),
-            label: const Text("保存"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
+          const SizedBox(height: 16),
+          // Using Wrap to prevent overflow on small screens
+          Wrap(
+            spacing: 8,
+            runSpacing: 12,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _timeDropdown(prefs['startTime']!, (val) => setState(() => prefs['startTime'] = val), theme),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text("〜", style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  _timeDropdown(prefs['endTime']!, (val) => setState(() => prefs['endTime'] = val), theme),
+                ],
+              ),
+              FilledButton.icon(
+                icon: _isSaving 
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                  : const Icon(Icons.save_as_outlined, size: 18),
+                onPressed: _isSaving ? null : () => _savePreference(staff),
+                label: const Text("保存"),
+              ),
+            ],
           ),
         ],
       ),
@@ -287,6 +298,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     final actualStaff = shifts.where((s) => s['staff_id'] != -1).toList();
     final names = actualStaff.map((s) => s['name'].toString()).toSet().toList();
     const hours = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+    const double hourWidth = 50.0;
+    const double labelWidth = 100.0;
 
     return Card(
       elevation: 0,
@@ -296,47 +309,51 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         children: [
           ListTile(
             title: Text(date, style: const TextStyle(fontWeight: FontWeight.bold)),
-            tileColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            tileColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const SizedBox(width: 120),
-                      ...hours.map((h) => SizedBox(width: 50, child: Center(child: Text("$h", style: TextStyle(fontSize: 11, color: theme.hintColor))))),
-                    ],
-                  ),
-                  const Divider(height: 30),
-                  ...names.map((name) {
-                    final staffShifts = actualStaff.where((s) => s['name'] == name).toList();
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          SizedBox(width: 120, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600))),
-                          ...hours.map((h) {
-                            bool active = staffShifts.any((s) => s['hour'] == h);
-                            return Container(
-                              width: 50, height: 28,
-                              margin: const EdgeInsets.symmetric(horizontal: 1),
-                              decoration: BoxDecoration(
-                                color: active ? theme.colorScheme.primary : theme.colorScheme.surfaceVariant.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    );
-                  }),
-                  const Divider(height: 40),
-                  _buildShortageRow(hours, shifts, theme),
-                ],
+              padding: const EdgeInsets.all(16),
+              // Fixed width ensures items don't squeeze and overflow
+              child: SizedBox(
+                width: labelWidth + (hours.length * (hourWidth + 2)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const SizedBox(width: labelWidth),
+                        ...hours.map((h) => SizedBox(width: hourWidth + 2, child: Center(child: Text("$h", style: TextStyle(fontSize: 11, color: theme.hintColor))))),
+                      ],
+                    ),
+                    const Divider(),
+                    ...names.map((name) {
+                      final staffShifts = actualStaff.where((s) => s['name'] == name).toList();
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            SizedBox(width: labelWidth, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                            ...hours.map((h) {
+                              bool active = staffShifts.any((s) => s['hour'] == h);
+                              return Container(
+                                width: hourWidth, height: 24,
+                                margin: const EdgeInsets.symmetric(horizontal: 1),
+                                decoration: BoxDecoration(
+                                  color: active ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      );
+                    }),
+                    const Divider(height: 32),
+                    _buildShortageRow(hours, shifts, theme, labelWidth, hourWidth),
+                  ],
+                ),
               ),
             ),
           ),
@@ -345,15 +362,15 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  Widget _buildShortageRow(List<int> hours, List<Map<String, dynamic>> shifts, ThemeData theme) {
+  Widget _buildShortageRow(List<int> hours, List<Map<String, dynamic>> shifts, ThemeData theme, double labelW, double hourW) {
     return Row(
       children: [
-        const SizedBox(width: 120, child: Text("配置スタッフ数", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+        SizedBox(width: labelW, child: const Text("配置数", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
         ...hours.map((h) {
           final count = shifts.where((s) => s['hour'] == h && s['staff_id'] != -1).length;
           final bool isShort = count < 2 || shifts.any((s) => s['hour'] == h && s['staff_id'] == -1);
           return SizedBox(
-            width: 50,
+            width: hourW + 2,
             child: Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -378,18 +395,26 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   Widget _buildActionBanner(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(16)),
-      child: Row(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(12)),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Colors.white),
-          const SizedBox(width: 12),
-          const Text("不足箇所は赤字で表示されます", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          const Spacer(),
+          const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text("不足箇所は赤字で表示されます", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            ],
+          ),
           ElevatedButton(
             onPressed: _isGenerating ? null : _generateAutoShifts, 
             child: _isGenerating 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
               : const Text("再生成"),
           ),
         ],
@@ -407,11 +432,28 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     return preferences[k]![id] ??= {'startTime': '09:00', 'endTime': '18:00'};
   }
 
-  Future<void> _pickTime(String id, String key) async {
-    final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
-    if (t != null) {
-      setState(() => _getPrefs(id)[key] = "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}");
-    }
+  Widget _timeDropdown(String currentValue, Function(String) onChanged, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: currentValue,
+          icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+          style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 13),
+          onChanged: (String? newValue) {
+            if (newValue != null) onChanged(newValue);
+          },
+          items: _timeOptions.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value));
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   Map<String, List<Map<String, dynamic>>> _groupShiftsByDate() {
@@ -421,20 +463,5 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
       map.putIfAbsent(d, () => []).add(s);
     }
     return map;
-  }
-
-  Widget _timeChip(String label, VoidCallback onTap, ThemeData theme) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-      ),
-    );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -306,29 +307,6 @@ static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
-    final url = '$baseUrl/shift_pre';
-
-    try {
-      _logRequest(method: "GET", url: url, headers: _headers);
-
-      final response =
-          await http.get(Uri.parse(url), headers: _headers);
-
-      _logResponse(response);
-
-      if (_isSuccess(response.statusCode)) {
-        final List data =
-            jsonDecode(utf8.decode(response.bodyBytes));
-        return data
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      rethrow;
-    }
-  }
 // ============================================================
 // DAILY REPORT
 // ============================================================
@@ -391,45 +369,85 @@ static Future<List<Map<String, dynamic>>> fetchDailyReports() async {
   // DASHBOARD SPECIFIC
   // ============================================================
 
-  static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
-    final now = DateTime.now();
-    final formatter = DateFormat('yyyy-MM-dd');
-    final dateString = formatter.format(now);
+  //post function for today's shift assignment
+static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
+  final now = DateTime.now();
+  final formatter = DateFormat('yyyy-MM-dd');
+  
+  // 1. Used for the API payload (next 2 days)
+  final endDateString = formatter.format(now.add(Duration(days: 2)));
+  final startDateString = formatter.format(now);
 
-    final url = '$baseUrl/shift_ass';
-    final payload = {
-      "start_date": dateString,
-      "end_date": dateString,
-    };
+  final url = '$baseUrl/shift_ass';
+  final payload = {
+    "start_date": startDateString,
+    "end_date": endDateString,
+  };
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (_isSuccess(response.statusCode)) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      List<Map<String, dynamic>> schedule = [];
+
+      if (decoded is Map && decoded.containsKey("shift_ass")) {
+        schedule = List<Map<String, dynamic>>.from(decoded["shift_ass"]);
+      } else if (decoded is List) {
+        schedule = List<Map<String, dynamic>>.from(decoded);
+      }
+
+      // 2. FIXED FILTERING LOGIC
+      // We parse the API date and compare only the Year, Month, and Day.
+      return schedule.where((shift) {
+        try {
+          // The API returns "Tue, 30 Dec 2025 00:00:00 GMT"
+          // HttpDate.parse handles this format automatically
+          DateTime shiftDate = HttpDate.parse(shift['date'].toString());
+          
+          return shiftDate.year == now.year &&
+                 shiftDate.month == now.month &&
+                 shiftDate.day == now.day;
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+
+    } else {
+      throw "Failed to load today's shifts";
+    }
+  } catch (e) {
+    debugPrint("[ApiService] fetchTodayShiftAssignment Error: $e");
+    rethrow;
+  }
+
+
+}
+//get function for shift table dashboard
+  static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
+    final url = '$baseUrl/shift_pre';
 
     try {
-      _logRequest(method: "POST", url: url, headers: _headers, body: payload);
+      _logRequest(method: "GET", url: url, headers: _headers);
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: _headers,
-        body: jsonEncode(payload),
-      );
+      final response =
+          await http.get(Uri.parse(url), headers: _headers);
 
       _logResponse(response);
 
       if (_isSuccess(response.statusCode)) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-        List<Map<String, dynamic>> schedule = [];
-
-        if (decoded is Map && decoded.containsKey("shift_schedule")) {
-          schedule = List<Map<String, dynamic>>.from(decoded["shift_schedule"]);
-        } else if (decoded is List) {
-          schedule = List<Map<String, dynamic>>.from(decoded);
-        }
-        
-        // Final client-side filter to ensure only today's data is processed
-        return schedule.where((s) => s['date'].toString().contains(dateString)).toList();
-      } else {
-        throw "Failed to load today's shifts";
+        final List data =
+            jsonDecode(utf8.decode(response.bodyBytes));
+        return data
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
       }
+      return [];
     } catch (e) {
-      debugPrint("[ApiService] fetchTodayShiftAssignment Error: $e");
       rethrow;
     }
   }

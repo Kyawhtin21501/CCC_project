@@ -1,9 +1,3 @@
-// Fixed & backend-safe version of StaffProfileScreen
-// - Handles id/ID differences
-// - Prevents Dropdown crashes
-// - Safer parsing & loading state handling
-// - Matches Flask CSV-style backend
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:predictor_web/services/api_services.dart';
@@ -59,7 +53,7 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     super.dispose();
   }
 
-  // ---------------- LOGIC ----------------
+  // ---------------- LOGIC (Existing Logic Retained) ----------------
 
   Future<void> _loadStaffList() async {
     try {
@@ -76,18 +70,14 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
   void _prepareEdit(Map<String, dynamic> staff) {
     final rawId = staff['id'] ?? staff['ID'];
-
     setState(() {
       _editingStaffId = rawId is int ? rawId : int.tryParse(rawId.toString());
-
       _nameController.text = staff['name']?.toString() ?? '';
       _ageController.text = staff['age']?.toString() ?? '';
       _levelController.text = staff['level']?.toString() ?? '';
       _emailController.text = staff['e_mail']?.toString() ?? '';
-
       final g = staff['gender']?.toString() ?? 'Male';
       _selectedGender = _genderOptions.contains(g) ? g : 'Male';
-
       final s = staff['status']?.toString() ?? 'パートタイム';
       _selectedStatus = _statusOptions.contains(s) ? s : 'パートタイム';
     });
@@ -95,7 +85,6 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
   Future<void> _submitProfile() async {
     if (!_formKey.currentState!.validate()) return;
-
     final payload = {
       'name': _nameController.text.trim(),
       'age': int.parse(_ageController.text),
@@ -104,16 +93,13 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       'e_mail': _emailController.text.trim(),
       'status': _selectedStatus,
     };
-
     try {
       setState(() => _isLoading = true);
-
       if (_editingStaffId == null) {
         await ApiService.postStaffProfile(payload);
       } else {
         await ApiService.patchStaffProfile(_editingStaffId!, payload);
       }
-
       _clearForm();
       await _loadStaffList();
       _showSnackBar('保存しました');
@@ -129,7 +115,6 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     _ageController.clear();
     _levelController.clear();
     _emailController.clear();
-
     setState(() {
       _editingStaffId = null;
       _selectedGender = 'Male';
@@ -141,6 +126,10 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine layout based on width
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isWide = screenWidth > 800;
+
     return Scaffold(
       drawer: const AppDrawer(currentScreen: DrawerScreen.staffProfile),
       body: Builder(
@@ -148,17 +137,26 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           children: [
             Positioned.fill(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 100, 20, 24),
+                padding: const EdgeInsets.fromLTRB(16, 100, 16, 24),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 900),
-                    child: Column(
-                      children: [
-                        _buildFormCard(),
-                        const SizedBox(height: 30),
-                        _buildStaffList(),
-                      ],
-                    ),
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: isWide 
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 2, child: _buildFormCard(isWide)),
+                            const SizedBox(width: 24),
+                            Expanded(flex: 3, child: _buildStaffList()),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _buildFormCard(isWide),
+                            const SizedBox(height: 30),
+                            _buildStaffList(),
+                          ],
+                        ),
                   ),
                 ),
               ),
@@ -172,14 +170,18 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
                 onMenuPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
             ),
-            if (_isLoading) const Center(child: CircularProgressIndicator()),
+            if (_isLoading)
+              Container(
+                color: Colors.black12,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFormCard() {
+  Widget _buildFormCard(bool isWide) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -195,40 +197,36 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           child: Column(
             children: [
               Text(
-                _editingStaffId == null
-                    ? '新規スタッフ登録'
-                    : 'スタッフ編集 (ID: $_editingStaffId)',
+                _editingStaffId == null ? '新規スタッフ登録' : 'スタッフ編集 (ID: $_editingStaffId)',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const Divider(),
+              const Divider(height: 32),
               _textField(_nameController, '名前'),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: _numberField(_ageController, '年齢', 15, 100)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _numberField(_levelController, 'レベル(1–5)', 1, 5)),
-                ],
-              ),
+              _responsiveRow(isWide, [
+                Expanded(child: _numberField(_ageController, '年齢', 15, 100)),
+                const SizedBox(width: 16),
+                Expanded(child: _numberField(_levelController, 'レベル(1–5)', 1, 5)),
+              ]),
               const SizedBox(height: 16),
               _textField(_emailController, 'メール'),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: _genderDropdown()),
-                  const SizedBox(width: 16),
-                  Expanded(child: _statusDropdown()),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              _responsiveRow(isWide, [
+                Expanded(child: _genderDropdown()),
+                const SizedBox(width: 16),
+                Expanded(child: _statusDropdown()),
+              ]),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
                 children: [
                   if (_editingStaffId != null)
                     OutlinedButton(onPressed: _clearForm, child: const Text('キャンセル')),
-                  const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: _submitProfile,
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
                     child: Text(_editingStaffId == null ? '登録' : '更新'),
                   ),
                 ],
@@ -240,14 +238,15 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     );
   }
 
+  // Helper for Row/Column switching
+  Widget _responsiveRow(bool isWide, List<Widget> children) {
+    if (isWide) return Row(children: children);
+    return Column(children: children.whereType<Expanded>().map((e) => e.child).toList());
+  }
+
   Widget _buildStaffList() {
     if (availableStaff.isEmpty) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Text('スタッフが登録されていません'),
-        ),
-      );
+      return const Card(child: Padding(padding: EdgeInsets.all(40), child: Center(child: Text('スタッフが登録されていません'))));
     }
 
     return Card(
@@ -261,16 +260,19 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
           final id = s['id'] ?? s['ID'];
 
           return ListTile(
-            title: Text(s['name'] ?? 'No Name'),
+            title: Text(s['name'] ?? 'No Name', style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('${s['status']} | Lv.${s['level']}'),
+            // FIXED: Added mainAxisSize: MainAxisSize.min to resolve your error
             trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min, 
               children: [
                 IconButton(
+                  visualDensity: VisualDensity.compact,
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () => _prepareEdit(s),
                 ),
                 IconButton(
+                  visualDensity: VisualDensity.compact,
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () => _confirmDelete(id, s['name']),
                 ),
@@ -282,20 +284,19 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     );
   }
 
-  // ---------------- FIELDS ----------------
+  // ---------------- INPUT FIELDS ----------------
 
   Widget _textField(TextEditingController c, String label) => TextFormField(
         controller: c,
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), filled: true, fillColor: Colors.grey[50]),
         validator: (v) => v == null || v.isEmpty ? '必須入力' : null,
       );
 
-  Widget _numberField(TextEditingController c, String label, int min, int max) =>
-      TextFormField(
+  Widget _numberField(TextEditingController c, String label, int min, int max) => TextFormField(
         controller: c,
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), filled: true, fillColor: Colors.grey[50]),
         validator: (v) {
           final n = int.tryParse(v ?? '');
           if (n == null || n < min || n > max) return '$min〜$max';
@@ -304,8 +305,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       );
 
   Widget _genderDropdown() => DropdownButtonFormField<String>(
-        initialValue: _selectedGender,
-        decoration: const InputDecoration(labelText: '性別', border: OutlineInputBorder()),
+        value: _selectedGender,
+        decoration: const InputDecoration(labelText: '性別', border: OutlineInputBorder(), filled: true, fillColor: Color(0xFFF0F0F0)),
         items: _genderOptions
             .map((g) => DropdownMenuItem(value: g, child: Text(g == 'Male' ? '男性' : '女性')))
             .toList(),
@@ -313,8 +314,8 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
       );
 
   Widget _statusDropdown() => DropdownButtonFormField<String>(
-        initialValue: _selectedStatus,
-        decoration: const InputDecoration(labelText: 'ステータス', border: OutlineInputBorder()),
+        value: _selectedStatus,
+        decoration: const InputDecoration(labelText: 'ステータス', border: OutlineInputBorder(), filled: true, fillColor: Color(0xFFF0F0F0)),
         items: _statusOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
         onChanged: (v) => setState(() => _selectedStatus = v!),
       );
