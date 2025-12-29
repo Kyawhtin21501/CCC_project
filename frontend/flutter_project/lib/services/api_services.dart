@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-static String get baseUrl { if (kReleaseMode) { return 'https://ccc-project.onrender.com'; } return 'http://127.0.0.1:5000'; }
+static String get baseUrl { if (kReleaseMode) { return 'https://ccc-project.onrender.com'; } return 'http://100.64.1.41:5000'; }
   // Common headers for all requests
 
   static Map<String, String> get _headers => {
