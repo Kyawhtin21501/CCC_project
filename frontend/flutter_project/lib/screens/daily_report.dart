@@ -7,6 +7,7 @@ import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:predictor_web/widgets/custom_menubar.dart';
 import 'package:predictor_web/widgets/responsiveCard.dart';
 import 'package:predictor_web/widgets/charts.dart';
+import 'package:predictor_web/widgets/todayshift.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -77,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadChartData() async {
     try {
       _salesDataCache = await ApiService.fetchPredSalesOneWeek();
-      _shiftScheduleCache = await ApiService.fetchShiftTableDashboard();
+      _shiftScheduleCache = await ApiService.fetchTodayShiftAssignment();
     } catch (_) {}
   }
 
@@ -147,6 +148,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         salesData: _salesDataCache,
                       ),
                       dailyReportCard: _buildDailyReportCard(),
+                      shiftCard: TodayShiftCard(
+                        shifts: _shiftScheduleCache,)
                     ),
             ),
           ),

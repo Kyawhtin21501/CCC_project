@@ -5,12 +5,14 @@ class ResponsiveBodyCard extends StatelessWidget {
   final Widget formCard;
   final Widget dailyReportCard;
   final Widget salesCard;
+  final Widget shiftCard; // Added new slot
 
   const ResponsiveBodyCard({
     super.key,
     required this.formCard,
     required this.salesCard,
     required this.dailyReportCard,
+    required this.shiftCard,
   });
 
   @override
@@ -18,38 +20,40 @@ class ResponsiveBodyCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
+        final bool isDesktop = width >= 600;
+        final double spacing = isDesktop ? 16 : 12;
 
-        // Desktop & Tablet View
-        if (width >= 600) {
-          return SingleChildScrollView(
-            child: Column(
-              children: [
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(spacing),
+          child: Column(
+            children: [
+              // Row 1: Form and Daily Report
+              if (isDesktop)
                 IntrinsicHeight(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(child: CardBox(child: formCard)),
-                      const SizedBox(width: 16),
+                      SizedBox(width: spacing),
                       Expanded(child: CardBox(child: dailyReportCard)),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                CardBox(child: salesCard),
+                )
+              else ...[
+                CardBox(child: formCard),
+                SizedBox(height: spacing),
+                CardBox(child: dailyReportCard),
               ],
-            ),
-          );
-        }
 
-        // Mobile View
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              CardBox(child: formCard),
-              const SizedBox(height: 12),
-              CardBox(child: dailyReportCard),
-              const SizedBox(height: 12),
+              SizedBox(height: spacing),
+
+              // Row 2: Sales Chart
               CardBox(child: salesCard),
+
+              SizedBox(height: spacing),
+
+              // Row 3: Today's Shift Assignment (The one you liked)
+              CardBox(child: shiftCard),
             ],
           ),
         );

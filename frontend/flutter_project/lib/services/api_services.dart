@@ -387,4 +387,50 @@ static Future<List<Map<String, dynamic>>> fetchDailyReports() async {
       rethrow;
     }
   }
+// ============================================================
+  // DASHBOARD SPECIFIC
+  // ============================================================
+
+  static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyy-MM-dd');
+    final dateString = formatter.format(now);
+
+    final url = '$baseUrl/shift_ass';
+    final payload = {
+      "start_date": dateString,
+      "end_date": dateString,
+    };
+
+    try {
+      _logRequest(method: "POST", url: url, headers: _headers, body: payload);
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _headers,
+        body: jsonEncode(payload),
+      );
+
+      _logResponse(response);
+
+      if (_isSuccess(response.statusCode)) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        List<Map<String, dynamic>> schedule = [];
+
+        if (decoded is Map && decoded.containsKey("shift_schedule")) {
+          schedule = List<Map<String, dynamic>>.from(decoded["shift_schedule"]);
+        } else if (decoded is List) {
+          schedule = List<Map<String, dynamic>>.from(decoded);
+        }
+        
+        // Final client-side filter to ensure only today's data is processed
+        return schedule.where((s) => s['date'].toString().contains(dateString)).toList();
+      } else {
+        throw "Failed to load today's shifts";
+      }
+    } catch (e) {
+      debugPrint("[ApiService] fetchTodayShiftAssignment Error: $e");
+      rethrow;
+    }
+  }
 }
