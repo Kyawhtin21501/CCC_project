@@ -448,55 +448,122 @@ class ShiftAss:
 
         return final_df
 
-    # =========================================================
+
     # OPTIMIZATION
-    # =========================================================
     def create_shift(self, df):
-        model = LpProblem("ShiftOptimize", LpMinimize)
-        x = LpVariable.dicts("x", df.index, cat="Binary")
+         model = LpProblem("ShiftOptimize", LpMinimize)
 
-        time_keys = list(df.groupby(["date", "hour"]).groups.keys())
-        not_enough = LpVariable.dicts("not_enough", time_keys, lowBound=0, cat="Integer")
+         x = LpVariable.dicts("x", df.index, cat="Binary")
 
-        model += (
-            lpSum(df.loc[i, "salary"] * x[i] for i in df.index) +
-            lpSum(10000 * not_enough[k] for k in time_keys)
-        )
+         time_keys = list(df.groupby(["date", "hour"]).groups.keys())
+         not_enough = LpVariable.dicts(
+             "not_enough",
+             time_keys,
+             lowBound=0,
+             cat="Integer"
+         )
 
-        for (date, hour), g in df.groupby(["date", "hour"]):
-            required = max(1, int(g["pred_sale_per_hour"].iloc[0] // 20000))
-            model += lpSum(x[i] for i in g.index) + not_enough[(date, hour)] >= required
-            model += lpSum(df.loc[i, "salary"] * x[i] for i in g.index) <= g["max_cost"].iloc[0]
+        
+         model += (
+             lpSum(df.loc[i, "salary"] * x[i] for i in df.index)
+             + lpSum(10000 * not_enough[k] for k in time_keys)  
+         )
 
-        model.solve()
+      
+         for (date, hour), g in df.groupby(["date", "hour"]):
+             required = max(1, int(g["pred_sale_per_hour"].iloc[0] // 20000))
 
-        selected = [i for i in df.index if x[i].value() == 1]
-        shift_df = df.loc[selected].copy()
-        shift_df["note"] = ""
+             model += (
+                 lpSum(x[i] for i in g.index) + not_enough[(date, hour)]
+                 >= required
+             )
 
-        # 🔥 FIX: NEVER None
-        lack_rows = []
-        for (date, hour), v in not_enough.items():
-            for _ in range(int(v.value())):
-                lack_rows.append({
-                    "date": date,
-                    "hour": hour,
-                    "staff_id": -1,
-                    "name": "not enough",
-                    "level": 0,
-                    "note": "shortage"
-                })
+             model += (
+                 lpSum(df.loc[i, "salary"] * x[i] for i in g.index)
+                 <= g["max_cost"].iloc[0]
+             )
 
-        lack_df = pd.DataFrame(lack_rows)
+         MIN_LEVEL = 3
+         MANAGER_LEVEL = 5
 
-        final_shift = pd.concat([shift_df, lack_df], ignore_index=True)
-        final_shift = final_shift[["date", "hour", "staff_id", "name", "level", "note"]]
+         for (date, hour), g in df.groupby(["date", "hour"]):
 
-        return final_shift
+             required = max(1, int(g["pred_sale_per_hour"].iloc[0] // 20000))
 
-    # =========================================================
+             model += (
+                 lpSum(x[i] for i in g.index) + not_enough[(date, hour)]
+                 >= required
+             )
+
+             model += (
+                 lpSum(df.loc[i, "salary"] * x[i] for i in g.index)
+                 <= g["max_cost"].iloc[0]
+             )
+
+             senior_idx = g[g["level"] >= MIN_LEVEL].index
+             manager_idx = g[g["level"] == MANAGER_LEVEL].index
+
+             if len(senior_idx) > 0:
+                 model += lpSum(x[i] for i in senior_idx) >= 1
+             elif len(manager_idx) > 0:
+                 model += lpSum(x[i] for i in manager_idx) >= 1
+             else:
+                 model += not_enough[(date, hour)] >= 1
+
+
+    
+         for i, row in df.iterrows():
+             if row["status"] == "high_school" and row["hour"] >= 22:
+                 model += x[i] == 0
+
+
+         for staff_id, g in df[df["status"] == "international_student"].groupby("staff_id"):
+             model += lpSum(x[i] for i in g.index) <= 28
+
+   
+         for staff_id, g_staff in df.groupby("staff_id"):
+             for date, g_day in g_staff.groupby("date"):
+                 idxs = g_day.sort_values("hour").index.tolist()
+                 for k in range(len(idxs) - 6):
+                     model += lpSum(x[i] for i in idxs[k:k+7]) <= 6
+
+    
+         model.solve()
+         selected = [i for i in df.index if x[i].value() == 1]
+
+         shift_df = df.loc[selected].copy()
+         shift_df["note"] = ""
+
+         lack_rows = []
+
+         for (date, hour), v in not_enough.items():
+             shortage = int(v.value())
+             for _ in range(shortage):
+                 lack_rows.append({
+                     "date": date,
+                     "hour": hour,
+                     "staff_id": -1,
+                     "name": "not enough",
+                     "level": None,
+                     "status": None,
+                     "salary": 0,
+                     "note": "shortage"
+                 })
+
+         lack_df = pd.DataFrame(lack_rows)
+
+         final_shift = pd.concat(
+             [shift_df, lack_df],
+             ignore_index=True
+             ).sort_values(["date", "hour", "staff_id"])
+
+         final_shift = final_shift[["date","hour","staff_id","name","level","note"]]
+
+         return final_shift
+
+   
     # SAVE TO DB (FINAL SAFETY)
-    # =========================================================
+
     def shift_save_db(self):
         df = self.combine_data()
         shift_rows = self.create_shift(df)
