@@ -144,33 +144,7 @@ class ApiService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(DateTime start, DateTime end) async {
-    final url = '$baseUrl/shift_ass';
-    final payload = {
-      "start_date": DateFormat('yyyy-MM-dd').format(start),
-      "end_date": DateFormat('yyyy-MM-dd').format(end),
-    };
-    _trace('POST AutoShift: $url');
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: _headers,
-        body: jsonEncode(payload),
-      );
 
-      if (_isSuccess(response.statusCode)) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-        if (decoded is Map && decoded.containsKey("shift_schedule")) {
-          return (decoded["shift_schedule"] as List).map((e) => Map<String, dynamic>.from(e)).toList();
-        }
-        return (decoded as List).map((e) => Map<String, dynamic>.from(e)).toList();
-      }
-      throw "AI shift generation failed";
-    } catch (e) {
-      _trace('fetchAutoShiftTable Error: $e');
-      rethrow;
-    }
-  }
 
   static Future<List<Map<String, dynamic>>> fetchPredSalesOneWeek() async {
     final url = '$baseUrl/pred_sales_dash';
@@ -219,39 +193,39 @@ class ApiService {
       rethrow;
     }
   }
+static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
+  final url = '$baseUrl/shift_ass_dash_board';
 
-  static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
-    final now = DateTime.now();
-    final url = '$baseUrl/shift_ass';
-    final payload = {
-      "start_date": DateFormat('yyyy-MM-dd').format(now),
-      "end_date": DateFormat('yyyy-MM-dd').format(now.add(const Duration(days: 2))),
-    };
-
-    _trace('POST TodayShifts: $url');
-    try {
-      final response = await http.post(Uri.parse(url), headers: _headers, body: jsonEncode(payload));
-      if (_isSuccess(response.statusCode)) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-        List<Map<String, dynamic>> schedule = (decoded is Map && decoded.containsKey("shift_ass"))
-            ? List<Map<String, dynamic>>.from(decoded["shift_ass"])
-            : List<Map<String, dynamic>>.from(decoded);
-
-        return schedule.where((shift) {
-          try {
-            DateTime shiftDate = HttpDate.parse(shift['date'].toString());
-            return shiftDate.year == now.year && shiftDate.month == now.month && shiftDate.day == now.day;
-          } catch (_) {
-            return false;
-          }
-        }).toList();
-      }
-      throw "Today's shifts failed";
-    } catch (e) {
-      _trace('fetchTodayShiftAssignment Error: $e');
-      rethrow;
+  _trace('GET Dashboard Shifts: $url');
+  try {
+    final response = await http.get(Uri.parse(url), headers: _headers);
+    
+    if (_isSuccess(response.statusCode)) {
+      final List decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final tomorrow = today.add(const Duration(days: 1));
+      
+      return decoded.map((e) => Map<String, dynamic>.from(e)).where((shift) {
+        try {
+          DateTime shiftDate = DateTime.parse(shift['date'].toString());
+          DateTime cleanShiftDate = DateTime(shiftDate.year, shiftDate.month, shiftDate.day);
+          
+          // 🔥 Change: Allow both today and tomorrow
+          return cleanShiftDate.isAtSameMomentAs(today) || 
+                 cleanShiftDate.isAtSameMomentAs(tomorrow);
+        } catch (_) {
+          return false;
+        }
+      }).toList();
     }
+    throw "Failed to fetch dashboard data";
+  } catch (e) {
+    _trace('fetchTodayShiftAssignment Error: $e');
+    rethrow;
   }
+}
 
   static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
     final url = '$baseUrl/shift_pre';
@@ -268,4 +242,30 @@ class ApiService {
       rethrow;
     }
   }
+  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(DateTime start, DateTime end) async {
+  final url = '$baseUrl/shift_ass'; // Matches the @shift_ass_bp.post
+  final payload = {
+    "start_date": DateFormat('yyyy-MM-dd').format(start),
+    "end_date": DateFormat('yyyy-MM-dd').format(end),
+  };
+  
+  _trace('POST AutoShift: $url');
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (_isSuccess(response.statusCode)) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      // The backend returns a list of dicts directly from shift_save_db()
+      return List<Map<String, dynamic>>.from(decoded);
+    }
+    throw "AI shift generation failed";
+  } catch (e) {
+    _trace('fetchAutoShiftTable Error: $e');
+    rethrow;
+  }
+}
 }

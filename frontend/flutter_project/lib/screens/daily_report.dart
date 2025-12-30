@@ -244,13 +244,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
           _staffSelect(),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _saveDailyReport,
-              child: const Text("保存"),
-            ),
-          )
+         SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: _saveDailyReport,
+    style: ElevatedButton.styleFrom(
+      // Uses the 'primary' color from your buildDarkTheme/buildLightTheme
+      backgroundColor: Theme.of(context).colorScheme.primary, 
+      // Uses the 'onPrimary' color (Cream/Ash) for the text
+      foregroundColor: Theme.of(context).colorScheme.onPrimary, 
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      elevation: 2,
+    ),
+    child: const Text(
+      "保存",
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+      ),
+    ),
+  ),
+)
         ],
       ),
     );
@@ -320,16 +338,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _staffSelect() {
-    return MultiSelectDialogField<String>(
-      items: availableStaffNames
-          .map((e) => MultiSelectItem<String>(e, e))
-          .toList(),
-      onConfirm: (values) {
+Widget _staffSelect() {
+  final theme = Theme.of(context);
+  
+  return MultiSelectDialogField<String>(
+    // 1. Styling the items in the list
+    items: availableStaffNames
+        .map((e) => MultiSelectItem<String>(e, e))
+        .toList(),
+    
+    // 2. Styling the Dialog appearance
+    title: Text(
+      "スタッフ選択",
+      style: TextStyle(color: theme.colorScheme.onSurface),
+    ),
+    backgroundColor: theme.colorScheme.surface, // Uses your darkSurface or white
+    selectedColor: theme.colorScheme.primary,   // Uses your Night Ocean / Deep Ocean blue
+    checkColor: theme.colorScheme.onPrimary,    // Checkmark color
+    
+    // 3. Styling the unselected items text
+    itemsTextStyle: TextStyle(
+      color: theme.colorScheme.onSurface.withOpacity(0.8),
+    ),
+    
+    // 4. Styling the selected items text in the list
+    selectedItemsTextStyle: TextStyle(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.bold,
+    ),
+
+    // 5. Styling the button that opens the dialog
+    buttonText: Text(
+      "スタッフを選択してください",
+      style: TextStyle(
+        color: theme.colorScheme.onSurface.withOpacity(0.7),
+        fontSize: 16,
+      ),
+    ),
+    buttonIcon: Icon(
+      Icons.person_add,
+      color: theme.colorScheme.primary,
+    ),
+    
+    // 6. Decoration for the field itself
+    decoration: BoxDecoration(
+      color: theme.inputDecorationTheme.fillColor,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: theme.dividerColor,
+        width: 1,
+      ),
+    ),
+
+    onConfirm: (values) {
+      setState(() {
         selectedStaffNames = values.cast<String>();
-      },
-      title: const Text("スタッフ"),
-      buttonText: const Text("スタッフ選択"),
-    );
-  }
+      });
+    },
+    
+    // 7. Styling the Chips that appear after selection
+    chipDisplay: MultiSelectChipDisplay(
+      textStyle: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+      chipColor: theme.colorScheme.primaryContainer,
+    ),
+  );
+}
 }

@@ -1,42 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:predictor_web/services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:predictor_web/widgets/custom_menubar.dart';
 
-class StaffProfileScreen extends StatelessWidget {
+class StaffProfileScreen extends StatefulWidget {
   const StaffProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const StaffProfileForm();
-  }
+  State<StaffProfileScreen> createState() => _StaffProfileScreenState();
 }
 
-class StaffProfileForm extends StatefulWidget {
-  const StaffProfileForm({super.key});
-
-  @override
-  State<StaffProfileForm> createState() => _StaffProfileFormState();
-}
-
-class _StaffProfileFormState extends State<StaffProfileForm> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _levelController = TextEditingController();
-  final _emailController = TextEditingController();
-
-  final List<String> _genderOptions = ['Male', 'Female'];
-  final List<String> _statusOptions = ['高校生', '留学生', 'フルタイム', 'パートタイム'];
-
-  String _selectedGender = 'Male';
-  String _selectedStatus = 'パートタイム';
-  int? _editingStaffId;
-
-  List<Map<String, dynamic>> availableStaff = [];
+class _StaffProfileScreenState extends State<StaffProfileScreen> {
+  List<Map<String, dynamic>> _allStaff = [];
+  List<Map<String, dynamic>> _filteredStaff = [];
   bool _isLoading = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  void _trace(String message) {
+    if (kDebugMode) {
+      print('[StaffProfileScreen] $message');
+    }
+  }
 
   @override
   void initState() {
@@ -44,319 +29,419 @@ class _StaffProfileFormState extends State<StaffProfileForm> {
     _loadStaffList();
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _ageController.dispose();
-    _levelController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  // ---------------- LOGIC (Existing Logic Retained) ----------------
-
   Future<void> _loadStaffList() async {
+    _trace('Starting loadStaffList...');
     try {
       setState(() => _isLoading = true);
       final data = await ApiService.fetchStaffList();
+
       if (!mounted) return;
-      setState(() => availableStaff = List<Map<String, dynamic>>.from(data));
+
+      setState(() {
+        _allStaff = List<Map<String, dynamic>>.from(data);
+        _applyFilter(_searchController.text);
+      });
+      _trace('Successfully loaded ${_allStaff.length} staff members.');
     } catch (e) {
-      _showSnackBar('取得失敗: $e');
+      _trace('Error loading staff list: $e');
+      _showSnackBar('データの取得に失敗しました');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _prepareEdit(Map<String, dynamic> staff) {
-    final rawId = staff['id'] ?? staff['ID'];
+  void _applyFilter(String query) {
+    _trace('Applying filter for query: "$query"');
     setState(() {
-      _editingStaffId = rawId is int ? rawId : int.tryParse(rawId.toString());
-      _nameController.text = staff['name']?.toString() ?? '';
-      _ageController.text = staff['age']?.toString() ?? '';
-      _levelController.text = staff['level']?.toString() ?? '';
-      _emailController.text = staff['e_mail']?.toString() ?? '';
-      final g = staff['gender']?.toString() ?? 'Male';
-      _selectedGender = _genderOptions.contains(g) ? g : 'Male';
-      final s = staff['status']?.toString() ?? 'パートタイム';
-      _selectedStatus = _statusOptions.contains(s) ? s : 'パートタイム';
-    });
-  }
-
-  Future<void> _submitProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-    final payload = {
-      'name': _nameController.text.trim(),
-      'age': int.parse(_ageController.text),
-      'level': int.parse(_levelController.text),
-      'gender': _selectedGender,
-      'e_mail': _emailController.text.trim(),
-      'status': _selectedStatus,
-    };
-    try {
-      setState(() => _isLoading = true);
-      if (_editingStaffId == null) {
-        await ApiService.postStaffProfile(payload);
+      if (query.isEmpty) {
+        _filteredStaff = List.from(_allStaff);
       } else {
-        await ApiService.patchStaffProfile(_editingStaffId!, payload);
+        _filteredStaff = _allStaff
+            .where((s) => s['name']
+                .toString()
+                .toLowerCase()
+                .contains(query.toLowerCase()))
+            .toList();
       }
-      _clearForm();
-      await _loadStaffList();
-      _showSnackBar('保存しました');
-    } catch (e) {
-      _showDialog('エラー', e.toString());
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _clearForm() {
-    _nameController.clear();
-    _ageController.clear();
-    _levelController.clear();
-    _emailController.clear();
-    setState(() {
-      _editingStaffId = null;
-      _selectedGender = 'Male';
-      _selectedStatus = 'パートタイム';
     });
   }
 
-  // ---------------- UI ----------------
+  void _openStaffForm([Map<String, dynamic>? staff]) {
+    if (staff == null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _StaffAddDialog(onSave: _loadStaffList),
+      );
+    } else {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Close',
+        barrierColor: Colors.black54,
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) => Align(
+          alignment: Alignment.centerRight,
+          child: _StaffEditSideSheet(staff: staff, onSave: _loadStaffList),
+        ),
+        transitionBuilder: (context, anim1, anim2, child) {
+          return SlideTransition(
+            position: Tween(begin: const Offset(1, 0), end: const Offset(0, 0))
+                .animate(CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic)),
+            child: child,
+          );
+        },
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Determine layout based on width
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isWide = screenWidth > 800;
+    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
       drawer: const AppDrawer(currentScreen: DrawerScreen.staffProfile),
-      body: Builder(
-        builder: (ctx) => Stack(
-          children: [
-            Positioned.fill(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 100, 16, 24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1100),
-                    child: isWide 
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(flex: 2, child: _buildFormCard(isWide)),
-                            const SizedBox(width: 24),
-                            Expanded(flex: 3, child: _buildStaffList()),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            _buildFormCard(isWide),
-                            const SizedBox(height: 30),
-                            _buildStaffList(),
-                          ],
-                        ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 28,
-              left: 16,
-              right: 16,
-              child: CustomMenuBar(
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              const SizedBox(height: 90),
+              _buildHeader(theme),
+              Expanded(child: _buildMainContent(theme)),
+            ],
+          ),
+          Positioned(
+            top: 28, left: 16, right: 16,
+            child: Builder(
+              builder: (scaffoldContext) => CustomMenuBar(
                 title: 'スタッフ管理',
-                onMenuPressed: () => Scaffold.of(ctx).openDrawer(),
+                onMenuPressed: () => Scaffold.of(scaffoldContext).openDrawer(),
               ),
             ),
-            if (_isLoading)
-              Container(
-                color: Colors.black12,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-          ],
-        ),
+          ),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
+        ],
       ),
     );
   }
 
-  Widget _buildFormCard(bool isWide) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: _editingStaffId != null
-            ? const BorderSide(color: Colors.blue, width: 2)
-            : BorderSide.none,
+  Widget _buildHeader(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: SearchBar(
+              controller: _searchController,
+              onChanged: _applyFilter,
+              hintText: "名前で検索...",
+              leading: const Icon(Icons.search),
+            ),
+          ),
+          const SizedBox(width: 16),
+          IconButton.filledTonal(
+              onPressed: _loadStaffList, 
+              icon: const Icon(Icons.refresh)
+          ),
+          const SizedBox(width: 16),
+          FilledButton.icon(
+              onPressed: () => _openStaffForm(),
+              icon: const Icon(Icons.add),
+              label: const Text('追加')
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Text(
-                _editingStaffId == null ? '新規スタッフ登録' : 'スタッフ編集 (ID: $_editingStaffId)',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const Divider(height: 32),
-              _textField(_nameController, '名前'),
-              const SizedBox(height: 16),
-              _responsiveRow(isWide, [
-                Expanded(child: _numberField(_ageController, '年齢', 15, 100)),
-                const SizedBox(width: 16),
-                Expanded(child: _numberField(_levelController, 'レベル(1–5)', 1, 5)),
-              ]),
-              const SizedBox(height: 16),
-              _textField(_emailController, 'メール'),
-              const SizedBox(height: 16),
-              _responsiveRow(isWide, [
-                Expanded(child: _genderDropdown()),
-                const SizedBox(width: 16),
-                Expanded(child: _statusDropdown()),
-              ]),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: [
-                  if (_editingStaffId != null)
-                    OutlinedButton(onPressed: _clearForm, child: const Text('キャンセル')),
-                  ElevatedButton(
-                    onPressed: _submitProfile,
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
-                    child: Text(_editingStaffId == null ? '登録' : '更新'),
-                  ),
+    );
+  }
+
+  Widget _buildMainContent(ThemeData theme) {
+    if (_filteredStaff.isEmpty && !_isLoading) {
+      return const Center(child: Text("見つかりません"));
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5))
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              // Forces the table to be at least the width of the screen
+              constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
+              child: DataTable(
+                headingRowColor: MaterialStateProperty.all(theme.colorScheme.surfaceVariant.withOpacity(0.3)),
+                horizontalMargin: 24,
+                columnSpacing: 24,
+                columns: const [
+                  DataColumn(label: Text('No.', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('氏名', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('種別', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('性別', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('年齢', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('メール', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('Lv', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('操作', style: TextStyle(fontWeight: FontWeight.bold))),
                 ],
-              )
-            ],
+                rows: _filteredStaff.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final s = entry.value;
+                  final id = s['id'] ?? s['ID'];
+                  
+                  return DataRow(
+                    key: ValueKey('staff_$id'),
+                    cells: [
+                      DataCell(Text('${index + 1}')), // Order Number
+                      DataCell(Text(s['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500))),
+                      DataCell(_buildStatusChip(s['status'] ?? '', theme)),
+                      DataCell(Text(s['gender'] == 'Male' ? '男性' : '女性')),
+                      DataCell(Text(s['age']?.toString() ?? '-')),
+                      DataCell(Text(s['e_mail'] ?? '-')),
+                      DataCell(Text(s['level']?.toString() ?? '')),
+                      DataCell(Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 20),
+                            onPressed: () => _openStaffForm(s)
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                            onPressed: () => _confirmDelete(s)
+                          ),
+                        ],
+                      )),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Helper for Row/Column switching
-  Widget _responsiveRow(bool isWide, List<Widget> children) {
-    if (isWide) return Row(children: children);
-    return Column(children: children.whereType<Expanded>().map((e) => e.child).toList());
-  }
-
-  Widget _buildStaffList() {
-    if (availableStaff.isEmpty) {
-      return const Card(child: Padding(padding: EdgeInsets.all(40), child: Center(child: Text('スタッフが登録されていません'))));
-    }
-
-    return Card(
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: availableStaff.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (_, i) {
-          final s = availableStaff[i];
-          final id = s['id'] ?? s['ID'];
-
-          return ListTile(
-            title: Text(s['name'] ?? 'No Name', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${s['status']} | Lv.${s['level']}'),
-            // FIXED: Added mainAxisSize: MainAxisSize.min to resolve your error
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min, 
-              children: [
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () => _prepareEdit(s),
-                ),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _confirmDelete(id, s['name']),
-                ),
-              ],
-            ),
-          );
-        },
+  Widget _buildStatusChip(String status, ThemeData theme) {
+    Color color = status == 'フルタイム' ? Colors.blue : (status == '留学生' ? Colors.orange : Colors.green);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color)
       ),
+      child: Text(status, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 
-  // ---------------- INPUT FIELDS ----------------
-
-  Widget _textField(TextEditingController c, String label) => TextFormField(
-        controller: c,
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), filled: true, fillColor: Colors.grey[50]),
-        validator: (v) => v == null || v.isEmpty ? '必須入力' : null,
-      );
-
-  Widget _numberField(TextEditingController c, String label, int min, int max) => TextFormField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), filled: true, fillColor: Colors.grey[50]),
-        validator: (v) {
-          final n = int.tryParse(v ?? '');
-          if (n == null || n < min || n > max) return '$min〜$max';
-          return null;
-        },
-      );
-
-  Widget _genderDropdown() => DropdownButtonFormField<String>(
-        value: _selectedGender,
-        decoration: const InputDecoration(labelText: '性別', border: OutlineInputBorder(), filled: true, fillColor: Color(0xFFF0F0F0)),
-        items: _genderOptions
-            .map((g) => DropdownMenuItem(value: g, child: Text(g == 'Male' ? '男性' : '女性')))
-            .toList(),
-        onChanged: (v) => setState(() => _selectedGender = v!),
-      );
-
-  Widget _statusDropdown() => DropdownButtonFormField<String>(
-        value: _selectedStatus,
-        decoration: const InputDecoration(labelText: 'ステータス', border: OutlineInputBorder(), filled: true, fillColor: Color(0xFFF0F0F0)),
-        items: _statusOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-        onChanged: (v) => setState(() => _selectedStatus = v!),
-      );
-
-  // ---------------- HELPERS ----------------
-
-  void _confirmDelete(dynamic id, String name) {
+  void _confirmDelete(Map<String, dynamic> staff) {
+    final staffId = staff['id'] ?? staff['ID'];
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('削除確認'),
-        content: Text('$name を削除しますか？'),
+      builder: (ctx) => AlertDialog(
+        title: const Text('削除'),
+        content: Text('${staff['name']}を削除しますか？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('キャンセル')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('キャンセル')),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              try {
-                setState(() => _isLoading = true);
-                final intId = id is int ? id : int.parse(id.toString());
-                await ApiService.deleteStaffProfile(intId);
-                await _loadStaffList();
-              } catch (e) {
-                _showSnackBar('削除失敗: $e');
-              } finally {
-                if (mounted) setState(() => _isLoading = false);
-              }
+              Navigator.pop(ctx);
+              await ApiService.deleteStaffProfile(staffId);
+              _loadStaffList();
             },
-            child: const Text('削除', style: TextStyle(color: Colors.red)),
-          )
+            child: const Text('削除', style: TextStyle(color: Colors.red))
+          ),
         ],
       ),
     );
   }
 
   void _showSnackBar(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+}
 
-  void _showDialog(String t, String m) => showDialog(
-        context: context,
-        builder: (_) => AlertDialog(title: Text(t), content: Text(m), actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))
-        ]),
-      );
+// ============================================================
+// SHARED COMPONENTS
+// ============================================================
+
+class StaffFormBody extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final TextEditingController name, email, age, level;
+  final String status, gender;
+  final Function(String?) onStatusChanged, onGenderChanged;
+
+  const StaffFormBody({
+    super.key, required this.formKey, required this.name, required this.email,
+    required this.age, required this.level, required this.status, required this.gender,
+    required this.onStatusChanged, required this.onGenderChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(controller: name, decoration: const InputDecoration(labelText: '氏名', border: OutlineInputBorder()), validator: (v) => v!.isEmpty ? '必須' : null),
+          const SizedBox(height: 16),
+          TextFormField(controller: email, decoration: const InputDecoration(labelText: 'メール', border: OutlineInputBorder())),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: TextFormField(controller: age, decoration: const InputDecoration(labelText: '年齢', border: OutlineInputBorder()), keyboardType: TextInputType.number)),
+              const SizedBox(width: 12),
+              Expanded(child: TextFormField(controller: level, decoration: const InputDecoration(labelText: 'Lv (1-5)', border: OutlineInputBorder()), keyboardType: TextInputType.number)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: status,
+            decoration: const InputDecoration(labelText: '雇用形態', border: OutlineInputBorder()),
+            items: ['高校生', '留学生', 'フルタイム', 'パートタイム'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+            onChanged: onStatusChanged,
+          ),
+          const SizedBox(height: 24),
+          const Text("性別", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'Male', label: Text('男性'), icon: Icon(Icons.male)),
+                ButtonSegment(value: 'Female', label: Text('女性'), icon: Icon(Icons.female))
+              ],
+              selected: {gender},
+              onSelectionChanged: (set) => onGenderChanged(set.first),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// ADD DIALOG
+// ============================================================
+
+class _StaffAddDialog extends StatefulWidget {
+  final VoidCallback onSave;
+  const _StaffAddDialog({required this.onSave});
+  @override
+  State<_StaffAddDialog> createState() => _StaffAddDialogState();
+}
+
+class _StaffAddDialogState extends State<_StaffAddDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController(), _email = TextEditingController(), 
+        _age = TextEditingController(), _level = TextEditingController();
+  String _status = 'パートタイム', _gender = 'Male';
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('新規登録'),
+      content: SizedBox(width: 450, child: SingleChildScrollView(child: StaffFormBody(
+        formKey: _formKey, name: _name, email: _email, age: _age, level: _level, status: _status, gender: _gender,
+        onStatusChanged: (v) => setState(() => _status = v!), 
+        onGenderChanged: (v) => setState(() => _gender = v!),
+      ))),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('キャンセル')),
+        FilledButton(onPressed: () async {
+          if (!_formKey.currentState!.validate()) return;
+          await ApiService.postStaffProfile({
+            'name': _name.text, 'e_mail': _email.text, 'age': int.tryParse(_age.text) ?? 0,
+            'level': int.tryParse(_level.text) ?? 1, 'gender': _gender, 'status': _status
+          });
+          widget.onSave();
+          Navigator.pop(context);
+        }, child: const Text('保存')),
+      ],
+    );
+  }
+}
+
+// ============================================================
+// EDIT SIDE SHEET
+// ============================================================
+
+class _StaffEditSideSheet extends StatefulWidget {
+  final Map<String, dynamic> staff;
+  final VoidCallback onSave;
+  const _StaffEditSideSheet({required this.staff, required this.onSave});
+  @override
+  State<_StaffEditSideSheet> createState() => _StaffEditSideSheetState();
+}
+
+class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _name, _email, _age, _level;
+  late String _status, _gender;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.staff['name']?.toString());
+    _email = TextEditingController(text: widget.staff['e_mail']?.toString());
+    _age = TextEditingController(text: widget.staff['age']?.toString());
+    _level = TextEditingController(text: widget.staff['level']?.toString());
+    _status = widget.staff['status'] ?? 'パートタイム';
+    _gender = widget.staff['gender'] ?? 'Male';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surface,
+      child: Container(
+        width: 450,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(border: Border(left: BorderSide(color: theme.colorScheme.outlineVariant))),
+        child: Column(
+          children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text('編集', style: theme.textTheme.headlineSmall),
+              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+            ]),
+            const Divider(),
+            const SizedBox(height: 16),
+            Expanded(child: SingleChildScrollView(child: StaffFormBody(
+              formKey: _formKey, name: _name, email: _email, age: _age, level: _level, status: _status, gender: _gender,
+              onStatusChanged: (v) => setState(() => _status = v!), 
+              onGenderChanged: (v) => setState(() => _gender = v!),
+            ))),
+            SizedBox(width: double.infinity, height: 50, child: FilledButton(
+              onPressed: _isSaving ? null : () async {
+                if (!_formKey.currentState!.validate()) return;
+                setState(() => _isSaving = true);
+                try {
+                  await ApiService.patchStaffProfile(widget.staff['id'] ?? widget.staff['ID'], {
+                    'name': _name.text, 'e_mail': _email.text, 'age': int.tryParse(_age.text) ?? 0,
+                    'level': int.tryParse(_level.text) ?? 1, 'gender': _gender, 'status': _status
+                  });
+                  widget.onSave();
+                  Navigator.pop(context);
+                } finally {
+                  if (mounted) setState(() => _isSaving = false);
+                }
+              },
+              child: _isSaving 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                : const Text('保存'),
+            ))
+          ],
+        ),
+      ),
+    );
+  }
 }

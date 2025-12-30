@@ -52,12 +52,10 @@ class StaffService:
         print("RAW status:", data.get("status"))
         print("status_map keys:", StaffService.status_map.keys())
 
-        if not staff:
-            return None
-
-       
-        if "level" in data:
-            staff.level = data["level"]
+        for key, value in data.items():
+            if hasattr(staff, key):
+                setattr(staff, key, value)
+                print(f"Updating field {key} to {value}")
 
         db.commit()
         db.refresh(staff)
