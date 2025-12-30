@@ -5,8 +5,16 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class ApiService {
-static String get baseUrl { if (kReleaseMode) { return 'https://ccc-project.onrender.com'; } return 'http://100.64.1.41:5000'; }
-  // Common headers for all requests
+  // ============================================================
+  // CONFIGURATION & TRACING
+  // ============================================================
+
+  static String get baseUrl {
+    if (kReleaseMode) {
+      return 'https://ccc-project.onrender.com';
+    }
+    return 'http://127.0.0.1:5000';
+  }
 
   static Map<String, String> get _headers => {
         'Content-Type': 'application/json',
@@ -15,44 +23,16 @@ static String get baseUrl { if (kReleaseMode) { return 'https://ccc-project.onre
 
   static bool _isSuccess(int statusCode) =>
       statusCode >= 200 && statusCode < 300;
-  // ============================================================
-  // PRETTY JSON DEBUG UTILITIES
-  // ============================================================
 
-  static const JsonEncoder _prettyJson = JsonEncoder.withIndent('  ');
-
-  static void _logRequest({
-    required String method,
-    required String url,
-    Map<String, String>? headers,
-    dynamic body,
-  }) {
-    debugPrint("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    debugPrint("📤 API REQUEST");
-    debugPrint("METHOD : $method");
-    debugPrint("URL    : $url");
-    debugPrint("HEADERS:\n${_prettyJson.convert(headers)}");
-    if (body != null) {
-      debugPrint("BODY:\n${_prettyJson.convert(body)}");
+  /// Simple trace function to monitor API flow in debug mode
+  static void _trace(String message) {
+    if (kDebugMode) {
+      print('[ApiService] $message');
     }
-    debugPrint("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-  }
-
-  static void _logResponse(http.Response response) {
-    debugPrint("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    debugPrint("📥 API RESPONSE");
-    debugPrint("STATUS : ${response.statusCode}");
-    try {
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      debugPrint("BODY:\n${_prettyJson.convert(decoded)}");
-    } catch (_) {
-      debugPrint("BODY:\n${utf8.decode(response.bodyBytes)}");
-    }
-    debugPrint("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
   }
 
   // ============================================================
-  // STAFF API
+  // STAFF API LOGIC
   // ============================================================
 
   static const Map<String, String> _translationMap = {
@@ -62,392 +42,229 @@ static String get baseUrl { if (kReleaseMode) { return 'https://ccc-project.onre
     'international': '留学生',
   };
 
-  static Map<String, dynamic> _sanitizeStaffData(
-      Map<String, dynamic> staff) {
-    if (_translationMap.containsKey(staff['status'])) {
-      staff['status'] = _translationMap[staff['status']];
+  static Map<String, dynamic> _sanitizeStaffData(Map<String, dynamic> staff) {
+    final Map<String, dynamic> result = Map<String, dynamic>.from(staff);
+    if (_translationMap.containsKey(result['status'])) {
+      result['status'] = _translationMap[result['status']];
     }
-    return staff;
+    return result;
   }
 
-  static Map<String, dynamic> _deSanitizeStaffData(
-      Map<String, dynamic> staff) {
-    final reverseMap =
-        _translationMap.map((k, v) => MapEntry(v, k));
-    if (reverseMap.containsKey(staff['status'])) {
-      staff['status'] = reverseMap[staff['status']];
+  static Map<String, dynamic> _deSanitizeStaffData(Map<String, dynamic> staff) {
+    final reverseMap = _translationMap.map((k, v) => MapEntry(v, k));
+    final Map<String, dynamic> result = Map<String, dynamic>.from(staff);
+    if (reverseMap.containsKey(result['status'])) {
+      result['status'] = reverseMap[result['status']];
     }
-    return staff;
+    return result;
   }
 
   static Future<List<Map<String, dynamic>>> fetchStaffList() async {
     final url = '$baseUrl/staff';
-
+    _trace('GET: $url');
     try {
-      _logRequest(method: "GET", url: url, headers: _headers);
-
-      final response =
-          await http.get(Uri.parse(url), headers: _headers);
-
-      _logResponse(response);
-
+      final response = await http.get(Uri.parse(url), headers: _headers);
       if (_isSuccess(response.statusCode)) {
-        final List data =
-            jsonDecode(utf8.decode(response.bodyBytes));
-        return data
-            .map((e) => _sanitizeStaffData(
-                Map<String, dynamic>.from(e)))
-            .toList();
-      } else {
-        throw 'サーバーエラー (${response.statusCode})';
+        final List data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data.map((e) => _sanitizeStaffData(Map<String, dynamic>.from(e))).toList();
       }
+      throw 'Error: ${response.statusCode}';
     } catch (e) {
-      debugPrint("[ApiService] fetchStaffList Error: $e");
+      _trace('fetchStaffList Error: $e');
       rethrow;
     }
   }
 
-  static Future<void> postStaffProfile(
-      Map<String, dynamic> staffData) async {
+  static Future<void> postStaffProfile(Map<String, dynamic> staffData) async {
     final url = '$baseUrl/staff';
-    final cleanedData =
-        _deSanitizeStaffData(Map<String, dynamic>.from(staffData));
-
+    final cleanedData = _deSanitizeStaffData(staffData);
+    _trace('POST: $url');
     try {
-      _logRequest(
-        method: "POST",
-        url: url,
-        headers: _headers,
-        body: cleanedData,
-      );
-
       final response = await http.post(
         Uri.parse(url),
         headers: _headers,
         body: jsonEncode(cleanedData),
       );
-
-      _logResponse(response);
-
-      if (!_isSuccess(response.statusCode)) {
-        throw '保存に失敗しました (${response.statusCode})';
-      }
+      if (!_isSuccess(response.statusCode)) throw 'Post Failed';
     } catch (e) {
-      debugPrint("[ApiService] postStaffProfile Error: $e");
+      _trace('postStaffProfile Error: $e');
       rethrow;
     }
   }
 
-  static Future<void> patchStaffProfile(
-      int staffId, Map<String, dynamic> staffData) async {
+  static Future<void> patchStaffProfile(int staffId, Map<String, dynamic> staffData) async {
     final url = '$baseUrl/staff/$staffId';
-    final cleanedData =
-        _deSanitizeStaffData(Map<String, dynamic>.from(staffData));
-
+    final cleanedData = _deSanitizeStaffData(staffData);
+    _trace('PATCH: $url');
     try {
-      _logRequest(
-        method: "PATCH",
-        url: url,
-        headers: _headers,
-        body: cleanedData,
-      );
-
       final response = await http.patch(
         Uri.parse(url),
         headers: _headers,
         body: jsonEncode(cleanedData),
       );
-
-      _logResponse(response);
-
-      if (!_isSuccess(response.statusCode)) {
-        throw '更新に失敗しました (${response.statusCode})';
-      }
+      if (!_isSuccess(response.statusCode)) throw 'Update Failed';
     } catch (e) {
-      debugPrint("[ApiService] patchStaffProfile Error: $e");
+      _trace('patchStaffProfile Error: $e');
       rethrow;
     }
   }
 
   static Future<void> deleteStaffProfile(int staffId) async {
     final url = '$baseUrl/staff/$staffId';
-
+    _trace('DELETE: $url');
     try {
-      _logRequest(method: "DELETE", url: url, headers: _headers);
-
-      final response =
-          await http.delete(Uri.parse(url), headers: _headers);
-
-      _logResponse(response);
-
-      if (!_isSuccess(response.statusCode)) {
-        throw '削除に失敗しました (${response.statusCode})';
-      }
+      final response = await http.delete(Uri.parse(url), headers: _headers);
+      if (!_isSuccess(response.statusCode)) throw 'Delete Failed';
     } catch (e) {
-      debugPrint("[ApiService] deleteStaffProfile Error: $e");
+      _trace('deleteStaffProfile Error: $e');
       rethrow;
     }
   }
 
   // ============================================================
-  // SHIFT PREFERENCES
+  // SHIFTS & REPORTS
   // ============================================================
 
-  static Future<void> saveShiftPreferences(
-      Map<String, dynamic> payload) async {
+  static Future<void> saveShiftPreferences(Map<String, dynamic> payload) async {
     final url = '$baseUrl/shift_pre';
-
+    _trace('POST Preferences: $url');
     try {
-      _logRequest(
-          method: "POST", url: url, headers: _headers, body: payload);
-
       final response = await http.post(
         Uri.parse(url),
         headers: _headers,
         body: jsonEncode(payload),
       );
-
-      _logResponse(response);
-
       if (!_isSuccess(response.statusCode)) {
         final error = jsonDecode(utf8.decode(response.bodyBytes));
         throw error['message'] ?? '保存に失敗しました';
       }
     } catch (e) {
-      debugPrint("[ApiService] saveShiftPreferences Error: $e");
+      _trace('saveShiftPreferences Error: $e');
       rethrow;
     }
   }
 
-static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(
-    DateTime start, DateTime end) async {
-  final url = '$baseUrl/shift_ass';
-  final formatter = DateFormat('yyyy-MM-dd');
-
-  final payload = {
-    "start_date": formatter.format(start),
-    "end_date": formatter.format(end),
-  };
-
-  try {
-    _logRequest(
-      method: "POST",
-      url: url,
-      headers: _headers,
-      body: payload,
-    );
-
-    final response = await http.post(
-      Uri.parse(url),
-      headers: _headers,
-      body: jsonEncode(payload),
-    );
-
-    _logResponse(response);
-
-    if (_isSuccess(response.statusCode)) {
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-
-      List<Map<String, dynamic>> schedule;
-
-      // If backend returns a Map with "shift_schedule"
-      if (decoded is Map && decoded.containsKey("shift_schedule")) {
-        schedule = (decoded["shift_schedule"] as List)
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } 
-      // If backend returns a raw List
-      else if (decoded is List) {
-        schedule = decoded
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } 
-      // Otherwise, empty list
-      else {
-        schedule = [];
-      }
-
-      return schedule;
-    } else {
-      throw "AI shift generation failed (${response.statusCode})";
-    }
-  } catch (e) {
-    debugPrint("[ApiService] fetchAutoShiftTable Error: $e");
-    rethrow;
-  }
-}
-
-  // ============================================================
-  // DASHBOARD
-  // ============================================================
-
-  static Future<List<Map<String, dynamic>>> fetchPredSalesOneWeek() async {
-    final url = '$baseUrl/pred_sales_dash';
-
+  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(DateTime start, DateTime end) async {
+    final url = '$baseUrl/shift_ass';
+    final payload = {
+      "start_date": DateFormat('yyyy-MM-dd').format(start),
+      "end_date": DateFormat('yyyy-MM-dd').format(end),
+    };
+    _trace('POST AutoShift: $url');
     try {
-      _logRequest(method: "POST", url: url, headers: _headers);
-
-      final response =
-          await http.post(Uri.parse(url), headers: _headers);
-
-      _logResponse(response);
-
-      if (_isSuccess(response.statusCode)) {
-        final List data =
-            jsonDecode(utf8.decode(response.bodyBytes));
-        return data
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } else {
-        throw "売上予測取得失敗";
-      }
-    } catch (e) {
-      debugPrint("[ApiService] fetchPredSalesOneWeek Error: $e");
-      rethrow;
-    }
-  }
-
-// ============================================================
-// DAILY REPORT
-// ============================================================
-
-static Future<List<Map<String, dynamic>>> fetchDailyReports() async {
-  final url = '$baseUrl/daily_report';
-
-  try {
-    _logRequest(
-      method: "GET",
-      url: url,
-      headers: _headers,
-    );
-
-    final response =
-        await http.get(Uri.parse(url), headers: _headers);
-
-    _logResponse(response);
-
-    if (_isSuccess(response.statusCode)) {
-      final List data =
-          jsonDecode(utf8.decode(response.bodyBytes));
-
-      return data
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-    } else {
-      throw '日報データ取得失敗 (${response.statusCode})';
-    }
-  } catch (e) {
-    debugPrint("[ApiService] fetchDailyReports Error: $e");
-    rethrow;
-  }
-}
-
-  static Future<void> postUserInput(
-      Map<String, dynamic> payload) async {
-    final url = '$baseUrl/daily_report';
-
-    try {
-      _logRequest(
-          method: "POST", url: url, headers: _headers, body: payload);
-
       final response = await http.post(
         Uri.parse(url),
         headers: _headers,
         body: jsonEncode(payload),
       );
 
-      _logResponse(response);
-
-      if (!_isSuccess(response.statusCode)) {
-        throw "送信失敗";
+      if (_isSuccess(response.statusCode)) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        if (decoded is Map && decoded.containsKey("shift_schedule")) {
+          return (decoded["shift_schedule"] as List).map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+        return (decoded as List).map((e) => Map<String, dynamic>.from(e)).toList();
       }
+      throw "AI shift generation failed";
     } catch (e) {
+      _trace('fetchAutoShiftTable Error: $e');
       rethrow;
     }
   }
-// ============================================================
-  // DASHBOARD SPECIFIC
-  // ============================================================
 
-  //post function for today's shift assignment
-static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
-  final now = DateTime.now();
-  final formatter = DateFormat('yyyy-MM-dd');
-  
-  // 1. Used for the API payload (next 2 days)
-  final endDateString = formatter.format(now.add(Duration(days: 2)));
-  final startDateString = formatter.format(now);
-
-  final url = '$baseUrl/shift_ass';
-  final payload = {
-    "start_date": startDateString,
-    "end_date": endDateString,
-  };
-
-  try {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: _headers,
-      body: jsonEncode(payload),
-    );
-
-    if (_isSuccess(response.statusCode)) {
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-      List<Map<String, dynamic>> schedule = [];
-
-      if (decoded is Map && decoded.containsKey("shift_ass")) {
-        schedule = List<Map<String, dynamic>>.from(decoded["shift_ass"]);
-      } else if (decoded is List) {
-        schedule = List<Map<String, dynamic>>.from(decoded);
+  static Future<List<Map<String, dynamic>>> fetchPredSalesOneWeek() async {
+    final url = '$baseUrl/pred_sales_dash';
+    _trace('POST Sales: $url');
+    try {
+      final response = await http.post(Uri.parse(url), headers: _headers);
+      if (_isSuccess(response.statusCode)) {
+        final List data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data.map((e) => Map<String, dynamic>.from(e)).toList();
       }
-
-      // 2. FIXED FILTERING LOGIC
-      // We parse the API date and compare only the Year, Month, and Day.
-      return schedule.where((shift) {
-        try {
-          // The API returns "Tue, 30 Dec 2025 00:00:00 GMT"
-          // HttpDate.parse handles this format automatically
-          DateTime shiftDate = HttpDate.parse(shift['date'].toString());
-          
-          return shiftDate.year == now.year &&
-                 shiftDate.month == now.month &&
-                 shiftDate.day == now.day;
-        } catch (e) {
-          return false;
-        }
-      }).toList();
-
-    } else {
-      throw "Failed to load today's shifts";
+      throw "売上予測取得失敗";
+    } catch (e) {
+      _trace('fetchPredSalesOneWeek Error: $e');
+      rethrow;
     }
-  } catch (e) {
-    debugPrint("[ApiService] fetchTodayShiftAssignment Error: $e");
-    rethrow;
   }
 
+  static Future<List<Map<String, dynamic>>> fetchDailyReports() async {
+    final url = '$baseUrl/daily_report';
+    _trace('GET Reports: $url');
+    try {
+      final response = await http.get(Uri.parse(url), headers: _headers);
+      if (_isSuccess(response.statusCode)) {
+        final List data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+      throw '日報データ取得失敗';
+    } catch (e) {
+      _trace('fetchDailyReports Error: $e');
+      rethrow;
+    }
+  }
 
-}
-//get function for shift table dashboard
+  static Future<void> postUserInput(Map<String, dynamic> payload) async {
+    final url = '$baseUrl/daily_report';
+    _trace('POST DailyInput: $url');
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _headers,
+        body: jsonEncode(payload),
+      );
+      if (!_isSuccess(response.statusCode)) throw "送信失敗";
+    } catch (e) {
+      _trace('postUserInput Error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchTodayShiftAssignment() async {
+    final now = DateTime.now();
+    final url = '$baseUrl/shift_ass';
+    final payload = {
+      "start_date": DateFormat('yyyy-MM-dd').format(now),
+      "end_date": DateFormat('yyyy-MM-dd').format(now.add(const Duration(days: 2))),
+    };
+
+    _trace('POST TodayShifts: $url');
+    try {
+      final response = await http.post(Uri.parse(url), headers: _headers, body: jsonEncode(payload));
+      if (_isSuccess(response.statusCode)) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        List<Map<String, dynamic>> schedule = (decoded is Map && decoded.containsKey("shift_ass"))
+            ? List<Map<String, dynamic>>.from(decoded["shift_ass"])
+            : List<Map<String, dynamic>>.from(decoded);
+
+        return schedule.where((shift) {
+          try {
+            DateTime shiftDate = HttpDate.parse(shift['date'].toString());
+            return shiftDate.year == now.year && shiftDate.month == now.month && shiftDate.day == now.day;
+          } catch (_) {
+            return false;
+          }
+        }).toList();
+      }
+      throw "Today's shifts failed";
+    } catch (e) {
+      _trace('fetchTodayShiftAssignment Error: $e');
+      rethrow;
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> fetchShiftTableDashboard() async {
     final url = '$baseUrl/shift_pre';
-
+    _trace('GET Dashboard: $url');
     try {
-      _logRequest(method: "GET", url: url, headers: _headers);
-
-      final response =
-          await http.get(Uri.parse(url), headers: _headers);
-
-      _logResponse(response);
-
+      final response = await http.get(Uri.parse(url), headers: _headers);
       if (_isSuccess(response.statusCode)) {
-        final List data =
-            jsonDecode(utf8.decode(response.bodyBytes));
-        return data
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
+        final List data = jsonDecode(utf8.decode(response.bodyBytes));
+        return data.map((e) => Map<String, dynamic>.from(e)).toList();
       }
       return [];
     } catch (e) {
+      _trace('fetchShiftTableDashboard Error: $e');
       rethrow;
     }
   }
