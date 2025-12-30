@@ -7,7 +7,7 @@ staff_bp = Blueprint("staff", __name__)
 def get_all_staff():
     staff_list = StaffService.get_all_staff()
     print("staff routes loaded", staff_list)
-    return jsonify([s.to_dict() for s in staff_list])
+    return jsonify([s.to_dict() for s in staff_list]) ,200
 
 @staff_bp.get("/staff/<int:staff_id>")
 def get_staff(staff_id):

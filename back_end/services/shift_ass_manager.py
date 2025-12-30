@@ -309,12 +309,13 @@
         
 from pulp import LpProblem, LpVariable, LpMinimize, lpSum
 from sqlalchemy.orm import Session
+#from sqlalchemy import func
 from ..models.shift_model import ShiftMain
 from ..utils.db import get_db
 
 import pandas as pd
 import numpy as np
-import datetime
+from datetime import datetime, timedelta, date
 
 from back_end.services.staff_manager import StaffService
 from back_end.services.shift_preferences import ShiftPreferences
@@ -562,7 +563,7 @@ class ShiftAss:
          return final_shift
 
    
-    # SAVE TO DB (FINAL SAFETY)
+    
 
     def shift_save_db(self):
         df = self.combine_data()
@@ -593,3 +594,29 @@ class ShiftAss:
         db.commit()
 
         return shift_rows.to_dict(orient="records")
+
+    @staticmethod
+    def get_shift_main():
+       
+        today = datetime.today().date()
+        tomorrow = today + timedelta(days=1)
+        
+        
+        
+        #print(today , tomorrow)
+        db : Session = next(get_db())
+        data = db.query(ShiftMain).filter(
+                    ShiftMain.date >= today,
+                    ShiftMain.date <= tomorrow
+                ).all()
+        if not data:
+            print("該当シフトはありません")
+        else:
+            for d in data:
+                print(d)
+        return  data
+        
+    
+     
+        
+        
