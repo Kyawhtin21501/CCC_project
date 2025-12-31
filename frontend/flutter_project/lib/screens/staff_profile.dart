@@ -4,6 +4,8 @@ import 'package:predictor_web/services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:predictor_web/widgets/custom_menubar.dart';
 
+/// Screen for managing staff records. 
+/// Features: List view, Search/Filter, Create (Dialog), Edit (Side Sheet), and Delete.
 class StaffProfileScreen extends StatefulWidget {
   const StaffProfileScreen({super.key});
 
@@ -12,11 +14,15 @@ class StaffProfileScreen extends StatefulWidget {
 }
 
 class _StaffProfileScreenState extends State<StaffProfileScreen> {
-  List<Map<String, dynamic>> _allStaff = [];
-  List<Map<String, dynamic>> _filteredStaff = [];
+  // Data State
+  List<Map<String, dynamic>> _allStaff = [];      // Source of truth from API
+  List<Map<String, dynamic>> _filteredStaff = []; // Data currently displayed in the table
   bool _isLoading = false;
+
+  // Search Controller
   final TextEditingController _searchController = TextEditingController();
 
+  /// Utility for debug logging that only prints in development mode.
   void _trace(String message) {
     if (kDebugMode) {
       print('[StaffProfileScreen] $message');
@@ -29,6 +35,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     _loadStaffList();
   }
 
+  /// Fetches the staff list and applies current filters.
   Future<void> _loadStaffList() async {
     _trace('Starting loadStaffList...');
     try {
@@ -50,6 +57,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     }
   }
 
+  /// Client-side filtering logic for the search bar.
   void _applyFilter(String query) {
     _trace('Applying filter for query: "$query"');
     setState(() {
@@ -66,14 +74,19 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     });
   }
 
+  /// Orchestrates how the form is opened.
+  /// If [staff] is null, opens a center Dialog (Create mode).
+  /// If [staff] is provided, opens a sliding Side Sheet (Edit mode).
   void _openStaffForm([Map<String, dynamic>? staff]) {
     if (staff == null) {
+      // Create Mode: Simple Modal
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => _StaffAddDialog(onSave: _loadStaffList),
       );
     } else {
+      // Edit Mode: Right-side Sliding Sheet using a custom transition
       showGeneralDialog(
         context: context,
         barrierDismissible: true,
@@ -106,11 +119,12 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
         children: [
           Column(
             children: [
-              const SizedBox(height: 90),
+              const SizedBox(height: 90), // Offset for the custom menu bar
               _buildHeader(theme),
               Expanded(child: _buildMainContent(theme)),
             ],
           ),
+          // Floating Top Menu Bar
           Positioned(
             top: 28, left: 16, right: 16,
             child: Builder(
@@ -126,6 +140,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     );
   }
 
+  /// Search Bar and Add Button section.
   Widget _buildHeader(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
@@ -155,6 +170,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     );
   }
 
+  /// The main data table container with horizontal and vertical scrolling.
   Widget _buildMainContent(ThemeData theme) {
     if (_filteredStaff.isEmpty && !_isLoading) {
       return const Center(child: Text("見つかりません"));
@@ -174,7 +190,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
-              // Forces the table to be at least the width of the screen
+              // Ensures the DataTable fills at least the available screen width
               constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
               child: DataTable(
                 headingRowColor: MaterialStateProperty.all(theme.colorScheme.surfaceVariant.withOpacity(0.3)),
@@ -198,7 +214,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                   return DataRow(
                     key: ValueKey('staff_$id'),
                     cells: [
-                      DataCell(Text('${index + 1}')), // Order Number
+                      DataCell(Text('${index + 1}')),
                       DataCell(Text(s['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500))),
                       DataCell(_buildStatusChip(s['status'] ?? '', theme)),
                       DataCell(Text(s['gender'] == 'Male' ? '男性' : '女性')),
@@ -228,6 +244,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     );
   }
 
+  /// Returns a styled Chip based on the staff employment status.
   Widget _buildStatusChip(String status, ThemeData theme) {
     Color color = status == 'フルタイム' ? Colors.blue : (status == '留学生' ? Colors.orange : Colors.green);
     return Container(
@@ -241,6 +258,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     );
   }
 
+  /// Deletion confirmation dialog.
   void _confirmDelete(Map<String, dynamic> staff) {
     final staffId = staff['id'] ?? staff['ID'];
     showDialog(
@@ -267,9 +285,10 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
 }
 
 // ============================================================
-// SHARED COMPONENTS
+// SHARED COMPONENTS: StaffFormBody
 // ============================================================
 
+/// Reusable form body shared between the Add Dialog and Edit Side Sheet.
 class StaffFormBody extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController name, email, age, level;
@@ -328,7 +347,7 @@ class StaffFormBody extends StatelessWidget {
 }
 
 // ============================================================
-// ADD DIALOG
+// CREATE MODE: Staff Add Dialog
 // ============================================================
 
 class _StaffAddDialog extends StatefulWidget {
@@ -370,7 +389,7 @@ class _StaffAddDialogState extends State<_StaffAddDialog> {
 }
 
 // ============================================================
-// EDIT SIDE SHEET
+// EDIT MODE: Staff Edit Side Sheet
 // ============================================================
 
 class _StaffEditSideSheet extends StatefulWidget {
@@ -390,6 +409,7 @@ class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
   @override
   void initState() {
     super.initState();
+    // Initialize controllers with existing staff data
     _name = TextEditingController(text: widget.staff['name']?.toString());
     _email = TextEditingController(text: widget.staff['e_mail']?.toString());
     _age = TextEditingController(text: widget.staff['age']?.toString());
@@ -406,7 +426,10 @@ class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
       child: Container(
         width: 450,
         padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(border: Border(left: BorderSide(color: theme.colorScheme.outlineVariant))),
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: theme.colorScheme.outlineVariant)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)]
+        ),
         child: Column(
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -420,6 +443,7 @@ class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
               onStatusChanged: (v) => setState(() => _status = v!), 
               onGenderChanged: (v) => setState(() => _gender = v!),
             ))),
+            // Bottom Action Button
             SizedBox(width: double.infinity, height: 50, child: FilledButton(
               onPressed: _isSaving ? null : () async {
                 if (!_formKey.currentState!.validate()) return;

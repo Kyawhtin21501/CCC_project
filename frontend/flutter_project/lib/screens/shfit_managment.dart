@@ -5,8 +5,13 @@ import 'package:predictor_web/services/api_services.dart';
 import 'package:predictor_web/widgets/appdrawer.dart';
 import 'package:predictor_web/widgets/custom_menubar.dart';
 
+/// Defines the view modes for the screen.
+/// [manual] is for staff to enter their availability.
+/// [auto] is for admins to generate and view AI-predicted shifts.
 enum ShiftMode { manual, auto }
 
+/// Data model representing a staff member.
+/// Supports flexible mapping from various API response formats (staff_id vs id).
 class Staff {
   final String id, name;
   final int? level;
@@ -28,22 +33,29 @@ class ShiftManagementScreen extends StatefulWidget {
 }
 
 class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
+  // UI State management
   ShiftMode _selectedMode = ShiftMode.manual;
   List<Staff> staffList = [];
-  bool _loading = false;
-  bool _isSaving = false;
-  bool _isGenerating = false;
+  bool _loading = false;      // Main data loading
+  bool _isSaving = false;     // Blocking overlay for API writes
+  bool _isGenerating = false; // Progress indicator for AI generation
 
+  // Calendar State
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
 
-  // Stores: { "yyyy-MM-dd": { "staffId": { "startTime": "HH:mm", "endTime": "HH:mm" } } }
+  /// Local state for shift preferences.
+  /// Structure: { "YYYY-MM-DD": { "staffId": { "startTime": "HH:mm", "endTime": "HH:mm" } } }
   Map<String, Map<String, Map<String, String>>> preferences = {};
+  
+  /// Stores raw data from the AI generation API
   List<Map<String, dynamic>> _predictedShifts = [];
 
+  // Range for AI Generation
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 6));
 
+  /// Generates a list of strings from 00:00 to 23:30 in 30-minute increments.
   final List<String> _timeOptions = List.generate(48, (index) {
     final hour = (index ~/ 2).toString().padLeft(2, '0');
     final minute = (index % 2 == 0) ? '00' : '30';
@@ -58,6 +70,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   // --- API LOGIC ---
 
+  /// Initial load: Fetches the list of active staff members.
   Future<void> _loadInitialData() async {
     setState(() => _loading = true);
     try {
@@ -76,6 +89,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
+  /// Sends a specific staff member's preference for the selected date to the backend.
   Future<void> _savePreference(Staff staff) async {
     setState(() => _isSaving = true);
     final dateKey = _dateKey(_selectedDay ?? _focusedDay);
@@ -95,6 +109,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
+  /// Triggers the AI logic to calculate the optimal shift table based on 
+  /// predicted sales, required labor, and staff preferences.
   Future<void> _generateAutoShifts() async {
     setState(() { _isGenerating = true; _predictedShifts = []; });
     try {
@@ -112,17 +128,21 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
+  /// Safe accessor for the preference map. 
+  /// Initializes nested maps if they don't exist to prevent Null Pointer Exceptions.
   Map<String, String> _getPrefs(String staffId) {
     final dKey = _dateKey(_selectedDay ?? _focusedDay);
     preferences[dKey] ??= {};
     return preferences[dKey]![staffId] ??= {'startTime': '09:00', 'endTime': '18:00'};
   }
 
+  /// Reorganizes the flat list of shift objects into a Map grouped by Date.
+  /// Essential for rendering the timeline view cards.
   Map<String, List<Map<String, dynamic>>> _groupShiftsByDate() {
     final Map<String, List<Map<String, dynamic>>> map = {};
     for (var s in _predictedShifts) {
       if (s['date'] == null) continue;
-      final d = s['date'].toString().split(' ')[0];
+      final d = s['date'].toString().split(' ')[0]; // Extract YYYY-MM-DD
       map.putIfAbsent(d, () => []).add(s);
     }
     return map;
@@ -176,6 +196,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                     ),
                   ),
           ),
+          
+          /// Fixed Menu Bar (Header)
           Positioned(
             top: 28, left: 16, right: 16,
             child: Builder(
@@ -185,12 +207,15 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
               ),
             ),
           ),
+
+          /// Global Loading Overlay for Save operations
           if (_isSaving) Container(color: Colors.black12, child: const Center(child: CircularProgressIndicator())),
         ],
       ),
     );
   }
 
+  /// Toggle button to switch between Manual Preference entry and AI Generation view.
   Widget _buildModeToggle(ThemeData theme) {
     return SizedBox(
       width: double.infinity,
@@ -205,7 +230,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  // --- MANUAL VIEW ---
+  // --- MANUAL VIEW WIDGETS ---
 
   Widget _buildManualView(ThemeData theme, bool isMobile) {
     return Column(
@@ -230,6 +255,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Wraps the [TableCalendar]. This serves as the primary date selector for manual entry.
   Widget _buildCalendarCard(ThemeData theme) {
     return Card(
       elevation: 0,
@@ -258,6 +284,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Individual card for each staff member to select start/end times.
+  /// Adjusts layout (Column vs Row) based on screen width.
   Widget _buildStaffCard(Staff staff, ThemeData theme, bool isMobile) {
     final prefs = _getPrefs(staff.id);
     return Card(
@@ -306,6 +334,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Custom styling for the time selector dropdown.
   Widget _timeDropdown(String currentValue, Function(String) onChanged, ThemeData theme) {
     return DropdownButton<String>(
       value: currentValue,
@@ -316,7 +345,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  // --- AUTO VIEW ---
+  // --- AUTO VIEW WIDGETS (Timeline) ---
 
   Widget _buildAutoView(ThemeData theme) {
     final grouped = _groupShiftsByDate();
@@ -332,6 +361,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Controls for setting the date range for AI shift prediction.
   Widget _buildActionBanner(ThemeData theme) {
     final df = DateFormat('yyyy/MM/dd');
     return Container(
@@ -350,10 +380,15 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Complex UI: Creates a Gantt-chart style timeline for a specific day.
+  /// [shifts] is the list of hours and staff assigned for that day.
   Widget _buildTimelineCard(String date, List<Map<String, dynamic>> shifts, ThemeData theme) {
+    // Filter out 'Shortage' entries (staff_id: -1) from the staff names list
     final actualStaff = shifts.where((s) => s['staff_id'] != -1).toList();
     final names = actualStaff.map((s) => s['name'].toString()).toSet().toList();
-    const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+    
+    // Config for the chart horizontal scroll
+    const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0];
     const double hourWidth = 45.0;
     const double labelWidth = 110.0;
 
@@ -376,6 +411,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                 width: labelWidth + (hours.length * hourWidth),
                 child: Column(
                   children: [
+                    // Header: Hours 9 - 24
                     Row(
                       children: [
                         const SizedBox(width: labelWidth),
@@ -383,6 +419,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                       ],
                     ),
                     const Divider(),
+                    // Body: One row per staff member
                     ...names.map((name) {
                       final staffShifts = actualStaff.where((s) => s['name'] == name).toList();
                       return Padding(
@@ -406,6 +443,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                       );
                     }),
                     const Divider(height: 32),
+                    // Footer: Alert row if AI predicts a labor shortage
                     _buildShortageRow(hours, shifts, theme, labelWidth, hourWidth),
                   ],
                 ),
@@ -417,6 +455,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Renders a "Warning" row at the bottom of the chart.
+  /// Triggered if the API returns a 'shortage' flag (staff_id: -1) for specific hours.
   Widget _buildShortageRow(List<int> hours, List<Map<String, dynamic>> shifts, ThemeData theme, double labelW, double hourW) {
     return Row(
       children: [
@@ -434,6 +474,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
+  /// Opens the standard Material Date Range Picker.
   Future<void> _selectDateRange() async {
     final picked = await showDateRangePicker(
       context: context, 

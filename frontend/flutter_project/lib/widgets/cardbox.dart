@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Generic card wrapper for consistent look & padding.
 class CardBox extends StatelessWidget {
   final Widget child;
   final double padding;

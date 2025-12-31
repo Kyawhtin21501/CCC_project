@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+/// A dashboard widget that displays shift assignments for Today and Tomorrow.
+/// It uses a TabBar to switch between days and a grid-style Table to visualize 
+/// work hours and staffing gaps.
 class TodayShiftCard extends StatelessWidget {
   final List<Map<String, dynamic>> shifts;
 
@@ -8,10 +11,12 @@ class TodayShiftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Prepare date strings for filtering the shifts list
     final now = DateTime.now();
     final todayStr = DateFormat('yyyy-MM-dd').format(now);
     final tomorrowStr = DateFormat('yyyy-MM-dd').format(now.add(const Duration(days: 1)));
 
+    // 2. Filter data for each tab
     final todayShifts = shifts.where((s) => s['date'] == todayStr).toList();
     final tomorrowShifts = shifts.where((s) => s['date'] == tomorrowStr).toList();
 
@@ -20,7 +25,7 @@ class TodayShiftCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Pagination Header
+          // Navigation: Today vs Tomorrow
           TabBar(
             labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor: Theme.of(context).hintColor,
@@ -31,9 +36,10 @@ class TodayShiftCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Scrollable Area for the Table
+          
+          // Tab Content Area
           SizedBox(
-            height: 400, // Adjust based on your content needs
+            height: 400, // Fixed height to allow internal scrolling of the table
             child: TabBarView(
               children: [
                 _buildDayTable(context, todayShifts),
@@ -46,28 +52,33 @@ class TodayShiftCard extends StatelessWidget {
     );
   }
 
+  /// Generates a horizontal-scrolling table showing staff on the Y-axis 
+  /// and hours (10:00 - 24:00) on the X-axis.
   Widget _buildDayTable(BuildContext context, List<Map<String, dynamic>> shiftData) {
     if (shiftData.isEmpty) {
       return const Center(child: Text("シフトデータがありません"));
     }
 
+    // Extract unique staff names and define the operating hours
     final staffNames = shiftData.map((s) => s['name'].toString()).toSet().toList();
-    final hours = List.generate(15, (index) => index + 9); // 9:00 to 23:00
+    final hours = List.generate(15, (index) => index + 10); // Represents 10:00 AM to 12:00 PM
 
     return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Table(
+            // column 0 (names) is wider; other columns (hours) are narrow squares
             defaultColumnWidth: const FixedColumnWidth(45),
-            columnWidths: const {0: FixedColumnWidth(100)}, // Wider for names
+            columnWidths: const {0: FixedColumnWidth(100)}, 
             border: TableBorder.all(
               color: Theme.of(context).dividerColor.withOpacity(0.3),
               width: 0.5,
             ),
             children: [
-              // Header Row
+              // --- HEADER ROW (Hours) ---
               TableRow(
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
@@ -77,7 +88,8 @@ class TodayShiftCard extends StatelessWidget {
                   ...hours.map((h) => TableCell(child: Center(child: Padding(padding: const EdgeInsets.all(8), child: Text("$h"))))),
                 ],
               ),
-              // Staff Rows
+              
+              // --- DATA ROWS (Staff Assignments) ---
               ...staffNames.map((name) {
                 return TableRow(
                   children: [
@@ -89,7 +101,10 @@ class TodayShiftCard extends StatelessWidget {
                       ),
                     ),
                     ...hours.map((h) {
+                      // Logic to determine if this cell should be highlighted
                       final bool isWorking = shiftData.any((s) => s['name'] == name && s['hour'] == h);
+                      
+                      // -1 is a special ID from the backend indicating a "Required but unfilled" slot
                       final bool isShortage = shiftData.any((s) => s['hour'] == h && s['staff_id'] == -1);
 
                       return TableCell(
@@ -98,12 +113,12 @@ class TodayShiftCard extends StatelessWidget {
                           margin: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: isWorking 
-                                ? Theme.of(context).colorScheme.primary 
+                                ? Theme.of(context).colorScheme.primary // Blue block for work
                                 : (isShortage ? Colors.red.withOpacity(0.15) : Colors.transparent),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: (isShortage && !isWorking) 
-                              ? const Icon(Icons.warning, color: Colors.red, size: 14) 
+                              ? const Icon(Icons.warning, color: Colors.red, size: 14) // Warning icon for gaps
                               : null,
                         ),
                       );

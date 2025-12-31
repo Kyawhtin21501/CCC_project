@@ -1,35 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// A ChangeNotifier that handles light/dark theme switching and persistence.
+/// A ChangeNotifier that manages the application's visual theme (Light vs Dark).
+/// It uses the 'Provider' pattern to notify the entire app when the theme changes
+/// and persists the user's choice using local storage.
 class ThemeProvider extends ChangeNotifier {
-  /// Current theme mode (light/dark/system)
+  
+  /// Internal state for the current theme mode.
+  /// Initialized to light, but updated immediately by [_loadTheme].
   ThemeMode _themeMode = ThemeMode.light;
 
-  /// Public getter for the current theme
+  /// Public getter to allow the [MaterialApp] to access the current mode.
   ThemeMode get themeMode => _themeMode;
 
+  /// Constructor: Automatically attempts to load the saved preference 
+  /// from the device storage as soon as the provider is created.
   ThemeProvider() {
     _loadTheme();
   }
 
-  /// Load the saved theme mode from SharedPreferences (runs at app startup)
+  /// PERSISTENCE: Loads the 'isDarkMode' boolean from SharedPreferences.
+  /// This ensures that if the user chose Dark Mode yesterday, the app 
+  /// starts in Dark Mode today.
   Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isDark = prefs.getBool('isDarkMode') ?? false;
-    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Default to false (Light Mode) if no preference has been saved yet.
+      final isDark = prefs.getBool('isDarkMode') ?? false;
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+      
+      // Notify all listening widgets (like MaterialApp) to rebuild with the loaded theme.
+      notifyListeners();
+    } catch (e) {
+      // Fallback or error handling can be added here if storage fails.
+      debugPrint('Error loading theme: $e');
+    }
   }
 
-  /// Toggle between light and dark themes, and persist the choice
+  /// ACTION: Toggles the theme between Light and Dark.
+  /// [isDark] - True for Dark Mode, False for Light Mode.
   Future<void> toggleTheme(bool isDark) async {
+    // 1. Update the in-memory state.
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    
+    // 2. Trigger a UI rebuild across the entire application.
     notifyListeners();
 
+    // 3. Save the choice to the device's physical storage.
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', isDark);
   }
 
-  /// Convenience helper (optional): returns `true` if current theme is dark
+  /// UTILITY: A simple boolean helper to check the current state 
+  /// (Useful for Switch widgets or Icon changes).
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 }
