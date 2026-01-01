@@ -194,6 +194,7 @@ class DataPrepare:
        
 
         df["predicted_sales"] = model.predict(model_input)
+        df["predicted_sales"] = df["predicted_sales"].astype(int)
         result = df[["date", "predicted_sales"]].to_dict(orient="records")
 
         print(result)
