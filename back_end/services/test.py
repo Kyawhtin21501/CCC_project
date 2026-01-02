@@ -175,19 +175,14 @@ class ShiftAss:
             cost[s, d, h] = row['salary']        # 1時間あたりのコスト
             max_cost[d, h] = row['max_cost']    # 時間帯ごとの最大人件費
             pred_sales[d, h] = row['pred_sale_per_hour']  # 1時間ごとの売上予測
-        for d, h in max_cost:
-            model.Add(sum(cost[s, d, h] * work[s, d, h] for s in df['staff_id'].unique()) <= max_cost[d, h])
+            for d, h in max_cost:
+                model.Add(sum(cost[s, d, h] * work[s, d, h] for s in df['staff_id'].unique()) <= max_cost[d, h])
 
-        for s in df['staff_id'].unique():
-            for d in df['date'].unique():
-                model.Add(sum(work[s, d, h] for h in df['hour'].unique()) <= 1)#ここまだズレてる
-        #objective
-        #model.Maximize(sum(pred_sales[d, h] * work[s, d, h] for s, d, h in work))
+        
+    
 
 
-        model.Maximize(
-            sum((pred_sales[d, h] - cost[s, d, h]) * work[s, d, h] for s, d, h in work)
-        )
+        
 
         
         
@@ -202,6 +197,7 @@ if __name__ == "__main__":
     sa = ShiftAss()
    
     df = sa.combine_data()
+    df.to_csv("combined_data.csv", index=False)
     #df = pd.DataFrame(df)
     
     print(df.head())
