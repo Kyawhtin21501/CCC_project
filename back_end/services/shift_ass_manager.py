@@ -1,24 +1,27 @@
-
-from pulp import LpProblem, LpVariable, LpMinimize, lpSum
 from sqlalchemy.orm import Session
-#from sqlalchemy import func
-from ..models.shift_model import ShiftMain
-from ..utils.db import get_db
 from pprint import pprint
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, date
 
+from ortools.sat.python import cp_model
+
+from back_end.models.shift_model import ShiftMain
+from back_end.utils.db import get_db
 from back_end.services.staff_manager import StaffService
 from back_end.services.shift_preferences import ShiftPreferences
 from back_end.services.pred_manager import DataPrepare
 
 
 class ShiftAss:
-
-    def __init__(self, start_date, end_date):
+    def __init__(self,start_date, end_date):
         self.start_date = start_date
         self.end_date = end_date
+
+        self.model = cp_model.CpModel()
+        self.work = {}
+        self.cost = {}
+        self.max_cost = {}
 
     # =========================================================
     # STAFF DATA
@@ -37,7 +40,6 @@ class ShiftAss:
         df = pd.DataFrame([s.to_dict() for s in shift_pre])
 
         df["date"] = pd.to_datetime(df["date"])
-
         df = df[
             (df["date"] >= pd.to_datetime(self.start_date)) &
             (df["date"] <= pd.to_datetime(self.end_date))
@@ -50,10 +52,20 @@ class ShiftAss:
     # PREDICTED SALES
     # =========================================================
     def get_pred_sale(self):
-        pred = DataPrepare(self.start_date, self.end_date)
+        start = pd.to_datetime(self.start_date) - timedelta(days=1)
+        end = pd.to_datetime(self.end_date)
+
+        pred = DataPrepare(
+            start.strftime("%Y-%m-%d"),
+            end.strftime("%Y-%m-%d")
+        )
+
         df = pd.DataFrame(pred.run_prediction())
         df["date"] = pd.to_datetime(df["date"])
+
         return df
+
+
 
     # =========================================================
     # HELPERS
@@ -81,7 +93,7 @@ class ShiftAss:
             return 1500
 
     # =========================================================
-    # COMBINE DATA (🔥 MAIN FIX IS HERE)
+    # COMBINE DATA
     # =========================================================
     def combine_data(self):
         df = pd.merge(
@@ -98,28 +110,15 @@ class ShiftAss:
             on="date"
         )
 
-        # CRITICAL NaN CLEANUP
+        # NaN cleanup
         df["name"] = df["name"].fillna("unknown")
         df["level"] = df["level"].fillna(0).astype(int)
         df["status"] = df["status"].fillna("unknown")
         df["predicted_sales"] = df["predicted_sales"].fillna(0)
-        """
-        df["start_dt"] = pd.to_datetime(
-            df["date"].dt.strftime("%Y-%m-%d") + " " + df["start_time"]
-        )
-        df["end_dt"] = pd.to_datetime(
-            df["date"].dt.strftime("%Y-%m-%d") + " " + df["end_time"]
-        )
-       
 
-        df.loc[df["end_dt"] < df["start_dt"], "end_dt"] += pd.Timedelta(days=1)
-        """
         records = []
-
         for _, row in df.iterrows():
-            #hours = int((row["end_dt"] - row["start_dt"]).total_seconds() // 3600)
-
-            for h in range(9,25):
+            for h in range(9, 25):
                 records.append({
                     "date": row["date"],
                     "hour": h,
@@ -128,6 +127,7 @@ class ShiftAss:
                     "level": row["level"],
                     "status": row["status"],
                     "predicted_sales": row["predicted_sales"],
+                    "salary" : row["level"]
                 })
 
         final_df = pd.DataFrame(records)
@@ -137,188 +137,300 @@ class ShiftAss:
             axis=1
         )
 
-        final_df["max_cost"] = final_df["pred_sale_per_hour"] * 0.25
-        final_df["salary"] = final_df["level"].apply(self.salary)
-        final_df = final_df.sort_values(by=["date", "hour", "staff_id"]).reset_index(drop=True)
-        #print("final_df")
-        #print(final_df.to_string())
+        final_df["max_cost"] = (
+            final_df["pred_sale_per_hour"] * 0.3
+        ).round().astype(int)
+
+        final_df["salary"] = final_df["level"].apply(self.salary).astype(int)
+
+        final_df = final_df.sort_values(
+            by=["date", "hour", "staff_id"]
+        ).reset_index(drop=True)
+
         return final_df
 
+    # =========================================================
+    # CREATE SHIFT (CP-SAT)
+    # =========================================================
+    def creat_shift(self, df):
+        model = cp_model.CpModel()
 
-    # OPTIMIZATION
-    def create_shift(self, df):
-         model = LpProblem("ShiftOptimize", LpMinimize)
+        """
+        groupby(["date", "hour"]).groups
+        -> key: (date, hour)
+        -> value: index list
+        """
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+        time_strip = list(df.groupby(["date", "hour"]).groups.keys())
 
-         x = LpVariable.dicts("x", df.index, cat="Binary")
+        # -----------------------------------------------------
+        # Decision Variables
+        # -----------------------------------------------------
+        work = {}
+        for _, row in df.iterrows():
+            s = row["staff_id"]
+            d = row["date"]
+            h = row["hour"]
+            work[s, d, h] = model.NewBoolVar(f"work_{s}_{d}_{h}")
 
-         time_keys = list(df.groupby(["date", "hour"]).groups.keys())
-         not_enough = LpVariable.dicts(
-             "not_enough",
-             time_keys,
-             lowBound=0,
-             cat="Integer"
-         )
-         break_var = LpVariable.dicts(
-            "break",
-            df.index,
-            cat="Binary"
-         )
-         for staff_id, g_staff in df.groupby("staff_id"):
-            for date, g_day in g_staff.groupby("date"):
-                hours = g_day.sort_values("hour")
-                idxs = hours.index.tolist()
+        # -----------------------------------------------------
+        # Cost / Sales
+        # -----------------------------------------------------
+        cost = {}
+        max_cost = {}
+        pred_sales = {}
 
-                for k in range(len(idxs) - 1):
-                    model += (
-                        break_var[idxs[k]] >=
-                        x[idxs[k]] - x[idxs[k+1]]
-                    )
+        for _, row in df.iterrows():
+            s = row["staff_id"]
+            d = row["date"]
+            h = row["hour"]
 
-         for staff_id, g_staff in df.groupby("staff_id"):
-            for date, g_day in g_staff.groupby("date"):
-                idxs = g_day.index.tolist()
-                model += lpSum(break_var[i] for i in idxs) <= 3
+            cost[s, d, h] = row["salary"]
+            max_cost[d, h] = row["max_cost"]
+            pred_sales[d, h] = row["pred_sale_per_hour"]
 
-        
-       
-         MIN_LEVEL = 3
-         MANAGER_LEVEL = 5
-      
-         for (date, hour), g in df.groupby(["date", "hour"]):
-             model += (lpSum(df.loc[i, "salary"] * x[i] for i in g.index) <= g["max_cost"].iloc[0])
-             n_e = int(g["max_cost"].iloc[0] // 1200)
-             if n_e >= 1:
-                 model += (lpSum(x[i] for i in g.index) + not_enough[(date, hour)] >= n_e)
-             senior_idx = g[g["level"] >= MIN_LEVEL].index
-             manager_idx = g[g["level"] == MANAGER_LEVEL].index
+        # -----------------------------------------------------
+        # Cost Constraint
+        # -----------------------------------------------------
+        for d, h in max_cost:
+            model.Add(
+                sum(
+                    cost[s, d, h] * w
+                    for (s, dd, hh), w in work.items()
+                    if dd == d and hh == h
+                ) <= max_cost[d, h]
+            )
 
-             if len(senior_idx) > 0:
-                 model += lpSum(x[i] for i in senior_idx) >= 1
-             elif len(manager_idx) > 0:
-                 model += lpSum(x[i] for i in manager_idx) >= 1
-             else:
-                 model += not_enough[(date, hour)] >= 1
+        # -----------------------------------------------------
+        # Skill Constraints
+        # -----------------------------------------------------
+        staff_df = self.get_staff_data_df()
 
-             
-         for staff_id, g_staff in df.groupby("staff_id"):
-            level = g_staff["level"].iloc[0]
+        regular_staff = staff_df[staff_df["level"].isin([3, 4])]["id"].tolist()
+        manager_staff = staff_df[staff_df["level"] == 5]["id"].tolist()
 
-            if level == 1:
-                for date, g_day in g_staff.groupby("date"):
-                    hours = g_day.sort_values("hour")
-                    idxs = hours.index.tolist()
+        has_regular = {}
+        for date, hour in time_strip:
+            has_regular[date, hour] = model.NewBoolVar(
+                f"has_regular_{date}_{hour}"
+            )
 
-                    for k in range(len(idxs) - 1):
-                        model += (
-                            x[idxs[k]] <= x[idxs[k]] + x[idxs[k+1]]
+            model.Add(
+                sum(
+                    w for (s, d, h), w in work.items()
+                    if d == date and h == hour and s in regular_staff
+                ) >= 1
+            ).OnlyEnforceIf(has_regular[date, hour])
+
+            model.Add(
+                sum(
+                    w for (s, d, h), w in work.items()
+                    if d == date and h == hour and s in regular_staff
+                ) == 0
+            ).OnlyEnforceIf(has_regular[date, hour].Not())
+
+            model.Add(
+                sum(
+                    w for (s, d, h), w in work.items()
+                    if d == date and h == hour and s in manager_staff
+                ) >= 1
+            ).OnlyEnforceIf(has_regular[date, hour].Not())
+
+        # -----------------------------------------------------
+        # Continuity
+        # -----------------------------------------------------
+        for (s, d, h), w in work.items():
+            if h <= 9:
+                continue
+
+            if (s, d, h-1) in work and (s, d, h+1) in work:
+                model.Add(w <= work[s, d, h-1] + work[s, d, h+1])
+
+        # -----------------------------------------------------
+        # Break Constraint (7h window -> max 6)
+        # -----------------------------------------------------
+        hours = sorted(df["hour"].unique())
+        for s in df["staff_id"].unique():
+            for d in df["date"].unique():
+                for i in range(len(hours) - 6):
+                    window = hours[i:i+7]
+                    if all((s, d, h) in work for h in window):
+                        model.Add(
+                            sum(work[s, d, h] for h in window) <= 6
                         )
-         for staff_id, g_staff in df.groupby("staff_id"):
-            level = g_staff["level"].iloc[0]
 
-            if level >= 2:
-                for date, g_day in g_staff.groupby("date"):
-                    hours = g_day.sort_values("hour")
-                    idxs = hours.index.tolist()
+        # -----------------------------------------------------
+        # Weekly Limit (International)
+        # -----------------------------------------------------
+        dates = sorted(df["date"].unique())
+        international_staff = staff_df[
+            staff_df["status"] == "international"
+        ]["id"].tolist()
 
-                    for k in range(len(idxs) - 2):
-                        model += (
-                            x[idxs[k]] <=
-                            x[idxs[k]] + x[idxs[k+1]] + x[idxs[k+2]]
-                        )
+        for s in international_staff:
+            for i in range(len(dates)):
+                start = dates[i]
+                end = start + timedelta(days=6)
 
+                model.Add(
+                    sum(
+                        w for (ss, d, h), w in work.items()
+                        if ss == s and start <= d <= end
+                    ) <= 28
+                )
 
-         
+        # -----------------------------------------------------
+        # High School Constraint
+        # -----------------------------------------------------
+        high_school_staff = staff_df[
+            staff_df["status"] == "high_school"
+        ]["id"].tolist()
 
+        for (s, d, h), w in work.items():
+            if s in high_school_staff and h >= 22:
+                model.Add(w == 0)
+
+        # -----------------------------------------------------
+        # Objective
+        # -----------------------------------------------------
         
 
-           
 
-             
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = 10
+        status = solver.Solve(model)
 
-    
-         for i, row in df.iterrows():
-             if row["status"] == "high_school" and row["hour"] >= 22:
-                 model += x[i] == 0
+        return solver, status, work
+    def run(self):
+        df = self.combine_data()
+        solver, status, work = self.creat_shift(df)
 
+        shift_ass = []  
 
-         for staff_id, g in df[df["status"] == "international_student"].groupby("staff_id"):
-             model += lpSum(x[i] for i in g.index) <= 28
+        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            for (s, d, h), w in work.items():
+                if solver.Value(w) == 1:
+                    shift_ass.append({
+                        "id": s,
+                        "date": d,
+                        "hour": h
+                    })
 
-   
-         for staff_id, g_staff in df.groupby("staff_id"):
-             for date, g_day in g_staff.groupby("date"):
-                 idxs = g_day.sort_values("hour").index.tolist()
-                 
-                 for k in range(len(idxs) - 6):
-                     model += lpSum(x[i] for i in idxs[k:k+7]) <= 6
-                     
-    
-         model.solve()
-         selected = [i for i in df.index if x[i].value() == 1]
+            shift_ass_df = pd.DataFrame(shift_ass)
 
-         shift_df = df.loc[selected].copy()
-         shift_df["note"] = ""
-
-         lack_rows = []
-
-         for (date, hour), v in not_enough.items():
-             shortage = int(v.value())
-             for _ in range(9 , 24):
-                for _ in range(shortage):
-                 lack_rows.append({
-                     "date": date,
-                     "hour": hour,
-                     "staff_id": -1,
-                     "name": "not enough",
-                     "level": None,
-                     "status": None,
-                     "salary": 0,
-                     "note": "shortage"
-                 })
-
-         lack_df = pd.DataFrame(lack_rows)
-
-         final_shift = pd.concat(
-             [shift_df, lack_df],
-             ignore_index=True
-             ).sort_values(["date", "hour", "staff_id"])
-
-         final_shift = final_shift[["date","hour","staff_id","name","level","note","salary"]]
+        else:
+            print("No solution found.")
+            shift_ass_df = pd.DataFrame()
+            
+        staff_df = self.get_staff_data_df()
+        shift_ass_df = shift_ass_df.merge(staff_df , how="left", on= "id")
+        shift_ass_df["salary"] = shift_ass_df["level"].apply(self.salary).astype(int)
         
-         return final_shift
+        # 実際の人件費
+        actual_cost = (
+            shift_ass_df
+            .groupby(["date", "hour"])["salary"]
+            .sum()
+        )
 
-   
-    
+        # 実際の人数
+        actual_count = (
+            shift_ass_df
+            .groupby(["date", "hour"])["id"]
+            .count()
+        )
+
+        # max_cost
+        max_cost = (
+            df
+            .groupby(["date", "hour"])["max_cost"]
+            .first()
+        )
+
+        # 1人あたり最低給料（基準）
+        min_salary = df["salary"].min()
+
+        result = []
+
+        for key in max_cost.index:
+            mc = max_cost.loc[key]
+            ac = actual_cost.get(key, 0)
+            cnt = actual_count.get(key, 0)
+
+        # max_costベースで入れられる最大人数
+            max_possible = mc // min_salary
+
+            shortage = max_possible - cnt
+
+            if shortage > 0:
+                result.append({
+                    "date": key[0],
+                    "hour": key[1],
+                    "max_cost": mc,
+                    "actual_cost": ac,
+                    "actual_staff": cnt,
+                    "can_add_staff": shortage
+                })
+
+        shortage_df = pd.DataFrame(result)
+        result = shift_ass_df.merge(
+            shortage_df[["date", "hour", "can_add_staff"]],
+            on=["date", "hour"],
+            how="left"
+        )
+
+        result["can_add_staff"] = result["can_add_staff"].fillna("perfect")
+
+            
+        return result
+
+            
+
 
     def shift_save_db(self):
-        df = self.combine_data()
-        shift_rows = self.create_shift(df)
+        df = self.run()
+        if df.empty:
+            return []
 
         db: Session = next(get_db())
 
+    # 対象期間のシフトを一旦削除
         db.query(ShiftMain).filter(
             ShiftMain.date >= self.start_date,
             ShiftMain.date <= self.end_date
-        ).delete()
-
+            ).delete()
         db.commit()
 
-        objs = [
-            ShiftMain(
-                date=row["date"],
-                hour=int(row["hour"]),
-                staff_id=int(row["staff_id"]) if not pd.isna(row["staff_id"]) else -1,
-                name=str(row["name"]) if pd.notna(row["name"]) else "not enough",
-                level=int(row["level"]) if pd.notna(row["level"]) else 0,
-                note=row.get("note") or "",
+        objs = []
+        for row in df.itertuples(index=False):
+
+        # "perfect" → None に変換（DB仕様）
+            can_add_staff = (
+                None if row.can_add_staff == "perfect"
+                else int(row.can_add_staff)
             )
-            for _, row in shift_rows.iterrows()
-        ]
+
+        objs.append(
+            ShiftMain(
+                date=row.date,
+                hour=int(row.hour),
+                staff_id=int(row.id),
+                name=row.name,
+                level=int(row.level) if row.level is not None else None,
+                status=row.status,          
+                salary=int(row.salary),    
+                can_add_staff=can_add_staff
+            )
+        )
 
         db.add_all(objs)
         db.commit()
 
-        return shift_rows.to_dict(orient="records")
+        return df.to_dict(orient="records")
+           
+
+
+
 
     @staticmethod
     def get_shift_main():

@@ -12,11 +12,12 @@ fake = Faker("ja_JP")
 STATUS_LIST = ["full-time","part-time", "international"]
 GENDER_LIST = ["male", "female"]
 
-def random_time_pair():
-    start_hour = random.randint(9, 16)
-    duration = random.choice([2, 3, 4, 5, 6])
+def random_time_pair_min_5h():
+    start_hour = random.randint(9, 14)  # 朝〜昼スタート
+    duration = random.randint(5, 8)     # 最低5時間
     end_hour = min(start_hour + duration, 23)
     return time(start_hour, 0), time(end_hour, 0)
+
 
 
 def create_staff(session: Session, n=30):
@@ -42,20 +43,19 @@ def create_staff(session: Session, n=30):
     return staff_list
 
 
-def create_shift_preferences(session: Session, staff_list, days=14):
+def create_shift_preferences(session: Session, staff_list):
     today = date.today()
+    all_dates = [today + timedelta(days=i) for i in range(7)]  # 1週間
 
     for staff in staff_list:
-        dates = random.sample(
-            [today + timedelta(days=i) for i in range(days)],
-            k=random.randint(3, days)
-        )
+        # 1人あたり必ず5日
+        work_dates = random.sample(all_dates, k=5)
 
-        for work_date in dates:
-            start_time, end_time = random_time_pair()
+        for work_date in work_dates:
+            start_time, end_time = random_time_pair_min_5h()
 
             shift = ShiftPre(
-                staff=staff,
+                staff_id=staff.id,   # ← 明示的にすると事故らない
                 date=work_date,
                 start_time=start_time,
                 end_time=end_time
@@ -63,6 +63,7 @@ def create_shift_preferences(session: Session, staff_list, days=14):
             session.add(shift)
 
     session.commit()
+
 
 
 def main():
@@ -73,7 +74,7 @@ def main():
     session.query(Staff).delete()
     session.commit()
 
-    staff_list = create_staff(session, n=40)
+    staff_list = create_staff(session, n=30)
     create_shift_preferences(session, staff_list)
 
     session.close()
