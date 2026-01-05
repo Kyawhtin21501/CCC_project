@@ -21,7 +21,7 @@ class ShiftMain(Base):
     salary = Column(Integer, nullable=False)
 
     # 予測・最適化結果
-    can_add_staff = Column(Integer, nullable=True)  
+    
     # null = perfect（追加不要）
     # 数値 = あと何人入れられるか
 
@@ -35,7 +35,6 @@ class ShiftMain(Base):
             "level": self.level,
             "status": self.status,
             "salary": self.salary,
-            "can_add_staff": (
-                "perfect" if self.can_add_staff is None else self.can_add_staff
-            )
+      
+            
         }

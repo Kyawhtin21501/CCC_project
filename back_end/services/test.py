@@ -295,7 +295,7 @@ if __name__ == "__main__":
     df3 = sa.run()
     #print(df.to_string())
     print(df2.head(50))
-    print(df3.head(5))
+    print(df3.to_string())
 
     
     
