@@ -113,7 +113,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
       drawer: const AppDrawer(currentScreen: DrawerScreen.staffProfile),
       body: Stack(
         children: [
@@ -193,7 +193,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
               // Ensures the DataTable fills at least the available screen width
               constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
               child: DataTable(
-                headingRowColor: MaterialStateProperty.all(theme.colorScheme.surfaceVariant.withOpacity(0.3)),
+                headingRowColor: WidgetStateProperty.all(theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)),
                 horizontalMargin: 24,
                 columnSpacing: 24,
                 columns: const [
@@ -321,7 +321,7 @@ class StaffFormBody extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: status,
+            initialValue: status,
             decoration: const InputDecoration(labelText: '雇用形態', border: OutlineInputBorder()),
             items: ['高校生', '留学生', 'フルタイム', 'パートタイム'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
             onChanged: onStatusChanged,
