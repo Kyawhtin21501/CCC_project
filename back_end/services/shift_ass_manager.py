@@ -17,7 +17,7 @@ class ShiftAss:
     def __init__(self,start_date,end_date):
         self.start_date = start_date
         self.end_date = end_date
-        self.help_id = 1500  # 十分なスタッフがいない場合のダミースタッフID
+        self.help_id = 1500  
         self.model = cp_model.CpModel()
         self.work = {}
         self.cost = {}
@@ -74,9 +74,9 @@ class ShiftAss:
 
     def salary(self, level):
         if level in [1, 2]:
-            return 1300
+            return 1200
         elif level == 3:
-            return 1350
+            return 1250
         elif level == 4:
             return 1400
         else:
@@ -174,48 +174,75 @@ class ShiftAss:
             model.Add(sum(slot_vars) == num_staff) 
 
             # 2. 責任者制約 (L4以上 or Help)
-            leader_vars = [work[row["id"], d, h] for _, row in group.iterrows() 
-                           if staff_info.get(row["id"], {}).get('level', 0) >= 4 or row["id"] == self.help_id]
-            if leader_vars:
-                model.Add(sum(leader_vars) >= 1)
+         
 
+            # 3. Level 3 枠の制約 (L3がいなければL5、L5もいなければHelp)
+            # 「L3 or L5 or Help」が1人以上
+        
+            l4_vars = [work[row["id"], d, h] for _, row in group.iterrows() 
+                       if row["id"] == self.help_id
+                       or staff_info.get(row["id"], {}).get('level') in [3 , 4 ,5]
+                       ]
+            model.Add(sum(l4_vars) >= 1)
+        """
+            # 3. Level 3 枠の制約 (L3 or L5 or Help が必須)
+            l3_vars = [work[row["id"], d, h] for _, row in group.iterrows() 
+                       if  
+                       or staff_info.get(row["id"], {}).get('level') == 5 
+                       or row["id"] == self.help_id]
+            model.Add(sum(l3_vars) >= 1)
+        """
         # 3. 個別・連続性ルール
         for s in staff_ids:
             if s == self.help_id: continue
             
-            status = staff_info.get(s, {}).get('status', 'unknown')
-
-            # 【留学生】週28時間
-            if status == "international":
-                weekly_vars = [v for (sid, date, hour), v in work.items() if sid == s]
-                model.Add(sum(weekly_vars) <= 28)
-
             for d in dates:
-                for h in range(9, 25):
+                day_hours = range(9, 25)
+                # この日のこの人の全勤務変数
+                d_vars = [work[s, d, h] for h in day_hours if (s, d, h) in work]
+                if not d_vars: continue
+
+                # 【1時間限定の休憩】を検知する変数
+                break_starts = []
+                for h in day_hours:
                     if (s, d, h) not in work: continue
+                    
+                    # --- 休憩検知 (1->0) ---
+                    if h > 9 and (s, d, h-1) in work:
+                        is_brk = model.NewBoolVar(f'brk_{s}_{d}_{h}')
+                        # 直前が1 かつ 今が0 の時だけ is_brk=1
+                        model.Add(is_brk >= work[s, d, h-1] - work[s, d, h])
+                        break_starts.append(is_brk)
+                        # 休憩は1時間だけ（次は必ず仕事に戻る）
+                        if (s, d, h+1) in work:
+                            model.Add(work[s, d, h+1] >= is_brk)
 
-                    # 【高校生】22時まで
-                    if status == "high_school" and h >= 22:
-                        model.Add(work[s, d, h] == 0)
+                    # --- 【重要】連続勤務は最大5時間まで（6時間連続勤務を禁止） ---
+                    # 誰であっても、6時間連続で「1」が続くことを数学的に禁止する
+                    window_6 = [work[s, d, h + i] for i in range(6) if (s, d, h + i) in work]
+                    if len(window_6) == 6:
+                        model.Add(sum(window_6) <= 5) # 6時間のうち仕事は5時間以内＝必ず1時間は休む
 
-                    # 【最低3時間連続】開始検知
-                    w_curr = work[s, d, h]
-                    w_prev = work[s, d, h-1] if (s, d, h-1) in work else 0
-                    start_working = model.NewBoolVar(f'start_{s}_{d}_{h}')
-                    model.Add(start_working >= w_curr - w_prev)
-                    if (s, d, h+1) in work: model.Add(work[s, d, h+1] >= start_working)
-                    if (s, d, h+2) in work: model.Add(work[s, d, h+2] >= start_working)
+                # --- 1日の合計が6時間を超えたら、必ず1回は休憩を「開始」させる ---
+                if break_starts:
+                    # 休憩開始（1->0）の合計回数を「最大2回」に制限
+                    model.Add(sum(break_starts) <= 3)
 
-                    # 【休憩】6時間枠で最大5時間
-                    window_6h = [work[s, d, h+i] for i in range(6) if (s, d, h+i) in work]
-                    if len(window_6h) == 6:
-                        model.Add(sum(window_6h) <= 5)
+                # 4. 6時間超えの勤務なら最低1回は休憩を入れる
+                total_w = sum(work[s, d, h] for h in day_hours)
+                has_long_shift = model.NewBoolVar(f'long_{s}_{d}')
+                model.Add(total_w > 6).OnlyEnforceIf(has_long_shift)
+                model.Add(total_w <= 6).OnlyEnforceIf(has_long_shift.Not())
+                if break_starts:
+                    model.Add(sum(break_starts) >= 1).OnlyEnforceIf(has_long_shift)
+                   
+               
 
         # 4. 目的関数
         obj_terms = []
         for (s, d, h), w in work.items():
             if s == self.help_id:
-                obj_terms.append(w * 100000)
+                obj_terms.append(w * 1000)
             else:
                 obj_terms.append(w * 1)
 
@@ -268,7 +295,7 @@ class ShiftAss:
                     ShiftMain(
                         date=row.date,
                         hour=int(row.hour),
-                        staff_id=int(row.staff_id), # idではなくstaff_idへ
+                        staff_id=int(row.staff_id), 
                         name=row.name,
                         level=int(row.level),
                         status=row.status, 
