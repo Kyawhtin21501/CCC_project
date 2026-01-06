@@ -388,7 +388,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     final names = actualStaff.map((s) => s['name'].toString()).toSet().toList();
     
     // Config for the chart horizontal scroll
-    const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0];
+    const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
     const double hourWidth = 45.0;
     const double labelWidth = 110.0;
 

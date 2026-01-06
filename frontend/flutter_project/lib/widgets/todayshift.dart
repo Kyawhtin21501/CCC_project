@@ -81,7 +81,7 @@ class TodayShiftCard extends StatelessWidget {
               // --- HEADER ROW (Hours) ---
               TableRow(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                 ),
                 children: [
                   const TableCell(child: Padding(padding: EdgeInsets.all(8), child: Text("氏名", style: TextStyle(fontWeight: FontWeight.bold)))),
