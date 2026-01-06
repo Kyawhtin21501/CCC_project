@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 // Note: Assuming DashboardScreen is located in daily_report.dart based on original usage context
-import 'package:predictor_web/screens/daily_report.dart'; 
-import 'package:predictor_web/screens/staff_profile.dart' ;
-import 'package:predictor_web/screens/shfit_managment.dart';
+import 'package:omakase_shift/screens/daily_report.dart'; 
+import 'package:omakase_shift/screens/staff_profile.dart' ;
+import 'package:omakase_shift/screens/shfit_managment.dart';
 
 /// Enum defining the available screens/destinations in the application drawer.
 enum DrawerScreen { dashboard, shiftCreate, shiftRequest, staffProfile, shiftManagement }

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
-import 'package:predictor_web/services/api_services.dart';
-import 'package:predictor_web/widgets/appdrawer.dart';
-import 'package:predictor_web/widgets/custom_menubar.dart';
-import 'package:predictor_web/widgets/responsiveCard.dart';
-import 'package:predictor_web/widgets/charts.dart';
-import 'package:predictor_web/widgets/todayshift.dart';
+import 'package:omakase_shift/services/api_services.dart';
+import 'package:omakase_shift/widgets/appdrawer.dart';
+import 'package:omakase_shift/widgets/custom_menubar.dart';
+import 'package:omakase_shift/widgets/responsiveCard.dart';
+import 'package:omakase_shift/widgets/charts.dart';
+import 'package:omakase_shift/widgets/todayshift.dart';
 
 /// [DashboardScreen] is the primary landing page of the application.
 /// It serves three main purposes:

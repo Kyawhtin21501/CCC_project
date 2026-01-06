@@ -65,9 +65,9 @@ class ShiftAss:
             return sales * 0.052
         elif hour in [12, 13, 14, 15]:
             return sales * 0.1
-        elif hour in [16, 17, 23]:
+        elif hour in [16, 17]:
             return sales * 0.07
-        elif hour in [18, 19, 20]:
+        elif hour in [18, 19, 20 ,23]:
             return sales * 0.08
         else:
             return sales * 0.09

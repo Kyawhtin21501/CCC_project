@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:predictor_web/theme_provider/them.dart';
+import 'package:omakase_shift/theme_provider/them.dart';
 
 /// A custom app bar/menu bar component used across the application.
 /// It features the title, a menu button to open the drawer, and a theme toggle button.

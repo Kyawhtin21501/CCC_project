@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:predictor_web/screens/daily_report.dart';
-import 'package:predictor_web/theme_provider/them.dart';
-import 'package:predictor_web/theme_provider/theme_color.dart';
+import 'package:omakase_shift/screens/daily_report.dart';
+import 'package:omakase_shift/theme_provider/them.dart';
+import 'package:omakase_shift/theme_provider/theme_color.dart';
 import 'package:provider/provider.dart';
 
 

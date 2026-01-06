@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:predictor_web/services/api_services.dart';
-import 'package:predictor_web/widgets/appdrawer.dart';
-import 'package:predictor_web/widgets/custom_menubar.dart';
+import 'package:omakase_shift/services/api_services.dart';
+import 'package:omakase_shift/widgets/appdrawer.dart';
+import 'package:omakase_shift/widgets/custom_menubar.dart';
 
 /// Screen for managing staff records. 
 /// Features: List view, Search/Filter, Create (Dialog), Edit (Side Sheet), and Delete.

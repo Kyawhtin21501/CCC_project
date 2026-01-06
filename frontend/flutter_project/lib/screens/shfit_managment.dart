@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:predictor_web/services/api_services.dart';
-import 'package:predictor_web/widgets/appdrawer.dart';
-import 'package:predictor_web/widgets/custom_menubar.dart';
+import 'package:omakase_shift/services/api_services.dart';
+import 'package:omakase_shift/widgets/appdrawer.dart';
+import 'package:omakase_shift/widgets/custom_menubar.dart';
 
 /// Defines the view modes for the screen.
 /// [manual] is for staff to enter their availability.

@@ -17,7 +17,7 @@ class ApiService {
     if (kReleaseMode) {
       return 'https://ccc-project.onrender.com';
     }
-    return 'http://127.0.0.1:5000';
+    return 'http://100.64.1.79:5000';
   }
 
   /// Default headers used for JSON-based communication.
