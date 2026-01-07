@@ -4,7 +4,7 @@
   ],
   "packages": [
     {
-      "name": "predictor_web",
+      "name": "omakase_shift",
       "version": "1.0.0+1",
       "dependencies": [
         "calendar_view",
