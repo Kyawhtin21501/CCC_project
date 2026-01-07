@@ -43,3 +43,4 @@ urllib3==2.6.2
 urllib3-future==2.15.901
 wassima==2.0.3
 Werkzeug==3.1.4
+xgboost==3.1.2
