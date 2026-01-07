@@ -17,7 +17,7 @@ class ApiService {
     if (kReleaseMode) {
       return 'https://ccc-project.onrender.com';
     }
-    return 'http://100.64.1.79:5000';
+    return 'http://10.116.15.242:5000';//have to use local network IP for device testing!!!!!
   }
 
   /// Default headers used for JSON-based communication.

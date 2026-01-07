@@ -91,7 +91,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
         context: context,
         barrierDismissible: true,
         barrierLabel: 'Close',
-        barrierColor: Colors.black54,
+        barrierColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
         transitionDuration: const Duration(milliseconds: 300),
         pageBuilder: (context, anim1, anim2) => Align(
           alignment: Alignment.centerRight,
@@ -113,7 +113,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+      backgroundColor: theme.colorScheme.surface,
       drawer: const AppDrawer(currentScreen: DrawerScreen.staffProfile),
       body: Stack(
         children: [
@@ -193,18 +193,19 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
               // Ensures the DataTable fills at least the available screen width
               constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 48),
               child: DataTable(
+                
                 headingRowColor: WidgetStateProperty.all(theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)),
                 horizontalMargin: 24,
                 columnSpacing: 24,
-                columns: const [
-                  DataColumn(label: Text('No.', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('氏名', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('種別', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('性別', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('年齢', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('メール', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Lv', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('操作', style: TextStyle(fontWeight: FontWeight.bold))),
+                columns: [
+                  DataColumn(label: Text('No.', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('氏名', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('種別', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('性別', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('年齢', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('メール', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('Lv', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
+                  DataColumn(label: Text('操作', style: TextStyle(fontWeight: FontWeight.bold,color: Theme.of(context).colorScheme.onSurface))),
                 ],
                 rows: _filteredStaff.asMap().entries.map((entry) {
                   final index = entry.key;
@@ -264,7 +265,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('削除'),
+        title: const Text('削除', style: TextStyle(color: Colors.red)),
         content: Text('${staff['name']}を削除しますか？'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('キャンセル')),
@@ -400,6 +401,7 @@ class _StaffEditSideSheet extends StatefulWidget {
   State<_StaffEditSideSheet> createState() => _StaffEditSideSheetState();
 }
 
+
 class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _name, _email, _age, _level;
@@ -409,7 +411,6 @@ class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with existing staff data
     _name = TextEditingController(text: widget.staff['name']?.toString());
     _email = TextEditingController(text: widget.staff['e_mail']?.toString());
     _age = TextEditingController(text: widget.staff['age']?.toString());
@@ -421,51 +422,109 @@ class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
     return Material(
+      // surface automatically switches between white (light) and dark gray (dark)
       color: theme.colorScheme.surface,
       child: Container(
         width: 450,
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
+          // Uses the theme's standard divider/outline color
           border: Border(left: BorderSide(color: theme.colorScheme.outlineVariant)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)]
+          boxShadow: [
+            BoxShadow(
+              // Adaptive shadow: softer in dark mode
+              color: theme.brightness == Brightness.light 
+                  ? Colors.black.withOpacity(0.1) 
+                  : Colors.black.withOpacity(0.4), 
+              blurRadius: 10,
+            )
+          ],
         ),
         child: Column(
           children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('編集', style: theme.textTheme.headlineSmall),
-              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-            ]),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+              children: [
+                Text(
+                  '編集', 
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    // Forces the text to be black in light mode and white in dark mode
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context), 
+                  icon: const Icon(Icons.close),
+                  // Secondary text/icon color for the close button
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
             const Divider(),
             const SizedBox(height: 16),
-            Expanded(child: SingleChildScrollView(child: StaffFormBody(
-              formKey: _formKey, name: _name, email: _email, age: _age, level: _level, status: _status, gender: _gender,
-              onStatusChanged: (v) => setState(() => _status = v!), 
-              onGenderChanged: (v) => setState(() => _gender = v!),
-            ))),
-            // Bottom Action Button
-            SizedBox(width: double.infinity, height: 50, child: FilledButton(
-              onPressed: _isSaving ? null : () async {
-                if (!_formKey.currentState!.validate()) return;
-                setState(() => _isSaving = true);
-                try {
-                  await ApiService.patchStaffProfile(widget.staff['id'] ?? widget.staff['ID'], {
-                    'name': _name.text, 'e_mail': _email.text, 'age': int.tryParse(_age.text) ?? 0,
-                    'level': int.tryParse(_level.text) ?? 1, 'gender': _gender, 'status': _status
-                  });
-                  widget.onSave();
-                  Navigator.pop(context);
-                } finally {
-                  if (mounted) setState(() => _isSaving = false);
-                }
-              },
-              child: _isSaving 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
-                : const Text('保存'),
-            ))
+            Expanded(
+              child: SingleChildScrollView(
+                child: StaffFormBody(
+                  formKey: _formKey, 
+                  name: _name, 
+                  email: _email, 
+                  age: _age, 
+                  level: _level, 
+                  status: _status, 
+                  gender: _gender,
+                  onStatusChanged: (v) => setState(() => _status = v!), 
+                  onGenderChanged: (v) => setState(() => _gender = v!),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity, 
+              height: 50, 
+              child: FilledButton(
+                onPressed: _isSaving ? null : _handleSave,
+                child: _isSaving 
+                  ? const SizedBox(
+                      width: 20, 
+                      height: 20, 
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2, 
+                        // Automatically uses the theme's "onPrimary" color
+                        color: Colors.white, 
+                      ),
+                    ) 
+                  : const Text('保存'),
+              ),
+            )
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleSave() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+    try {
+      await ApiService.patchStaffProfile(widget.staff['id'] ?? widget.staff['ID'], {
+        'name': _name.text, 
+        'e_mail': _email.text, 
+        'age': int.tryParse(_age.text) ?? 0,
+        'level': int.tryParse(_level.text) ?? 1, 
+        'gender': _gender, 
+        'status': _status
+      });
+      widget.onSave();
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('保存に失敗しました')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 }
