@@ -13,3 +13,5 @@ __pycache__/
 .DS_Store
 venv312/
 .venv/
+.fvm/flutter_sdk
+.vscode/
