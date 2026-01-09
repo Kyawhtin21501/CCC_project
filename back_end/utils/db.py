@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 Base = declarative_base()
 
 #BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_FILE = "postgresql://kyawhtin21501:BFqWIxdu9xN2VXK2ewpV5ow4ApyTVLGQ@dpg-d5ft50vpm1nc73dmc9c0-a.virginia-postgres.render.com/ccc_project"
+DATABASE_FILE = "postgresql://kyawhtin21501:JnLswv2jDtr9n152yzQbYRlksKV5llil@dpg-d4tdl1k9c44c73bm0b0g-a/omakase_shift_5rie"
 DATABASE_URL = f"{DATABASE_FILE}"
 
 
