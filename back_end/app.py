@@ -1,5 +1,5 @@
 from flask import Flask
-from .routes.staff_routes import staff_bp
+from  .routes.staff_routes import staff_bp
 from  .routes.shift_pre_routes import shift_pre_bp
 from  .routes.daily_report_route import daily_report_bp
 from  .routes.prediction_routes import pred_sales_bp
