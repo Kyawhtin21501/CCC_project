@@ -10,15 +10,15 @@ from flask_cors import CORS
 
 
 def create_app():
-    app = Flask(__name__)
+    application = Flask(__name__)
     CORS(app)
 
-    app.register_blueprint(staff_bp)
-    app.register_blueprint(shift_pre_bp)
-    app.register_blueprint(daily_report_bp)
-    app.register_blueprint(pred_sales_bp)
-    app.register_blueprint(shift_ass_bp)
-    return app
+    application.register_blueprint(staff_bp)
+    application.register_blueprint(shift_pre_bp)
+    application.register_blueprint(daily_report_bp)
+    application.register_blueprint(pred_sales_bp)
+    application.register_blueprint(shift_ass_bp)
+    return application
 
 
 
