@@ -1,13 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
+
 
 
 Base = declarative_base()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_FILE = os.path.join(BASE_DIR, "../../ccc_project.db")
-DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
+#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_FILE = "postgresql://kyawhtin21501:BFqWIxdu9xN2VXK2ewpV5ow4ApyTVLGQ@dpg-d5ft50vpm1nc73dmc9c0-a.virginia-postgres.render.com/ccc_project"
+DATABASE_URL = f"{DATABASE_FILE}"
 
 
 
