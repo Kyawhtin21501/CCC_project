@@ -1,16 +1,17 @@
-import os
+# 修正前 (相対インポート)
+# from .database import engine, Base 
+
+# 修正後 (絶対パスで指定)
+
+from back_end.utils.db import engine, Base
 from flask import Flask
 from flask_cors import CORS
-
-# --- 修正点1: Base と engine を database.py からインポートする ---
-from .database import engine, Base 
-
-# 各ルートのインポート
-from .routes.staff_routes import staff_bp
-from .routes.shift_pre_routes import shift_pre_bp
-from .routes.daily_report_route import daily_report_bp
-from .routes.prediction_routes import pred_sales_bp
-from .routes.shift_routes import shift_ass_bp
+# その他のインポートも同様に「back_end.」から始めてください
+from back_end.routes.staff_routes import staff_bp
+from back_end.routes.shift_pre_routes import shift_pre_bp
+from back_end.routes.daily_report_route import daily_report_bp
+from back_end.routes.prediction_routes import pred_sales_bp
+from back_end.routes.shift_routes import shift_ass_bp
 
 def create_app():
     application = Flask(__name__)
