@@ -1,12 +1,9 @@
-# 修正前 (相対インポート)
-# from .database import engine, Base 
 
-# 修正後 (絶対パスで指定)
 
 from back_end.utils.db import engine, Base
 from flask import Flask
 from flask_cors import CORS
-# その他のインポートも同様に「back_end.」から始めてください
+
 from back_end.routes.staff_routes import staff_bp
 from back_end.routes.shift_pre_routes import shift_pre_bp
 from back_end.routes.daily_report_route import daily_report_bp
@@ -29,17 +26,17 @@ def create_app():
 # アプリのインスタンスを作成
 app = create_app()
 
-# --- 修正点2: テーブルの自動作成（関数の外で1回だけ実行） ---
+
 with app.app_context():
     try:
-        # モデルを読み込んで Base にテーブル情報を登録させる
+     
         from . import models 
-        # Base と engine を使って実際にテーブルを作成
+
         Base.metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully!")
+        print("Database tables created successfully!")
     except Exception as e:
-        print(f"❌ Database table creation failed: {e}")
+        print(f"Database table creation failed: {e}")
 
 if __name__ == "__main__":
-    # ローカル実行用
+    # local
     app.run(host="0.0.0.0", port=5000, debug=True)
