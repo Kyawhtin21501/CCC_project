@@ -5,15 +5,13 @@ import 'package:omakase_shift/services/api_services.dart';
 import 'package:omakase_shift/widgets/appdrawer.dart';
 import 'package:omakase_shift/widgets/custom_menubar.dart';
 
-/// Defines the view modes for the screen.
-/// [manual] is for staff to enter their availability.
-/// [auto] is for admins to generate and view AI-predicted shifts.
+/// [ShiftMode] toggles the UI between staff input and admin AI generation.
 enum ShiftMode { manual, auto }
 
-/// Data model representing a staff member.
-/// Supports flexible mapping from various API response formats (staff_id vs id).
+/// [Staff] model handles data mapping from backend JSON.
 class Staff {
-  final String id, name;
+  final String id;
+  final String name;
   final int? level;
 
   Staff({required this.id, required this.name, this.level});
@@ -33,29 +31,27 @@ class ShiftManagementScreen extends StatefulWidget {
 }
 
 class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
-  // UI State management
+  // --- STATE VARIABLES ---
   ShiftMode _selectedMode = ShiftMode.manual;
   List<Staff> staffList = [];
-  bool _loading = false;      // Main data loading
-  bool _isSaving = false;     // Blocking overlay for API writes
-  bool _isGenerating = false; // Progress indicator for AI generation
+  bool _loading = false;
+  bool _isSaving = false;
+  bool _isGenerating = false;
 
-  // Calendar State
+  // --- CALENDAR & DATE STATE ---
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
-
-  /// Local state for shift preferences.
-  /// Structure: { "YYYY-MM-DD": { "staffId": { "startTime": "HH:mm", "endTime": "HH:mm" } } }
-  Map<String, Map<String, Map<String, String>>> preferences = {};
-  
-  /// Stores raw data from the AI generation API
-  List<Map<String, dynamic>> _predictedShifts = [];
-
-  // Range for AI Generation
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 6));
 
-  /// Generates a list of strings from 00:00 to 23:30 in 30-minute increments.
+  /// Internal cache for shift preferences.
+  /// Format: { "YYYY-MM-DD": { "staffId": { "startTime": "HH:mm", "endTime": "HH:mm" } } }
+  final Map<String, Map<String, Map<String, String>>> _preferences = {};
+
+  /// Stores raw data retrieved from AI generation endpoint.
+  List<Map<String, dynamic>> _predictedShifts = [];
+
+  /// Standard 30-minute intervals for dropdown selectors.
   final List<String> _timeOptions = List.generate(48, (index) {
     final hour = (index ~/ 2).toString().padLeft(2, '0');
     final minute = (index % 2 == 0) ? '00' : '30';
@@ -70,7 +66,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   // --- API LOGIC ---
 
-  /// Initial load: Fetches the list of active staff members.
   Future<void> _loadInitialData() async {
     setState(() => _loading = true);
     try {
@@ -89,7 +84,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  /// Sends a specific staff member's preference for the selected date to the backend.
   Future<void> _savePreference(Staff staff) async {
     setState(() => _isSaving = true);
     final dateKey = _dateKey(_selectedDay ?? _focusedDay);
@@ -109,40 +103,42 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  /// Triggers the AI logic to calculate the optimal shift table based on 
-  /// predicted sales, required labor, and staff preferences.
   Future<void> _generateAutoShifts() async {
-    setState(() { _isGenerating = true; _predictedShifts = []; });
+    setState(() {
+      _isGenerating = true;
+      _predictedShifts = [];
+    });
     try {
       final data = await ApiService.fetchAutoShiftTable(_startDate, _endDate);
-      setState(() => _predictedShifts = List<Map<String, dynamic>>.from(data));
-      if (mounted) _showSnackBar("AIシフトを生成しました");
+      if (mounted) {
+        setState(() => _predictedShifts = List<Map<String, dynamic>>.from(data));
+        _showSnackBar("AIシフトを生成しました");
+      }
     } catch (e) {
-      if (mounted) _showSnackBar("AI生成に失敗しました: $e", isError: true);
+      if (mounted) _showSnackBar("AI生成に失敗しました", isError: true);
     } finally {
       if (mounted) setState(() => _isGenerating = false);
     }
   }
 
-  // --- HELPERS ---
+  // --- HELPER METHODS ---
 
   String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
-  /// Safe accessor for the preference map. 
-  /// Initializes nested maps if they don't exist to prevent Null Pointer Exceptions.
   Map<String, String> _getPrefs(String staffId) {
     final dKey = _dateKey(_selectedDay ?? _focusedDay);
-    preferences[dKey] ??= {};
-    return preferences[dKey]![staffId] ??= {'startTime': '09:00', 'endTime': '18:00'};
+    _preferences[dKey] ??= {};
+    return _preferences[dKey]![staffId] ??= {
+      'startTime': '09:00',
+      'endTime': '18:00'
+    };
   }
 
-  /// Reorganizes the flat list of shift objects into a Map grouped by Date.
-  /// Essential for rendering the timeline view cards.
   Map<String, List<Map<String, dynamic>>> _groupShiftsByDate() {
     final Map<String, List<Map<String, dynamic>>> map = {};
     for (var s in _predictedShifts) {
       if (s['date'] == null) continue;
-      final d = s['date'].toString().split(' ')[0]; // Extract YYYY-MM-DD
+      final d = s['date'].toString().split(' ')[0];
       map.putIfAbsent(d, () => []).add(s);
     }
     return map;
@@ -152,13 +148,15 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        backgroundColor: isError
+            ? Theme.of(context).colorScheme.error
+            : Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  // --- UI BUILDING ---
+  // --- MAIN UI COMPOSITION ---
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +171,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(isMobile ? 12 : 24, 110, isMobile ? 12 : 24, 40),
+                    padding: EdgeInsets.fromLTRB(
+                      isMobile ? 12 : 24,
+                      110,
+                      isMobile ? 12 : 24,
+                      40,
+                    ),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 1100),
@@ -181,8 +184,11 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _selectedMode == ShiftMode.manual ? "スタッフの出勤希望入力" : "AIシフト自動生成・分析",
-                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+                              _selectedMode == ShiftMode.manual
+                                  ? "スタッフの出勤希望入力"
+                                  : "AIシフト自動生成・分析",
+                              style: theme.textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(height: 24),
                             _buildModeToggle(theme),
@@ -196,10 +202,10 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                     ),
                   ),
           ),
-          
-          /// Fixed Menu Bar (Header)
           Positioned(
-            top: 28, left: 16, right: 16,
+            top: 28,
+            left: 16,
+            right: 16,
             child: Builder(
               builder: (scaffoldContext) => CustomMenuBar(
                 title: 'シフト作成・管理',
@@ -207,22 +213,31 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
               ),
             ),
           ),
-
-          /// Global Loading Overlay for Save operations
-          if (_isSaving) Container(color: Colors.black12, child: const Center(child: CircularProgressIndicator())),
+          if (_isSaving)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
         ],
       ),
     );
   }
 
-  /// Toggle button to switch between Manual Preference entry and AI Generation view.
   Widget _buildModeToggle(ThemeData theme) {
     return SizedBox(
       width: double.infinity,
       child: SegmentedButton<ShiftMode>(
         segments: const [
-          ButtonSegment(value: ShiftMode.manual, label: Text('希望入力'), icon: Icon(Icons.edit_calendar)),
-          ButtonSegment(value: ShiftMode.auto, label: Text('AI予測'), icon: Icon(Icons.auto_awesome)),
+          ButtonSegment(
+            value: ShiftMode.manual,
+            label: Text('希望入力'),
+            icon: Icon(Icons.edit_calendar),
+          ),
+          ButtonSegment(
+            value: ShiftMode.auto,
+            label: Text('AI予測'),
+            icon: Icon(Icons.auto_awesome),
+          ),
         ],
         selected: {_selectedMode},
         onSelectionChanged: (set) => setState(() => _selectedMode = set.first),
@@ -230,7 +245,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  // --- MANUAL VIEW WIDGETS ---
+  // --- MANUAL VIEW ---
 
   Widget _buildManualView(ThemeData theme, bool isMobile) {
     return Column(
@@ -240,25 +255,32 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         const SizedBox(height: 32),
         Row(
           children: [
-            const Icon(Icons.people_outline, size: 20),
+            Icon(Icons.people_outline, size: 20, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
             Text(
               "${DateFormat('MM月dd日').format(_selectedDay ?? _focusedDay)} の希望状況",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        if (staffList.isEmpty) const Center(child: Padding(padding: EdgeInsets.all(40), child: Text("スタッフが登録されていません")))
-        else ...staffList.map((staff) => _buildStaffCard(staff, theme, isMobile)),
+        if (staffList.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: Text("スタッフが登録されていません"),
+            ),
+          )
+        else
+          ...staffList.map((staff) => _buildStaffCard(staff, theme, isMobile)),
       ],
     );
   }
 
-  /// Wraps the [TableCalendar]. This serves as the primary date selector for manual entry.
   Widget _buildCalendarCard(ThemeData theme) {
     return Card(
       elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
@@ -274,78 +296,121 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
             _selectedDay = selected;
             _focusedDay = focused;
           }),
-          headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
+          headerStyle: HeaderStyle(
+            formatButtonVisible: false,
+            titleCentered: true,
+            titleTextStyle: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           calendarStyle: CalendarStyle(
-            selectedDecoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
-            todayDecoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.3), shape: BoxShape.circle),
+            selectedDecoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            todayDecoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            todayTextStyle: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+            weekendTextStyle: TextStyle(color: theme.colorScheme.error),
           ),
         ),
       ),
     );
   }
 
-  /// Individual card for each staff member to select start/end times.
-  /// Adjusts layout (Column vs Row) based on screen width.
   Widget _buildStaffCard(Staff staff, ThemeData theme, bool isMobile) {
     final prefs = _getPrefs(staff.id);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
+      color: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: isMobile 
-        ? Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(child: Text(staff.name[0])),
-                title: Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              const Divider(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: isMobile
+            ? Column(
                 children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.secondaryContainer,
+                      child: Text(
+                        staff.name[0],
+                        style: TextStyle(color: theme.colorScheme.onSecondaryContainer),
+                      ),
+                    ),
+                    title: Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _timeDropdown(prefs['startTime']!, (v) => setState(() => prefs['startTime'] = v), theme),
+                      const Text("〜"),
+                      _timeDropdown(prefs['endTime']!, (v) => setState(() => prefs['endTime'] = v), theme),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.save, size: 18),
+                      onPressed: () => _savePreference(staff),
+                      label: const Text("保存"),
+                    ),
+                  )
+                ],
+              )
+            : Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    child: Text(
+                      staff.name[0],
+                      style: TextStyle(color: theme.colorScheme.onSecondaryContainer),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
                   _timeDropdown(prefs['startTime']!, (v) => setState(() => prefs['startTime'] = v), theme),
-                  const Text("〜", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Text("〜")),
                   _timeDropdown(prefs['endTime']!, (v) => setState(() => prefs['endTime'] = v), theme),
+                  const SizedBox(width: 24),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.save, size: 18),
+                    onPressed: () => _savePreference(staff),
+                    label: const Text("保存"),
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              SizedBox(width: double.infinity, child: FilledButton.icon(icon: const Icon(Icons.save, size: 18), onPressed: () => _savePreference(staff), label: const Text("保存")))
-            ],
-          )
-        : Row(
-            children: [
-              CircleAvatar(child: Text(staff.name[0])),
-              const SizedBox(width: 16),
-              Expanded(child: Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold))),
-              _timeDropdown(prefs['startTime']!, (v) => setState(() => prefs['startTime'] = v), theme),
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Text("〜", style: TextStyle(fontWeight: FontWeight.bold))),
-              _timeDropdown(prefs['endTime']!, (v) => setState(() => prefs['endTime'] = v), theme),
-              const SizedBox(width: 24),
-              FilledButton.icon(icon: const Icon(Icons.save, size: 18), onPressed: () => _savePreference(staff), label: const Text("保存")),
-            ],
-          ),
       ),
     );
   }
 
-  /// Custom styling for the time selector dropdown.
   Widget _timeDropdown(String currentValue, Function(String) onChanged, ThemeData theme) {
     return DropdownButton<String>(
       value: currentValue,
-      dropdownColor: theme.colorScheme.surface,
+      dropdownColor: theme.colorScheme.surfaceContainerHighest,
       underline: const SizedBox(),
       onChanged: (v) => v != null ? onChanged(v) : null,
-      items: _timeOptions.map((v) => DropdownMenuItem(value: v, child: Text(v, style: const TextStyle(fontSize: 14)))).toList(),
+      items: _timeOptions
+          .map((v) => DropdownMenuItem(
+                value: v,
+                child: Text(v, style: theme.textTheme.bodyMedium),
+              ))
+          .toList(),
     );
   }
 
-  // --- AUTO VIEW WIDGETS (Timeline) ---
+  // --- AI VIEW ---
 
   Widget _buildAutoView(ThemeData theme) {
     final grouped = _groupShiftsByDate();
@@ -354,99 +419,124 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         _buildActionBanner(theme),
         const SizedBox(height: 24),
         if (_isGenerating) const LinearProgressIndicator(),
-        if (!_isGenerating && grouped.isEmpty) 
-          const Padding(padding: EdgeInsets.all(40), child: Text("期間を選択してAI生成ボタンを押してください")),
+        if (!_isGenerating && grouped.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(40),
+            child: Text("期間を選択してAI生成ボタンを押してください"),
+          ),
         ...grouped.entries.map((e) => _buildTimelineCard(e.key, e.value, theme)),
       ],
     );
   }
 
-  /// Controls for setting the date range for AI shift prediction.
   Widget _buildActionBanner(ThemeData theme) {
     final df = DateFormat('yyyy/MM/dd');
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: theme.colorScheme.primaryContainer.withOpacity(0.4), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+      ),
       child: Row(
         children: [
-          const Icon(Icons.date_range),
+          Icon(Icons.date_range, color: theme.colorScheme.primary),
           const SizedBox(width: 12),
-          Expanded(child: Text("${df.format(_startDate)} 〜 ${df.format(_endDate)}", style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(
+            child: Text(
+              "${df.format(_startDate)} 〜 ${df.format(_endDate)}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
           TextButton(onPressed: _selectDateRange, child: const Text("期間変更")),
           const SizedBox(width: 8),
-          FilledButton.icon(onPressed: _isGenerating ? null : _generateAutoShifts, icon: const Icon(Icons.auto_awesome), label: const Text("AI生成")),
+          FilledButton.icon(
+            onPressed: _isGenerating ? null : _generateAutoShifts,
+            icon: const Icon(Icons.auto_awesome),
+            label: const Text("AI生成"),
+          ),
         ],
       ),
     );
   }
 
-  /// Complex UI: Creates a Gantt-chart style timeline for a specific day.
-  /// [shifts] is the list of hours and staff assigned for that day.
   Widget _buildTimelineCard(String date, List<Map<String, dynamic>> shifts, ThemeData theme) {
-    // Filter out 'Shortage' entries (staff_id: -1) from the staff names list
-    final actualStaff = shifts.where((s) => s['staff_id'] != -1).toList();
+    final actualStaff = shifts
+        .where((s) => s['staff_id'] != -1 && s['name'] != 'not_enough')
+        .toList();
     final names = actualStaff.map((s) => s['name'].toString()).toSet().toList();
-    
-    // Config for the chart horizontal scroll
+
     const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
     const double hourWidth = 45.0;
-    const double labelWidth = 110.0;
+    const double nameWidth = 100.0;
+    const double totalHoursWidth = 70.0;
+    final double totalTableWidth = nameWidth + totalHoursWidth + (hours.length * hourWidth);
 
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: theme.colorScheme.outlineVariant)),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            title: Text(date, style: const TextStyle(fontWeight: FontWeight.bold)),
-            tileColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
+            child: Text(
+              date,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: labelWidth + (hours.length * hourWidth),
-                child: Column(
-                  children: [
-                    // Header: Hours 9 - 24
-                    Row(
-                      children: [
-                        const SizedBox(width: labelWidth),
-                        ...hours.map((h) => SizedBox(width: hourWidth, child: Center(child: Text("$h", style: TextStyle(fontSize: 11, color: theme.hintColor))))),
-                      ],
-                    ),
-                    const Divider(),
-                    // Body: One row per staff member
-                    ...names.map((name) {
-                      final staffShifts = actualStaff.where((s) => s['name'] == name).toList();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          children: [
-                            SizedBox(width: labelWidth, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), overflow: TextOverflow.ellipsis)),
-                            ...hours.map((h) {
-                              bool active = staffShifts.any((s) => s['hour'] == h);
-                              return Container(
-                                width: hourWidth - 4, height: 20,
-                                margin: const EdgeInsets.symmetric(horizontal: 2),
-                                decoration: BoxDecoration(
-                                  color: active ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    }),
-                    const Divider(height: 32),
-                    // Footer: Alert row if AI predicts a labor shortage
-                    _buildShortageRow(hours, shifts, theme, labelWidth, hourWidth),
-                  ],
-                ),
+            child: SizedBox(
+              width: totalTableWidth,
+              child: Column(
+                children: [
+                  _buildHeaderRow(hours, nameWidth, totalHoursWidth, hourWidth, theme),
+                  Stack(
+                    children: [
+                      _buildShortageBackground(hours, nameWidth, totalHoursWidth, hourWidth, shifts, theme),
+                      Column(
+                        children: [
+                          ...names.map((name) {
+                            final staffShifts = actualStaff.where((s) => s['name'] == name).toList();
+                            return _buildDataRow(
+                              name,
+                              "${staffShifts.length}h",
+                              hours,
+                              staffShifts,
+                              hourWidth,
+                              nameWidth,
+                              totalHoursWidth,
+                              theme,
+                              isShortageRow: false,
+                            );
+                          }),
+                          _buildDataRow(
+                            "欠員不足",
+                            "-",
+                            hours,
+                            shifts.where((s) => s['staff_id'] == -1).toList(),
+                            hourWidth,
+                            nameWidth,
+                            totalHoursWidth,
+                            theme,
+                            isShortageRow: true,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -455,33 +545,121 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  /// Renders a "Warning" row at the bottom of the chart.
-  /// Triggered if the API returns a 'shortage' flag (staff_id: -1) for specific hours.
-  Widget _buildShortageRow(List<int> hours, List<Map<String, dynamic>> shifts, ThemeData theme, double labelW, double hourW) {
-    return Row(
-      children: [
-        SizedBox(width: labelW, child: const Text("必要人数不足", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.redAccent))),
-        ...hours.map((h) {
-          final bool isShort = shifts.any((s) => s['hour'] == h && s['staff_id'] == -1);
-          return SizedBox(
-            width: hourW,
-            child: Center(
-              child: isShort ? const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 18) : const Text("-", style: TextStyle(color: Colors.grey)),
-            ),
-          );
-        }),
-      ],
+  Widget _buildHeaderRow(List<int> hours, double nameW, double totalW, double hourW, ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant)),
+      ),
+      child: Row(
+        children: [
+          _buildHeaderCell("名前", nameW, theme),
+          _buildHeaderCell("実労働", totalW, theme),
+          ...hours.map((h) => _buildHeaderCell("${h}h", hourW, theme)),
+        ],
+      ),
     );
   }
 
-  /// Opens the standard Material Date Range Picker.
+  Widget _buildShortageBackground(List<int> hours, double nameW, double totalW, double hourW, List<Map<String, dynamic>> shifts, ThemeData theme) {
+    return Positioned.fill(
+      child: Padding(
+        padding: EdgeInsets.only(left: nameW + totalW),
+        child: Row(
+          children: hours.map((h) {
+            final bool isShort = shifts.any((s) => s['hour'] == h && (s['staff_id'] == -1 || s['name'] == 'not_enough'));
+            return Container(
+              width: hourW,
+              color: isShort ? theme.colorScheme.error.withOpacity(0.1) : Colors.transparent,
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataRow(String name, String totalTime, List<int> hours, List<Map<String, dynamic>> rowShifts, double hourW, double nameW, double totalW, ThemeData theme, {required bool isShortageRow}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: nameW,
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              name,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isShortageRow ? FontWeight.bold : FontWeight.normal,
+                color: isShortageRow ? theme.colorScheme.error : theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+          Container(
+            width: totalW,
+            alignment: Alignment.center,
+            child: Text(
+              totalTime,
+              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ),
+          ...hours.map((h) {
+            final bool hasEntry = rowShifts.any((s) => s['hour'] == h);
+            return SizedBox(
+              width: hourW,
+              height: 38,
+              child: Center(
+                child: hasEntry
+                    ? Container(
+                        width: hourW - 12,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: isShortageRow ? theme.colorScheme.error : theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: isShortageRow
+                            ? Icon(Icons.warning_amber_rounded, size: 10, color: theme.colorScheme.onError)
+                            : null,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCell(String text, double width, ThemeData theme) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
   Future<void> _selectDateRange() async {
     final picked = await showDateRangePicker(
-      context: context, 
+      context: context,
       initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
-      firstDate: DateTime.now().subtract(const Duration(days: 90)), 
-      lastDate: DateTime(2030, 12, 31)
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime(2030, 12, 31),
     );
-    if (picked != null) setState(() { _startDate = picked.start; _endDate = picked.end; });
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+    }
   }
 }
