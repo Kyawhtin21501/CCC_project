@@ -2,14 +2,15 @@ import os
 from flask import Flask
 from flask_cors import CORS
 
-# あなたのデータベース設定ファイル（例: database.py）からインポート
+# --- 修正点1: Base と engine を database.py からインポートする ---
+from .database import engine, Base 
 
-
-from back_end.routes.staff_routes import staff_bp
-from back_end.routes.shift_pre_routes import shift_pre_bp
-from back_end.routes.daily_report_route import daily_report_bp
-from back_end.routes.prediction_routes import pred_sales_bp
-from back_end.routes.shift_routes import shift_ass_bp
+# 各ルートのインポート
+from .routes.staff_routes import staff_bp
+from .routes.shift_pre_routes import shift_pre_bp
+from .routes.daily_report_route import daily_report_bp
+from .routes.prediction_routes import pred_sales_bp
+from .routes.shift_routes import shift_ass_bp
 
 def create_app():
     application = Flask(__name__)
@@ -24,18 +25,20 @@ def create_app():
 
     return application
 
+# アプリのインスタンスを作成
 app = create_app()
 
-# --- 重要：テーブルの自動作成 ---
+# --- 修正点2: テーブルの自動作成（関数の外で1回だけ実行） ---
 with app.app_context():
     try:
-        # ここで、modelsで定義した全てのテーブルを作成します
-        # 実行前に各モデル（Staffクラスなど）がインポートされている必要があります
-        from back_end import models 
+        # モデルを読み込んで Base にテーブル情報を登録させる
+        from . import models 
+        # Base と engine を使って実際にテーブルを作成
         Base.metadata.create_all(bind=engine)
-        print("Database tables created successfully!")
+        print("✅ Database tables created successfully!")
     except Exception as e:
-        print(f"Database table creation failed: {e}")
+        print(f"❌ Database table creation failed: {e}")
 
 if __name__ == "__main__":
+    # ローカル実行用
     app.run(host="0.0.0.0", port=5000, debug=True)
