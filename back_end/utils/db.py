@@ -1,18 +1,17 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-
-
 Base = declarative_base()
 
-#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_FILE = "postgresql://kyawhtin21501:JnLswv2jDtr9n152yzQbYRlksKV5llil@dpg-d4tdl1k9c44c73bm0b0g-a.singapore-postgres.render.com/omakase_shift_5rie"
-DATABASE_URL = f"{DATABASE_FILE}"
+# Renderの環境変数から取得（パスワードを隠す）
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
+# Render特有の postgres:// を postgresql:// に修正する処理
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-
-
-
+# 環境変数がない場合のフォールバック（開発用）
 
 
 engine = create_engine(
@@ -20,7 +19,6 @@ engine = create_engine(
     echo=True,       
     future=True
 )
-
 
 SessionLocal = sessionmaker(
     autocommit=False,
