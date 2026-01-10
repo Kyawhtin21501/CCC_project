@@ -2,14 +2,14 @@ import os
 from flask import Flask
 from flask_cors import CORS
 
-# あなたのデータベース設定ファイル（例: database.py）からインポート
-from back_end.database import engine, Base 
-
-from back_end.routes.staff_routes import staff_bp
-from back_end.routes.shift_pre_routes import shift_pre_bp
-from back_end.routes.daily_report_route import daily_report_bp
-from back_end.routes.prediction_routes import pred_sales_bp
-from back_end.routes.shift_routes import shift_ass_bp
+# 自分のフォルダ内からインポートするため、ドット（.）を使います
+from .database import engine, Base
+# Blueprintのインポートも統一します
+from .routes.staff_routes import staff_bp
+from .routes.shift_pre_routes import shift_pre_bp
+from .routes.daily_report_route import daily_report_bp
+from .routes.prediction_routes import pred_sales_bp
+from .routes.shift_routes import shift_ass_bp
 
 def create_app():
     application = Flask(__name__)
@@ -24,18 +24,18 @@ def create_app():
 
     return application
 
+# Gunicornが読み込むためのエントリーポイント
 app = create_app()
 
 # --- 重要：テーブルの自動作成 ---
 with app.app_context():
     try:
-        # ここで、modelsで定義した全てのテーブルを作成します
-        # 実行前に各モデル（Staffクラスなど）がインポートされている必要があります
-        from back_end import models 
+        # テーブルを作成するためにモデルを読み込む必要があります
+        from . import models 
         Base.metadata.create_all(bind=engine)
-        print("Database tables created successfully!")
+        print("✅ Database tables created successfully!")
     except Exception as e:
-        print(f"Database table creation failed: {e}")
+        print(f"❌ Database table creation failed: {e}")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
