@@ -16,7 +16,7 @@ def create_app():
     application.register_blueprint(daily_report_bp)
     application.register_blueprint(pred_sales_bp)
     application.register_blueprint(shift_ass_bp)
-    return application
+    return application,print("hello ")
 
 
 app = create_app()
