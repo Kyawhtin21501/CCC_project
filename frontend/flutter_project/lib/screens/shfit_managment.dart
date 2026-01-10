@@ -386,7 +386,10 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     // Filter out 'Shortage' entries (staff_id: -1) from the staff names list
     final actualStaff = shifts.where((s) => s['staff_id'] != -1).toList();
     final names = actualStaff.map((s) => s['name'].toString()).toSet().toList();
-    
+    bool hourHasShortage(int hour) {
+  return shifts.any((s) => s['hour'] == hour && s['staff_id'] == -1);
+}
+
     // Config for the chart horizontal scroll
     const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
     const double hourWidth = 45.0;
@@ -428,15 +431,23 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                           children: [
                             SizedBox(width: labelWidth, child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), overflow: TextOverflow.ellipsis)),
                             ...hours.map((h) {
-                              bool active = staffShifts.any((s) => s['hour'] == h);
-                              return Container(
-                                width: hourWidth - 4, height: 20,
-                                margin: const EdgeInsets.symmetric(horizontal: 2),
-                                decoration: BoxDecoration(
-                                  color: active ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              );
+                              final bool active = staffShifts.any((s) => s['hour'] == h);
+final bool shortage = hourHasShortage(h);
+
+return Container(
+  width: hourWidth - 4,
+  height: 20,
+  margin: const EdgeInsets.symmetric(horizontal: 2),
+  decoration: BoxDecoration(
+    color: active
+        ? theme.colorScheme.primary
+        : shortage
+            ? Colors.redAccent.withOpacity(0.25)
+            : theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+    borderRadius: BorderRadius.circular(4),
+  ),
+);
+
                             }),
                           ],
                         ),
