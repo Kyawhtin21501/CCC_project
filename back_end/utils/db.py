@@ -25,7 +25,34 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+<<<<<<< HEAD
 # --- 重要：ここから下が足りていなかった部分です ---
+=======
+#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#DATABASE_FILE = "postgresql://kyawhtin21501:BFqWIxdu9xN2VXK2ewpV5ow4ApyTVLGQ@dpg-d5ft50vpm1nc73dmc9c0-a.virginia-postgres.render.com/ccc_project"
+DATABASE_FILE = r"C:\Users\kph\Desktop\project_test\CCC_project\ccc_project.db"
+
+DATABASE_URL = f"{DATABASE_FILE}"
+
+
+
+
+
+
+
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,       
+    future=True
+)
+
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+>>>>>>> 352742042478e1e45a03cd3c6903429703eaf9e2
 
 def get_db():
     """
