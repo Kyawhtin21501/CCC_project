@@ -38,7 +38,6 @@ class TodayShiftCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Content
           SizedBox(
             height: 400,
             child: TabBarView(
@@ -53,122 +52,110 @@ class TodayShiftCard extends StatelessWidget {
     );
   }
 
-  /// Builds a shift table for a single day
-  Widget _buildDayTable(
-      BuildContext context, List<Map<String, dynamic>> shiftData) {
-    if (shiftData.isEmpty) {
-      return const Center(child: Text("シフトデータがありません"));
-    }
+Widget _buildDayTable(BuildContext context, List<Map<String, dynamic>> shiftData) {
+  if (shiftData.isEmpty) {
+    return const Center(child: Text("シフトデータがありません"));
+  }
 
-    // Unique staff list
-    final staffNames =
-        shiftData.map((s) => s['name'].toString()).toSet().toList();
+  // Filter out the 'not_enough' entry from the regular staff list 
+  // so it doesn't appear as a normal row.
+  final staffNames = shiftData
+      .where((s) => s['name'] != 'not_enough')
+      .map((s) => s['name'].toString())
+      .toSet()
+      .toList();
 
-    // 10:00 - 24:00
-    final hours = List.generate(15, (i) => i + 10);
+  final hours = List.generate(15, (i) => i + 10);
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Table(
-            defaultColumnWidth: const FixedColumnWidth(45),
-            columnWidths: const {0: FixedColumnWidth(100)},
-            border: TableBorder.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
-              width: 0.5,
-            ),
-            children: [
-              // HEADER ROW
-              TableRow(
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withOpacity(0.5),
-                ),
-                children: [
-                  const TableCell(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text(
-                        "氏名",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  ...hours.map(
-                    (h) => TableCell(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text("$h"),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // STAFF ROWS
-              ...staffNames.map((name) {
-                return TableRow(
-                  children: [
-                    // Staff name column
-                    TableCell(
-                      verticalAlignment: TableCellVerticalAlignment.middle,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          name,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
-                    ),
-
-                    // Hour cells
-                    ...hours.map((h) {
-                      // Staff working?
-                      final bool isWorking = shiftData.any(
-                        (s) => s['name'] == name && s['hour'] == h,
-                      );
-
-                      // Hour-level shortage (staff_id == -1)
-                      final bool hourHasShortage = shiftData.any(
-                        (s) => s['hour'] == h && s['staff_id'] == -1,
-                      );
-
-                      return TableCell(
-                        child: Container(
-                          height: 38,
-                          margin: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: isWorking
-                                ? Theme.of(context).colorScheme.primary
-                                : (hourHasShortage
-                                    ? Colors.red.withOpacity(0.15)
-                                    : Colors.transparent),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: (!isWorking && hourHasShortage)
-                              ? const Icon(
-                                  Icons.warning,
-                                  color: Colors.red,
-                                  size: 14,
-                                )
-                              : null,
-                        ),
-                      );
-                    }),
-                  ],
-                );
-              }),
-            ],
+  return SingleChildScrollView(
+    scrollDirection: Axis.vertical,
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Table(
+          defaultColumnWidth: const FixedColumnWidth(45),
+          columnWidths: const {0: FixedColumnWidth(100)},
+          border: TableBorder.all(
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
+            width: 0.5,
           ),
+          children: [
+            /// HEADER ROW
+            TableRow(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              ),
+              children: [
+                const TableCell(child: Padding(padding: EdgeInsets.all(8), child: Text("氏名", style: TextStyle(fontWeight: FontWeight.bold)))),
+                ...hours.map((h) => TableCell(child: Center(child: Padding(padding: const EdgeInsets.all(8), child: Text("$h"))))),
+              ],
+            ),
+
+            /// REGULAR STAFF ROWS
+            ...staffNames.map((name) {
+              return TableRow(
+                children: [
+                  TableCell(
+                    verticalAlignment: TableCellVerticalAlignment.middle,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  ...hours.map((h) {
+                    final bool isWorking = shiftData.any((s) => s['name'] == name && s['hour'] == h);
+                    return TableCell(
+                      child: Container(
+                        height: 38,
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: isWorking ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              );
+            }),
+
+            /// 🔴 SHORTAGE ROW (Red Color Change)
+            TableRow(
+              decoration: BoxDecoration(color: Colors.red.withOpacity(0.05)),
+              children: [
+                const TableCell(
+                  verticalAlignment: TableCellVerticalAlignment.middle,
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text("不足\n(Shortage)", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.red)),
+                  ),
+                ),
+                ...hours.map((h) {
+                  // Specifically check for the 'not_enough' entries in your data
+                  final bool isShortage = shiftData.any((s) => s['name'] == 'not_enough' && s['hour'] == h);
+                  
+                  return TableCell(
+                    child: Container(
+                      height: 38,
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        // Change to solid Red when there is a shortage
+                        color: isShortage ? Colors.red : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: isShortage 
+                          ? const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 16) 
+                          : null,
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
