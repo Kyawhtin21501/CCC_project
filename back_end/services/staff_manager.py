@@ -7,9 +7,9 @@ class StaffService:
 
     status_map = {
         
-        "international_student" : "留学生",
-        "high_school_student" : "高校生",
-        "freeter" : "フリーター",
+        "international-student" : "留学生",
+        "high-school" : "高校生",
+        "full_time" : "フリーター",
         "part_time" : "パートタイム"
     }
     #take all staff data from database for using dashboard or something like that
