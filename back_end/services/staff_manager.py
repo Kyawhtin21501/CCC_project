@@ -17,13 +17,10 @@ class StaffService:
     @staticmethod
     def get_all_staff():
         db: Session = next(get_db())
-        datas = db.query(Staff).all()
-        result = []
-        for data in datas:
-            if data.status in StaffService.status_map:
-                data.status = StaffService.status_map[data.status]
-                result.append(data)
-        return result
+        
+        
+        
+        return db.query(Staff).all()
     #take one person frome database like searching with staff id 
     
     @staticmethod
