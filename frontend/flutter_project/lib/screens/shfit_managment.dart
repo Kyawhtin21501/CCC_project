@@ -54,8 +54,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   /// Standard 30-minute intervals for dropdown selectors.
   final List<String> _timeOptions = List.generate(48, (index) {
     final hour = (index ~/ 2).toString().padLeft(2, '0');
-    final minute = (index % 2 == 0) ? '00' : '30';
-    return "$hour:$minute";
+   
+    return "$hour:00";
   });
 
   @override
