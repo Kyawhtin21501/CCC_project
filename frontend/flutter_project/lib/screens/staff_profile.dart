@@ -218,7 +218,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                       DataCell(Text('${index + 1}')),
                       DataCell(Text(s['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500))),
                       DataCell(_buildStatusChip(s['status'] ?? '', theme)),
-                      DataCell(Text(s['gender'] == 'Male' ? '男性' : '女性')),
+                      DataCell(Text(s['gender'] == 'male' ? '男性' : '女性')),
                       DataCell(Text(s['age']?.toString() ?? '-')),
                       DataCell(Text(s['e_mail'] ?? '-')),
                       DataCell(Text(s['level']?.toString() ?? '')),
@@ -334,8 +334,8 @@ class StaffFormBody extends StatelessWidget {
             width: double.infinity,
             child: SegmentedButton<String>(
               segments: const [
-                ButtonSegment(value: 'Male', label: Text('男性'), icon: Icon(Icons.male)),
-                ButtonSegment(value: 'Female', label: Text('女性'), icon: Icon(Icons.female))
+                ButtonSegment(value: 'male', label: Text('男性'), icon: Icon(Icons.male)),
+                ButtonSegment(value: 'female', label: Text('女性'), icon: Icon(Icons.female))
               ],
               selected: {gender},
               onSelectionChanged: (set) => onGenderChanged(set.first),
@@ -362,7 +362,7 @@ class _StaffAddDialogState extends State<_StaffAddDialog> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController(), _email = TextEditingController(), 
         _age = TextEditingController(), _level = TextEditingController();
-  String _status = 'パートタイム', _gender = 'Male';
+  String _status = 'パートタイム', _gender = 'male';
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +416,7 @@ class _StaffEditSideSheetState extends State<_StaffEditSideSheet> {
     _age = TextEditingController(text: widget.staff['age']?.toString());
     _level = TextEditingController(text: widget.staff['level']?.toString());
     _status = widget.staff['status'] ?? 'パートタイム';
-    _gender = widget.staff['gender'] ?? 'Male';
+    _gender = widget.staff['gender'] ?? 'male';
   }
 
   @override
