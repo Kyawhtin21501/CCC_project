@@ -278,8 +278,8 @@ class ShiftAss:
     def shift_save_db(self):
         df = self.run()
         if df.empty:
-            print("保存するデータがありません。")
-            return []
+            
+            return "保存するデータがありません"
 
         db: Session = next(get_db())
         try:

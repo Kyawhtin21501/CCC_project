@@ -16,7 +16,9 @@ class StaffService:
     @staticmethod
     def get_all_staff():
         db: Session = next(get_db())
-        return db.query(Staff).all()
+        data = db.query(Staff).all()
+        
+        return 
     #take one person frome database like searching with staff id 
     
     @staticmethod
