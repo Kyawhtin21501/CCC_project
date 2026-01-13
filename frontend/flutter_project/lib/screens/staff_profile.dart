@@ -335,7 +335,7 @@ class StaffFormBody extends StatelessWidget {
             child: SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: 'Male', label: Text('男性'), icon: Icon(Icons.male)),
-                ButtonSegment(value: 'Female', label: Text('女性'), icon: Icon(Icons.female))
+                ButtonSegment(value: 'female', label: Text('女性'), icon: Icon(Icons.female))
               ],
               selected: {gender},
               onSelectionChanged: (set) => onGenderChanged(set.first),
