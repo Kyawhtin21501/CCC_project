@@ -6,19 +6,24 @@ from ..utils.db import get_db
 class StaffService:
 
     status_map = {
-        "留学生": "international_student",
-        "高校生": "high_school_student",
-        "フリーター": "freeter",
-        "パートタイム" : "part-time"
+        
+        "international_student" : "留学生",
+        "high_school_student" : "高校生",
+        "freeter" : "フリーター",
+        "part_time" : "パートタイム"
     }
     #take all staff data from database for using dashboard or something like that
     
     @staticmethod
     def get_all_staff():
         db: Session = next(get_db())
-        data = db.query(Staff).all()
-        
-        return 
+        datas = db.query(Staff).all()
+        result = {}
+        for data in datas:
+            if data.status in StaffService.status_map:
+                data.status = StaffService.status_map[data.status]
+                result.append(data)
+        return result
     #take one person frome database like searching with staff id 
     
     @staticmethod
