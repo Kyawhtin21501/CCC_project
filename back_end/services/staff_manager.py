@@ -18,7 +18,7 @@ class StaffService:
     def get_all_staff():
         db: Session = next(get_db())
         datas = db.query(Staff).all()
-        result = {}
+        result = []
         for data in datas:
             if data.status in StaffService.status_map:
                 data.status = StaffService.status_map[data.status]
