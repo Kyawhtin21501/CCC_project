@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
  
 fake = Faker("ja_JP")
  
-STATUS_LIST = ["full-time","part-time", "international"]
-GENDER_LIST = ["male", "female"]
+STATUS_LIST = ["full-time", "part-time","high-school", "international"]
+GENDER_LIST = ["Male", "Female"]
  
 def random_time_pair_min_5h():
     start_hour = random.randint(9, 14)
@@ -20,7 +20,7 @@ def random_time_pair_min_5h():
  
  
  
-def create_staff(session: Session, n=30):
+def create_staff(session: Session, n=25):
     staff_list = []
  
     for _ in range(n):
@@ -45,11 +45,11 @@ def create_staff(session: Session, n=30):
  
 def create_shift_preferences(session: Session, staff_list):
     today = date.today()
-    all_dates = [today + timedelta(days=i) for i in range(7)]  # 1週間
+    all_dates = [today + timedelta(days=i) for i in range(14)]  # 1週間
  
     for staff in staff_list:
-        # 1人あたり必ず5日
-        work_dates = random.sample(all_dates, k=5)
+        
+        work_dates = random.sample(all_dates, k=10)
  
         for work_date in work_dates:
             start_time, end_time = random_time_pair_min_5h()
@@ -74,7 +74,7 @@ def main():
     session.query(Staff).delete()
     session.commit()
  
-    staff_list = create_staff(session, n=30)
+    staff_list = create_staff(session, n=25)
     create_shift_preferences(session, staff_list)
  
     session.close()

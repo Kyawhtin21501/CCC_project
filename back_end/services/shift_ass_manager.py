@@ -195,7 +195,12 @@ class ShiftAss:
         # 3. 個別・連続性ルール
         for s in staff_ids:
             if s == self.help_id: continue
-            
+            status = staff_info.get(s, {}).get('status', 'unknown')
+            if status == "international":
+                # このスタッフの全日付・全時間のwork変数を合計
+                weekly_vars = [work[sid, d, h] for (sid, d, h) in work.keys() if sid == s]
+                model.Add(sum(weekly_vars) <= 28)
+                
             for d in dates:
                 day_hours = range(9, 25)
                 # この日のこの人の全勤務変数
@@ -206,7 +211,8 @@ class ShiftAss:
                 break_starts = []
                 for h in day_hours:
                     if (s, d, h) not in work: continue
-                    
+                    if status == "high_school" and h >= 22:
+                        model.Add(work[s, d, h] == 0)
                     # --- 休憩検知 (1->0) ---
                     if h > 9 and (s, d, h-1) in work:
                         is_brk = model.NewBoolVar(f'brk_{s}_{d}_{h}')
