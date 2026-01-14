@@ -13,8 +13,8 @@ STATUS_LIST = ["full-time","part-time", "international"]
 GENDER_LIST = ["male", "female"]
 
 def random_time_pair_min_5h():
-    start_hour = random.randint(9, 14)  # 朝〜昼スタート
-    duration = random.randint(5, 8)     # 最低5時間
+    start_hour = random.randint(9, 14) 
+    duration = random.randint(5, 8)    
     end_hour = min(start_hour + duration, 23)
     return time(start_hour, 0), time(end_hour, 0)
 
