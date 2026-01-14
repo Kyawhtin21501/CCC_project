@@ -4,62 +4,83 @@ from datetime import date, timedelta, time
 from back_end.utils.db import engine
 from back_end.models.staff_model import Staff
 from back_end.models.shift_pref_model import ShiftPre
-
+ 
 from sqlalchemy.orm import Session
-
-
-
-def create_staff(session: Session):
-    import pandas as pd
-    # 1. ファイル読み込み
-    df = pd.read_excel("/Users/khein21502/Documents/ccc_project_f/CCC_project/scripts/ppt_symdata_CCC_project.xlsx")
-    
-    # 2. 前処理（列名を小文字にして空白削除）
-    df.columns = [c.strip().lower() for c in df.columns]
-
-    # 3. 必要な列の抽出
-    # もしExcel側が 'email' なら、ここで 'email' を指定します
-    df = df[["name", "age", "level", "email", "status", "gender"]]
-    
+ 
+fake = Faker("ja_JP")
+ 
+STATUS_LIST = ["full-time","part-time", "international"]
+GENDER_LIST = ["male", "female"]
+ 
+def random_time_pair_min_5h():
+    start_hour = random.randint(9, 14)
+    duration = random.randint(5, 8)    
+    end_hour = min(start_hour + duration, 23)
+    return time(start_hour, 0), time(end_hour, 0)
+ 
+ 
+ 
+def create_staff(session: Session, n=30):
     staff_list = []
-    for index, row in df.iterrows():
-        # 4. モデルの属性名(e_mail)に合わせてマッピング
-        staff_member = Staff(
-            name=row["name"],
-            age=row["age"],
-            level=row["level"],
-            status=row["status"],
-            e_mail=row["email"],  # ここでDB側のカラム名 'e_mail' に変換
-            gender=row["gender"]
+ 
+    for _ in range(n):
+        status = random.choice(STATUS_LIST)
+ 
+        age = random.randint(18, 25) if status == "international" else random.randint(22, 55)
+ 
+        staff = Staff(
+            name=fake.name(),
+            age=age,
+            level=random.randint(1, 4),
+            status=status,
+            e_mail=fake.unique.email(),
+            gender=random.choice(GENDER_LIST)
         )
-        staff_list.append(staff_member)
-    
-    # 5. 一括追加
-    session.add_all(staff_list)
+        session.add(staff)
+        staff_list.append(staff)
+ 
     session.commit()
     return staff_list
-
+ 
+ 
+def create_shift_preferences(session: Session, staff_list):
+    today = date.today()
+    all_dates = [today + timedelta(days=i) for i in range(7)]  # 1週間
+ 
+    for staff in staff_list:
+        # 1人あたり必ず5日
+        work_dates = random.sample(all_dates, k=5)
+ 
+        for work_date in work_dates:
+            start_time, end_time = random_time_pair_min_5h()
+ 
+            shift = ShiftPre(
+                staff_id=staff.id,   # ← 明示的にすると事故らない
+                date=work_date,
+                start_time=start_time,
+                end_time=end_time
+            )
+            session.add(shift)
+ 
+    session.commit()
+ 
+ 
+ 
 def main():
     session = Session(bind=engine)
-
-    try:
-        # テストデータの初期化（既存データの削除）
-        print("🗑  Deleting old data...")
-        session.query(ShiftPre).delete()
-        session.query(Staff).delete()
-        session.commit()
-
-        # データの生成と保存
-        print("📥 Inserting new staff data...")
-        inserted_staff = create_staff(session)
-        
-        print(f"✅ {len(inserted_staff)} staff members generated")
-
-    except Exception as e:
-        session.rollback()
-        print(f"❌ Error occurred: {e}")
-    finally:
-        session.close()
-
+ 
+    # 念のため全削除（テスト環境限定）
+    session.query(ShiftPre).delete()
+    session.query(Staff).delete()
+    session.commit()
+ 
+    staff_list = create_staff(session, n=30)
+    create_shift_preferences(session, staff_list)
+ 
+    session.close()
+    print("✅ test data generated")
+ 
 if __name__ == "__main__":
     main()
+ 
+ 
