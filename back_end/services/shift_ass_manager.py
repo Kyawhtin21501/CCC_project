@@ -29,7 +29,17 @@ class ShiftAss:
 
     def get_shift_pre_df(self):
         shift_pre = ShiftPreferences.get_shift_pre()
+        
+        # --- ここを追加：データが空でも列を保証する ---
+        if not shift_pre:
+            return pd.DataFrame(columns=["id", "date", "staff_id"])
+
         df = pd.DataFrame([s.to_dict() for s in shift_pre])
+        
+        # 安全策：列が存在するか確認
+        if "date" not in df.columns:
+            return pd.DataFrame(columns=["id", "date", "staff_id"])
+        # ----------------------------------------
 
         df["date"] = pd.to_datetime(df["date"])
         df = df[
