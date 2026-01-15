@@ -71,8 +71,8 @@ class TodayShiftCard extends StatelessWidget {
         .toSet()
         .toList();
 
-    // Define business hours (e.g., 10:00 to 24:00)
-    final hours = List.generate(15, (i) => i + 10);
+    // Define business hours (e.g., 9:00 to 24:00)
+    final hours = List.generate(16, (i) => i + 9); // 9 to 24
 
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
@@ -108,7 +108,7 @@ class TodayShiftCard extends StatelessWidget {
                       child: Center(
                         child: Padding(
                           padding: const EdgeInsets.all(8),
-                          child: Text("$h", style: const TextStyle(fontSize: 12)),
+                          child: Text("$h 時", style: const TextStyle(fontSize: 12)),
                         ),
                       ),
                     ),
