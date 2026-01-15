@@ -318,7 +318,7 @@ static Future<List<Map<String, dynamic>>> getAutoShiftTable(
     "end_date": DateFormat('yyyy-MM-dd').format(end),
   };
 
-  final uri = Uri.parse('$baseUrl/shift_ass').replace(queryParameters: query);
+  final uri = Uri.parse('$baseUrl/shift_ass_data_main').replace(queryParameters: query);
 
   _trace('GET AutoShift Result: $uri');
 
