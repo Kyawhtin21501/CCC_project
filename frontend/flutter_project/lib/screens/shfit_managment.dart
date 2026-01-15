@@ -31,30 +31,22 @@ class ShiftManagementScreen extends StatefulWidget {
 }
 
 class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
-  // --- STATE VARIABLES ---
   ShiftMode _selectedMode = ShiftMode.manual;
   List<Staff> staffList = [];
   bool _loading = false;
   bool _isSaving = false;
   bool _isGenerating = false;
 
-  // --- CALENDAR & DATE STATE ---
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 6));
 
-  /// Internal cache for shift preferences.
-  /// Format: { "YYYY-MM-DD": { "staffId": { "startTime": "HH:mm", "endTime": "HH:mm" } } }
   final Map<String, Map<String, Map<String, String>>> _preferences = {};
-
-  /// Stores raw data retrieved from AI generation endpoint.
   List<Map<String, dynamic>> _predictedShifts = [];
 
-  /// Standard 30-minute intervals for dropdown selectors.
-  final List<String> _timeOptions = List.generate(48, (index) {
+  final List<String> _timeOptions = List.generate(24, (index) {
     final hour = (index ~/ 2).toString().padLeft(2, '0');
-   
     return "$hour:00";
   });
 
@@ -79,49 +71,93 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        _showSnackBar("スタッフデータの取得に失敗しました", isError: true);
+        _showSnackBar(
+          "スタッフデータの取得に失敗しました。通信環境を確認してください。",
+          isError: true,
+        );
       }
     }
   }
 
   Future<void> _savePreference(Staff staff) async {
-    setState(() => _isSaving = true);
-    final dateKey = _dateKey(_selectedDay ?? _focusedDay);
+    final selectedDate = _selectedDay;
+    if (selectedDate == null) {
+      _showSnackBar("日付を選択してください", isError: true); // ✅ UX
+      return;
+    }
+
     final p = _getPrefs(staff.id);
+
+    // ✅ UX: time validation
+    if (p['startTime']!.compareTo(p['endTime']!) >= 0) {
+      _showSnackBar(
+        "開始時間は終了時間より前に設定してください",
+        isError: true,
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
     try {
       await ApiService.saveShiftPreferences({
-        'date': dateKey,
+        'date': _dateKey(selectedDate),
         'staff_id': int.parse(staff.id),
         'start_time': p['startTime'],
         'end_time': p['endTime'],
       });
-      if (mounted) _showSnackBar("${staff.name}さんの希望を保存しました");
+      if (mounted) {
+        _showSnackBar("${staff.name}さんの希望を保存しました");
+      }
     } catch (e) {
-      if (mounted) _showSnackBar("保存に失敗しました", isError: true);
+      if (mounted) {
+        _showSnackBar(
+          "保存に失敗しました。ネットワークをご確認ください。",
+          isError: true,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
   Future<void> _generateAutoShifts() async {
+    // ✅ UX: date range validation
+    if (_endDate.isBefore(_startDate)) {
+      _showSnackBar(
+        "終了日は開始日以降を選択してください",
+        isError: true,
+      );
+      return;
+    }
+
     setState(() {
       _isGenerating = true;
       _predictedShifts = [];
     });
+
     try {
-      final data = await ApiService.fetchAutoShiftTable(_startDate, _endDate);
+      final data =
+          await ApiService.fetchAutoShiftTable(_startDate, _endDate);
       if (mounted) {
-        setState(() => _predictedShifts = List<Map<String, dynamic>>.from(data));
+        setState(() {
+          _predictedShifts = List<Map<String, dynamic>>.from(data);
+        });
         _showSnackBar("AIシフトを生成しました");
       }
     } catch (e) {
-      if (mounted) _showSnackBar("AI生成に失敗しました", isError: true);
+      if (mounted) {
+        _showSnackBar(
+          "AIシフト生成に失敗しました。通信状況を確認してください。",
+          isError: true,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isGenerating = false);
     }
   }
 
-  // --- HELPER METHODS ---
+  // --- HELPERS ---
 
   String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
@@ -130,7 +166,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     _preferences[dKey] ??= {};
     return _preferences[dKey]![staffId] ??= {
       'startTime': '09:00',
-      'endTime': '18:00'
+      'endTime': '18:00',
     };
   }
 
@@ -156,7 +192,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  // --- MAIN UI COMPOSITION ---
+  // --- UI ---
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +245,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
             child: Builder(
               builder: (scaffoldContext) => CustomMenuBar(
                 title: 'シフト作成・管理',
-                onMenuPressed: () => Scaffold.of(scaffoldContext).openDrawer(),
+                onMenuPressed: () =>
+                    Scaffold.of(scaffoldContext).openDrawer(),
               ),
             ),
           ),
