@@ -206,7 +206,7 @@ class ShiftAss:
                 # この日のこの人の全勤務変数
                 d_vars = [work[s, d, h] for h in day_hours if (s, d, h) in work]
                 if not d_vars: continue
-
+                
                 # 【1時間限定の休憩】を検知する変数
                 break_starts = []
                 for h in day_hours:
