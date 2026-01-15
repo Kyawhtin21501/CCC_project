@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 
-from datetime import datetime, date
+from datetime import datetime, date,timedelta
 from ..services.shift_ass_manager import ShiftAss
 
 shift_ass_bp = Blueprint("shift_ass" , __name__)
@@ -22,7 +22,9 @@ def shift_ass():
 
 @shift_ass_bp.get("/shift_ass_dash_board")
 def shift_ass_dash():
-    shift_ass_dash = ShiftAss.get_shift_main()
+    today = datetime.today().date()
+    tomorrow = today + timedelta(days=1)
+    shift_ass_dash = ShiftAss.get_shift_main(today,tomorrow)
     results = []
     for s in shift_ass_dash:
         d = s.to_dict()
@@ -31,3 +33,12 @@ def shift_ass_dash():
         results.append(d)
         
     return jsonify(results), 200
+
+@shift_ass_bp.get("/shift_ass_data_main")
+def shift_ass_main():
+    data = request.get_json()
+    start = data["start_date"]
+    end = data["end_date"]
+    shift_ass_main = ShiftAss.get_shift_main(start,end)
+    
+    return jsonify(shift_ass_main), 200

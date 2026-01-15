@@ -41,7 +41,7 @@ def create_staff(session: Session, n=25):
  
     session.commit()
     return staff_list
- 
+
  
 def create_shift_preferences(session: Session, staff_list):
     today = date.today()

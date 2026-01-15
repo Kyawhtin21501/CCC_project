@@ -283,6 +283,7 @@ class ShiftAss:
 
     def shift_save_db(self):
         df = self.run()
+        
         if df.empty:
             
             return "保存するデータがありません"
@@ -321,18 +322,16 @@ class ShiftAss:
 
 
     @staticmethod
-    def get_shift_main():
+    def get_shift_main(start,end):
        
-        today = datetime.today().date()
-        tomorrow = today + timedelta(days=1)
         
         
         
         #print(today , tomorrow)
         db : Session = next(get_db())
         data = db.query(ShiftMain).filter(
-                    ShiftMain.date >= today,
-                    ShiftMain.date <= tomorrow
+                    ShiftMain.date >= start,
+                    ShiftMain.date <= end
                 ).all()
         if not data:
             print("該当シフトはありません")
