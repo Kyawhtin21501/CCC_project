@@ -250,29 +250,54 @@ class ApiService {
   }
 
   /// POST: Triggers the AI shift generation algorithm for a specific date range.
-  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(DateTime start, DateTime end) async {
-    final url = '$baseUrl/shift_ass';
-    final payload = {
-      "start_date": DateFormat('yyyy-MM-dd').format(start),
-      "end_date": DateFormat('yyyy-MM-dd').format(end),
-    };
-    
-    _trace('POST AutoShift: $url');
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: _headers,
-        body: jsonEncode(payload),
-      );
+ static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(
+  DateTime start,
+  DateTime end,
+) async {
+  final url = '$baseUrl/shift_ass';
+  final payload = {
+    "start_date": DateFormat('yyyy-MM-dd').format(start),
+    "end_date": DateFormat('yyyy-MM-dd').format(end),
+  };
 
-      if (_isSuccess(response.statusCode)) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-        return List<Map<String, dynamic>>.from(decoded);
-      }
-      throw "AI shift generation failed";
-    } catch (e) {
-      _trace('fetchAutoShiftTable Error: $e');
-      rethrow;
+  _trace('POST AutoShift: $url');
+  _trace('Payload: $payload');
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (!_isSuccess(response.statusCode)) {
+      throw "AI shift generation failed (${response.statusCode})";
     }
+
+    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+
+   
+    if (decoded is List) {
+      return decoded
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+
+    if (decoded is Map) {
+      if (decoded['data'] is List) {
+        return List<Map<String, dynamic>>.from(decoded['data']);
+      }
+      if (decoded['shifts'] is List) {
+        return List<Map<String, dynamic>>.from(decoded['shifts']);
+      }
+    }
+
+    throw Exception('Invalid AutoShift response format: $decoded');
+  } catch (e, st) {
+    _trace('fetchAutoShiftTable Error: $e');
+    debugPrintStack(stackTrace: st);
+    rethrow;
   }
+}
+
 }
