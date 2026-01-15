@@ -15,9 +15,9 @@ class ApiService {
   /// while Debug mode points to the local machine (localhost).
   static String get baseUrl {
     if (kReleaseMode) {
-      return "https://ccc-project-p8yt.onrender.com";
+      return "https://ccc-project.onrender.com";
     }
-    return 'http://100.64.1.81:5000';//have to use local network IP for device testing!!!!!
+    return 'http://127.0.0.1:5000';//have to use local network IP for device testing!!!!!
   }
 
   /// Default headers used for JSON-based communication.
