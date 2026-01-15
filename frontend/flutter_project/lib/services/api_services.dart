@@ -15,7 +15,7 @@ class ApiService {
   /// while Debug mode points to the local machine (localhost).
   static String get baseUrl {
     if (kReleaseMode) {
-      return "https://ccc-project-p8yt.onrender.com";
+      return "https://ccc-project-1.onrender.com";
     }
     return 'http://100.64.1.81:5000';//have to use local network IP for device testing!!!!!
   }
