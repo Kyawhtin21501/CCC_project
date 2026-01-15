@@ -45,11 +45,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   final Map<String, Map<String, Map<String, String>>> _preferences = {};
   List<Map<String, dynamic>> _predictedShifts = [];
 
-  final List<String> _timeOptions = List.generate(24, (index) {
-    final hour = (index ~/ 2).toString().padLeft(2, '0');
-    return "$hour:00";
-  });
+ final List<String> _timeOptions = List.generate(24, (hour) {
+  return "${hour.toString().padLeft(2, '0')}:00";
+});
 
+
+  
   @override
   void initState() {
     super.initState();
