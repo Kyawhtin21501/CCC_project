@@ -333,21 +333,24 @@ class ShiftAss:
     def get_shift_main(today, tomorrow):
         # ... 前半の取得処理 ...
         db: Session = next(get_db())
-        data = db.query(ShiftMain).filter(
-            # 必要に応じて引数 start_date, end_date を使うように変更
-            ShiftMain.date >= today,
-            ShiftMain.date <= tomorrow
-        ).all()
+        day1 = db.query(ShiftMain).filter(
+            ShiftMain.date == today).all()
+        day2 = db.query(ShiftMain).filter(
+            ShiftMain.date == tomorrow).all()
+        
 
        
-        results = []
-        for d in data:
+        results1 = []
+        for d in day1:
             
-            results.append(d.to_dict()) 
+            results1.append(d.to_dict()) 
             # もし to_dict() がなければ、手動で辞書を作ります
             # results.append({
             #     "id": d.id, "date": d.date.isoformat(), "hour": d.hour, ...
             # })
+        results2 = []
+        for d in day2:
+            results2.append(d.to_dict()) 
         
-        return results # 辞書のリストを返す
+        return results1 , results2
  
