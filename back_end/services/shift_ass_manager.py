@@ -340,8 +340,4 @@ class ShiftAss:
             for d in data:
                 print(d)
         return  data
-        
-    
-     
-        
-        
+ 
