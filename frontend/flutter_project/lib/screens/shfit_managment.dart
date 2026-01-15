@@ -83,13 +83,13 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   Future<void> _savePreference(Staff staff) async {
     final selectedDate = _selectedDay;
     if (selectedDate == null) {
-      _showSnackBar("日付を選択してください", isError: true); // ✅ UX
+      _showSnackBar("日付を選択してください", isError: true); 
       return;
     }
 
     final p = _getPrefs(staff.id);
 
-    // ✅ UX: time validation
+    
     if (p['startTime']!.compareTo(p['endTime']!) >= 0) {
       _showSnackBar(
         "開始時間は終了時間より前に設定してください",
@@ -122,41 +122,54 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  Future<void> _generateAutoShifts() async {
-    // ✅ UX: date range validation
-    if (_endDate.isBefore(_startDate)) {
-      _showSnackBar(
-        "終了日は開始日以降を選択してください",
-        isError: true,
-      );
-      return;
-    }
+Future<void> _generateAutoShifts() async {
+  if (_endDate.isBefore(_startDate)) {
+    _showSnackBar(
+      "終了日は開始日以降を選択してください",
+      isError: true,
+    );
+    return;
+  }
 
-    setState(() {
-      _isGenerating = true;
-      _predictedShifts = [];
-    });
+  setState(() {
+    _isGenerating = true;
+    _predictedShifts = [];
+  });
 
-    try {
-      final data =
-          await ApiService.fetchAutoShiftTable(_startDate, _endDate);
-      if (mounted) {
-        setState(() {
-          _predictedShifts = List<Map<String, dynamic>>.from(data);
-        });
-        _showSnackBar("AIシフトを生成しました");
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar(
-          "AIシフト生成に失敗しました。通信状況を確認してください。",
-          isError: true,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isGenerating = false);
+  try {
+    debugPrint("AutoShift Request Start");
+    debugPrint("Start: $_startDate, End: $_endDate");
+
+    final data =
+        await ApiService.fetchAutoShiftTable(_startDate, _endDate);
+
+    debugPrint("API Response: $data");
+
+    if (mounted) {
+      setState(() {
+        _predictedShifts = List<Map<String, dynamic>>.from(data);
+      });
+      _showSnackBar("AIシフトを生成しました");
     }
   }
+  // ここが重要
+  catch (e, stackTrace) {
+    debugPrint(" AutoShift Error: $e");
+    debugPrint("tackTrace:\n$stackTrace");
+
+    if (mounted) {
+      _showSnackBar(
+        "AIシフト生成に失敗しました。\n${e.toString()}",
+        isError: true,
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isGenerating = false);
+    }
+  }
+}
+
 
   // --- HELPERS ---
 
