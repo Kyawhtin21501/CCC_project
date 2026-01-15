@@ -288,6 +288,7 @@ class ShiftAss:
             return "保存するデータがありません"
 
         db: Session = next(get_db())
+        db.execute("SELECT 1")
         try:
             # 対象期間を削除
             db.query(ShiftMain).filter(
