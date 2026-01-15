@@ -1,26 +1,23 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import os
-
 
 Base = declarative_base()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_FILE = os.path.join(BASE_DIR, "../../ccc_project.db")
-DATABASE_URL = f"sqlite:///{DATABASE_FILE}"
+# Renderの環境変数から取得（パスワードを隠す）
+DATABASE_URL = "sqlite:////Users/khein21502/Documents/ccc_project_f/CCC_project/ccc_project.db"
 
-
-
-
-
+# Render特有の postgres:// を postgresql:// に修正する処理
+"""
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+"""
+# 環境変数がない場合のフォールバック（開発用）
 
 
 engine = create_engine(
-    DATABASE_URL,
-    echo=True,       
-    future=True
-)
-
+    DATABASE_URL, connect_args={"check_same_thread": False})    
+   
 
 SessionLocal = sessionmaker(
     autocommit=False,

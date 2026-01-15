@@ -12,9 +12,8 @@ from back_end.services.staff_manager import StaffService
 from back_end.services.shift_preferences import ShiftPreferences
 from back_end.services.pred_manager import DataPrepare
 
-
 class ShiftAss:
-    def __init__(self,start_date,end_date):
+    def __init__(self, start_date, end_date):
         self.start_date = start_date
         self.end_date = end_date
         self.help_id = 1500  
@@ -23,18 +22,11 @@ class ShiftAss:
         self.cost = {}
         self.max_cost = {}
 
-    # =========================================================
-    # STAFF DATA
-    # =========================================================
     def get_staff_data_df(self):
         staff = StaffService.get_all_staff()
         df = pd.DataFrame([s.to_dict() for s in staff])
-       
         return df
 
-    # =========================================================
-    # SHIFT PREFERENCES
-    # =========================================================
     def get_shift_pre_df(self):
         shift_pre = ShiftPreferences.get_shift_pre()
         df = pd.DataFrame([s.to_dict() for s in shift_pre])
@@ -48,18 +40,12 @@ class ShiftAss:
         df = df.rename(columns={"staff_id": "id"})
         return df
 
-    # =========================================================
-    # PREDICTED SALES
-    # =========================================================
     def get_pred_sale(self):
         pred = DataPrepare(self.start_date, self.end_date)
         df = pd.DataFrame(pred.run_prediction())
         df["date"] = pd.to_datetime(df["date"])
         return df
 
-    # =========================================================
-    # HELPERS
-    # =========================================================
     def pred_sales_per_hour(self, hour, sales):
         if hour in [9, 10]:
             return sales * 0.052
@@ -67,7 +53,7 @@ class ShiftAss:
             return sales * 0.1
         elif hour in [16, 17]:
             return sales * 0.07
-        elif hour in [18, 19, 20 ,23]:
+        elif hour in [18, 19, 20, 23]:
             return sales * 0.08
         else:
             return sales * 0.09
@@ -82,9 +68,6 @@ class ShiftAss:
         else:
             return 1500
 
-    # =========================================================
-    # COMBINE DATA
-    # =========================================================
     def combine_data(self):
         df = pd.merge(
             self.get_shift_pre_df(),
@@ -100,7 +83,6 @@ class ShiftAss:
             on="date"
         )
 
-        # NaN cleanup
         df["name"] = df["name"].fillna("unknown")
         df["level"] = df["level"].fillna(0).astype(int)
         df["status"] = df["status"].fillna("unknown")
@@ -118,6 +100,7 @@ class ShiftAss:
                     "status": row["status"],
                     "predicted_sales": row["predicted_sales"],
                 })
+        
         unique_dates = df["date"].unique()
         for d in unique_dates:
             pred_val = df[df["date"] == d]["predicted_sales"].values[0] if not df[df["date"] == d].empty else 0
@@ -127,17 +110,14 @@ class ShiftAss:
                     "name": "not_enough", "level": 0, "salary": 0, 
                     "predicted_sales": pred_val
                 })
+        
         final_df = pd.DataFrame(records)
 
         final_df["pred_sale_per_hour"] = final_df.apply(
             lambda r: self.pred_sales_per_hour(r["hour"], r["predicted_sales"]),
             axis=1
         )
-        """
-        final_df["max_cost"] = (
-            final_df["pred_sale_per_hour"] * 0.3
-        ).astype(int)
-        """
+        
         final_df["salary"] = final_df["level"].apply(self.salary).astype(int)
 
         final_df = final_df.sort_values(
@@ -146,21 +126,16 @@ class ShiftAss:
 
         return final_df
 
-    # =========================================================
-    # CREATE SHIFT (CP-SAT)
-    # =========================================================
     def create_shift(self, df=None):
         model = cp_model.CpModel()
         if df is None:
             df = self.combine_data()
         
-        # 決定変数
         work = {}
         for _, row in df.iterrows():
             s, d, h = row["id"], row["date"], row["hour"]
             work[s, d, h] = model.NewBoolVar(f"work_{s}_{d}_{h}")
 
-        # スタッフ属性の辞書化 (高速化のため)
         staff_info = df.drop_duplicates('id').set_index('id')[['level', 'status']].to_dict('index')
         staff_ids = df["id"].unique()
         dates = df["date"].unique()
@@ -168,77 +143,55 @@ class ShiftAss:
         for (d, h), group in df.groupby(["date", "hour"]):
             sales = group["pred_sale_per_hour"].iloc[0]
             
-            # 1. 必要人数の確保 (5000円に1人)
             num_staff = max(1, int(sales // 5000))
             slot_vars = [work[row["id"], d, h] for _, row in group.iterrows()]
             model.Add(sum(slot_vars) == num_staff) 
 
-            # 2. 責任者制約 (L4以上 or Help)
-         
-
-            # 3. Level 3 枠の制約 (L3がいなければL5、L5もいなければHelp)
-            # 「L3 or L5 or Help」が1人以上
-        
             l4_vars = [work[row["id"], d, h] for _, row in group.iterrows() 
                        if row["id"] == self.help_id
-                       or staff_info.get(row["id"], {}).get('level') in [3 , 4 ,5]
+                       or staff_info.get(row["id"], {}).get('level') in [3, 4, 5]
                        ]
             model.Add(sum(l4_vars) >= 1)
-        """
-            # 3. Level 3 枠の制約 (L3 or L5 or Help が必須)
-            l3_vars = [work[row["id"], d, h] for _, row in group.iterrows() 
-                       if  
-                       or staff_info.get(row["id"], {}).get('level') == 5 
-                       or row["id"] == self.help_id]
-            model.Add(sum(l3_vars) >= 1)
-        """
-        # 3. 個別・連続性ルール
+
         for s in staff_ids:
             if s == self.help_id: continue
-            
+            status = staff_info.get(s, {}).get('status', 'unknown')
+            if status == "international":
+                weekly_vars = [work[sid, d, h] for (sid, d, h) in work.keys() if sid == s]
+                model.Add(sum(weekly_vars) <= 28)
+                
             for d in dates:
                 day_hours = range(9, 25)
-                # この日のこの人の全勤務変数
                 d_vars = [work[s, d, h] for h in day_hours if (s, d, h) in work]
                 if not d_vars: continue
-
-                # 【1時間限定の休憩】を検知する変数
+                
                 break_starts = []
                 for h in day_hours:
                     if (s, d, h) not in work: continue
-                    
-                    # --- 休憩検知 (1->0) ---
+                    if status == "high_school" and h >= 22:
+                        model.Add(work[s, d, h] == 0)
+
                     if h > 9 and (s, d, h-1) in work:
                         is_brk = model.NewBoolVar(f'brk_{s}_{d}_{h}')
-                        # 直前が1 かつ 今が0 の時だけ is_brk=1
                         model.Add(is_brk >= work[s, d, h-1] - work[s, d, h])
                         break_starts.append(is_brk)
-                        # 休憩は1時間だけ（次は必ず仕事に戻る）
                         if (s, d, h+1) in work:
                             model.Add(work[s, d, h+1] >= is_brk)
 
-                    # --- 【重要】連続勤務は最大5時間まで（6時間連続勤務を禁止） ---
-                    # 誰であっても、6時間連続で「1」が続くことを数学的に禁止する
                     window_6 = [work[s, d, h + i] for i in range(6) if (s, d, h + i) in work]
                     if len(window_6) == 6:
-                        model.Add(sum(window_6) <= 5) # 6時間のうち仕事は5時間以内＝必ず1時間は休む
+                        model.Add(sum(window_6) <= 5)
 
-                # --- 1日の合計が6時間を超えたら、必ず1回は休憩を「開始」させる ---
                 if break_starts:
-                    # 休憩開始（1->0）の合計回数を「最大2回」に制限
                     model.Add(sum(break_starts) <= 3)
 
-                # 4. 6時間超えの勤務なら最低1回は休憩を入れる
                 total_w = sum(work[s, d, h] for h in day_hours)
                 has_long_shift = model.NewBoolVar(f'long_{s}_{d}')
                 model.Add(total_w > 6).OnlyEnforceIf(has_long_shift)
                 model.Add(total_w <= 6).OnlyEnforceIf(has_long_shift.Not())
                 if break_starts:
                     model.Add(sum(break_starts) >= 1).OnlyEnforceIf(has_long_shift)
-                   
-               
 
-        # 4. 目的関数
         obj_terms = []
         for (s, d, h), w in work.items():
             if s == self.help_id:
@@ -256,7 +209,6 @@ class ShiftAss:
         df = self.combine_data()
         solver, status, work = self.create_shift(df)
         
-        # スタッフ情報をIDで引けるように辞書化
         staff_data = self.get_staff_data_df().set_index('id').to_dict('index')
         
         shift_results = []  
@@ -278,12 +230,11 @@ class ShiftAss:
     def shift_save_db(self):
         df = self.run()
         if df.empty:
-            print("保存するデータがありません。")
-            return []
+            return "保存するデータがありません"
 
         db: Session = next(get_db())
         try:
-            # 対象期間を削除
+            db.execute("SELECT 1")
             db.query(ShiftMain).filter(
                 ShiftMain.date >= self.start_date,
                 ShiftMain.date <= self.end_date
@@ -309,21 +260,13 @@ class ShiftAss:
             db.rollback()
             print(f"Error saving to DB: {e}")
             return []
-           
-
-
-
 
     @staticmethod
     def get_shift_main():
-       
         today = datetime.today().date()
         tomorrow = today + timedelta(days=1)
         
-        
-        
-        #print(today , tomorrow)
-        db : Session = next(get_db())
+        db: Session = next(get_db())
         data = db.query(ShiftMain).filter(
                     ShiftMain.date >= today,
                     ShiftMain.date <= tomorrow
@@ -333,9 +276,4 @@ class ShiftAss:
         else:
             for d in data:
                 print(d)
-        return  data
-        
-    
-     
-        
-        
+        return data

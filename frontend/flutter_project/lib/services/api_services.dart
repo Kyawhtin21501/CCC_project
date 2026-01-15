@@ -15,7 +15,7 @@ class ApiService {
   /// while Debug mode points to the local machine (localhost).
   static String get baseUrl {
     if (kReleaseMode) {
-      return 'https://ccc-project.onrender.com';
+      return "https://ccc-project-p8yt.onrender.com";
     }
     return 'http://127.0.0.1:5000';//have to use local network IP for device testing!!!!!
   }
@@ -76,11 +76,14 @@ class ApiService {
     try {
       final response = await http.get(Uri.parse(url), headers: _headers);
       if (_isSuccess(response.statusCode)) {
-        // Use utf8.decode to ensure Japanese characters aren't garbled
-        final List data = jsonDecode(utf8.decode(response.bodyBytes));
-        return data.map((e) => _sanitizeStaffData(Map<String, dynamic>.from(e))).toList();
-      }
-      throw 'Error: ${response.statusCode}';
+  final List data = jsonDecode(utf8.decode(response.bodyBytes));
+  return data.map((e) => _sanitizeStaffData(Map<String, dynamic>.from(e))).toList();
+} else {
+  // This provides more info in the console
+  _trace('Server side error: ${response.body}'); 
+  throw 'サーバーエラーが発生しました (${response.statusCode})。管理者にお問い合わせください。';
+}
+      
     } catch (e) {
       _trace('fetchStaffList Error: $e');
       rethrow;
