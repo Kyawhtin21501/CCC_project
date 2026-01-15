@@ -137,13 +137,19 @@ Future<void> _generateAutoShifts() async {
   });
 
   try {
-    debugPrint("AutoShift Request Start");
+    debugPrint("AutoShift POST start");
     debugPrint("Start: $_startDate, End: $_endDate");
 
-    final data =
-        await ApiService.fetchAutoShiftTable(_startDate, _endDate);
+    // ① POST: trigger AI generation
+    await ApiService.postAutoShiftGeneration(_startDate, _endDate);
 
-    debugPrint("API Response: $data");
+    debugPrint("AutoShift POST success → fetching result");
+
+    // ② GET: fetch generated shift table
+    final data =
+        await ApiService.getAutoShiftTable(_startDate, _endDate);
+
+    debugPrint("AutoShift GET response: $data");
 
     if (mounted) {
       setState(() {
@@ -151,11 +157,9 @@ Future<void> _generateAutoShifts() async {
       });
       _showSnackBar("AIシフトを生成しました");
     }
-  }
-  // ここが重要
-  catch (e, stackTrace) {
-    debugPrint(" AutoShift Error: $e");
-    debugPrint("tackTrace:\n$stackTrace");
+  } catch (e, stackTrace) {
+    debugPrint("AutoShift Error: $e");
+    debugPrint("StackTrace:\n$stackTrace");
 
     if (mounted) {
       _showSnackBar(
@@ -169,6 +173,7 @@ Future<void> _generateAutoShifts() async {
     }
   }
 }
+
 
 
   // --- HELPERS ---
@@ -480,36 +485,87 @@ Future<void> _generateAutoShifts() async {
     );
   }
 
-  Widget _buildActionBanner(ThemeData theme) {
-    final df = DateFormat('yyyy/MM/dd');
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.date_range, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "${df.format(_startDate)} 〜 ${df.format(_endDate)}",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+Widget _buildActionBanner(ThemeData theme) {
+  final df = DateFormat('yyyy/MM/dd');
+
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2)),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.date_range, color: theme.colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            "${df.format(_startDate)} 〜 ${df.format(_endDate)}",
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          TextButton(onPressed: _selectDateRange, child: const Text("期間変更")),
-          const SizedBox(width: 8),
-          FilledButton.icon(
-            onPressed: _isGenerating ? null : _generateAutoShifts,
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text("AI生成"),
-          ),
-        ],
-      ),
-    );
+        ),
+        TextButton(
+          onPressed: _selectDateRange,
+          child: const Text("期間変更"),
+        ),
+        const SizedBox(width: 8),
+
+        /// 🔵 POST button
+        FilledButton.icon(
+          onPressed: _isGenerating ? null : _postAutoShift,
+          icon: const Icon(Icons.play_arrow),
+          label: const Text("AI生成開始"),
+        ),
+
+        const SizedBox(width: 8),
+
+        /// 🟢 GET button
+        OutlinedButton.icon(
+          onPressed: _isGenerating ? null : _fetchAutoShift,
+          icon: const Icon(Icons.download),
+          label: const Text("結果取得"),
+        ),
+      ],
+    ),
+  );
+}
+Future<void> _postAutoShift() async {
+  if (_endDate.isBefore(_startDate)) {
+    _showSnackBar("終了日は開始日以降を選択してください", isError: true);
+    return;
   }
+
+  setState(() => _isGenerating = true);
+
+  try {
+    await ApiService.postAutoShiftGeneration(_startDate, _endDate);
+    _showSnackBar("AI生成を開始しました");
+  } catch (e) {
+    _showSnackBar("AI生成の開始に失敗しました\n$e", isError: true);
+  } finally {
+    if (mounted) setState(() => _isGenerating = false);
+  }
+}
+Future<void> _fetchAutoShift() async {
+  setState(() => _isGenerating = true);
+
+  try {
+    final data =
+        await ApiService.getAutoShiftTable(_startDate, _endDate);
+
+    setState(() {
+      _predictedShifts = List<Map<String, dynamic>>.from(data);
+    });
+
+    _showSnackBar("AIシフト結果を取得しました");
+  } catch (e) {
+    _showSnackBar("結果取得に失敗しました\n$e", isError: true);
+  } finally {
+    if (mounted) setState(() => _isGenerating = false);
+  }
+}
+
 
   Widget _buildTimelineCard(String date, List<Map<String, dynamic>> shifts, ThemeData theme) {
     final actualStaff = shifts

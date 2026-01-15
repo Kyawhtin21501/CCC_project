@@ -15,6 +15,7 @@ class ApiService {
   /// while Debug mode points to the local machine (localhost).
   static String get baseUrl {
     if (kReleaseMode) {
+      return "https://ccc-project-1.onrender.com";
 
       return "https://ccc-project-1.onrender.com";
     }
@@ -251,30 +252,93 @@ class ApiService {
     }
   }
 
-  /// POST: Triggers the AI shift generation algorithm for a specific date range.
-  static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(DateTime start, DateTime end) async {
-    final url = '$baseUrl/shift_ass';
-    final payload = {
-      "start_date": DateFormat('yyyy-MM-dd').format(start),
-      "end_date": DateFormat('yyyy-MM-dd').format(end),
-    };
+  // /// POST: Triggers the AI shift generation algorithm for a specific date range.
+  // static Future<List<Map<String, dynamic>>> fetchAutoShiftTable(DateTime start, DateTime end) async {
+  //   final url = '$baseUrl/shift_ass';
+  //   final payload = {
+  //     "start_date": DateFormat('yyyy-MM-dd').format(start),
+  //     "end_date": DateFormat('yyyy-MM-dd').format(end),
+  //   };
     
-    _trace('POST AutoShift: $url');
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: _headers,
-        body: jsonEncode(payload),
-      );
+  //   _trace('POST AutoShift: $url');
+  //   try {
+  //     final response = await http.post(
+  //       Uri.parse(url),
+  //       headers: _headers,
+  //       body: jsonEncode(payload),
+  //     );
 
-      if (_isSuccess(response.statusCode)) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-        return List<Map<String, dynamic>>.from(decoded);
-      }
-      throw "AI shift generation failed";
-    } catch (e) {
-      _trace('fetchAutoShiftTable Error: $e');
-      rethrow;
+  //     if (_isSuccess(response.statusCode)) {
+  //       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+  //       return List<Map<String, dynamic>>.from(decoded);
+  //     }
+  //     throw "AI shift generation failed";
+  //   } catch (e) {
+  //     _trace('fetchAutoShiftTable Error: $e');
+  //     rethrow;
+  //   }
+  // }
+  /// POST: Trigger AI shift generation for a date range
+static Future<void> postAutoShiftGeneration(
+    DateTime start,
+    DateTime end,
+) async {
+  final url = '$baseUrl/shift_ass';
+
+  final payload = {
+    "start_date": DateFormat('yyyy-MM-dd').format(start),
+    "end_date": DateFormat('yyyy-MM-dd').format(end),
+  };
+
+  _trace('POST AutoShift Trigger: $url');
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: jsonEncode(payload),
+    );
+
+    if (!_isSuccess(response.statusCode)) {
+      throw Exception('AI shift generation failed');
     }
+  } catch (e) {
+    _trace('postAutoShiftGeneration Error: $e');
+    rethrow;
   }
+}
+
+/// GET: Fetch generated AI shift table
+static Future<List<Map<String, dynamic>>> getAutoShiftTable(
+    DateTime start,
+    DateTime end,
+) async {
+  final query = {
+    "start_date": DateFormat('yyyy-MM-dd').format(start),
+    "end_date": DateFormat('yyyy-MM-dd').format(end),
+  };
+
+  final uri = Uri.parse('$baseUrl/shift_ass_data_main').replace(queryParameters: query);
+
+  _trace('GET AutoShift Result: $uri');
+
+  try {
+    final response = await http.get(
+      uri,
+      headers: _headers,
+    );
+
+    if (_isSuccess(response.statusCode)) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      return List<Map<String, dynamic>>.from(decoded);
+    }
+
+    throw Exception('Failed to fetch AI shift result');
+  } catch (e) {
+    _trace('getAutoShiftTable Error: $e');
+    rethrow;
+  }
+}
+
+
 }

@@ -16,9 +16,9 @@ if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
 
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,      # 実行前に接続確認を行う（今回のエラー対策の核）
-    pool_recycle=300,        # 5分ごとに接続をリフレッシュする
-
+    echo=True,       
+    future=True,
+    pool_pre_ping=True
 )
 
 SessionLocal = sessionmaker(
