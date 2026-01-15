@@ -322,21 +322,25 @@ class ShiftAss:
 
 
     @staticmethod
-    def get_shift_main(start,end):
-       
-        
-        
-        
-        #print(today , tomorrow)
-        db : Session = next(get_db())
+    @staticmethod
+    def get_shift_main(today, tomorrow):
+        # ... 前半の取得処理 ...
+        db: Session = next(get_db())
         data = db.query(ShiftMain).filter(
-                    ShiftMain.date >= start,
-                    ShiftMain.date <= end
-                ).all()
-        if not data:
-            print("該当シフトはありません")
-        else:
-            for d in data:
-                print(d)
-        return  data
+            # 必要に応じて引数 start_date, end_date を使うように変更
+            ShiftMain.date >= today,
+            ShiftMain.date <= tomorrow
+        ).all()
+
+        # ここが重要！：オブジェクトのリストを辞書のリストに変換する
+        results = []
+        for d in data:
+            # ShiftMainモデルに to_dict() がある場合
+            results.append(d.to_dict()) 
+            # もし to_dict() がなければ、手動で辞書を作ります
+            # results.append({
+            #     "id": d.id, "date": d.date.isoformat(), "hour": d.hour, ...
+            # })
+        
+        return results # 辞書のリストを返す
  
