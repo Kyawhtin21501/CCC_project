@@ -319,7 +319,14 @@ class ShiftAss:
            
 
 
-
+    @staticmethod 
+    def get_shift_for_dashboard(today, tomorrow):
+        db: Session = next(get_db())
+        data = db.query(ShiftMain).filter(
+            ShiftMain.date == today,
+            ShiftMain.date ==  tomorrow
+        ).all()
+        return data
 
    
     @staticmethod
@@ -332,10 +339,10 @@ class ShiftAss:
             ShiftMain.date <= tomorrow
         ).all()
 
-        # ここが重要！：オブジェクトのリストを辞書のリストに変換する
+       
         results = []
         for d in data:
-            # ShiftMainモデルに to_dict() がある場合
+            
             results.append(d.to_dict()) 
             # もし to_dict() がなければ、手動で辞書を作ります
             # results.append({
