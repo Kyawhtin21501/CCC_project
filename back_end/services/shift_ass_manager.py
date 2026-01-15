@@ -234,7 +234,7 @@ class ShiftAss:
 
         db: Session = next(get_db())
         try:
-            db.execute("SELECT 1")
+           
             db.query(ShiftMain).filter(
                 ShiftMain.date >= self.start_date,
                 ShiftMain.date <= self.end_date
