@@ -25,14 +25,9 @@ def shift_ass_dash():
     today = datetime.today().date()
     tomorrow = today + timedelta(days=1)
     shift_ass_dash = ShiftAss.get_shift_main(today,tomorrow)
-    results = []
-    for s in shift_ass_dash:
-        d = s.to_dict()
-        if isinstance(d['date'], (date, datetime)):
-            d['date'] = d['date'].strftime('%Y-%m-%d')
-        results.append(d)
-        
-    return jsonify(results), 200
+    
+  
+    return jsonify(shift_ass_dash), 200
 
 @shift_ass_bp.get("/shift_ass_data_main")
 def shift_ass_main():

@@ -321,7 +321,7 @@ class ShiftAss:
 
 
 
-    @staticmethod
+   
     @staticmethod
     def get_shift_main(today, tomorrow):
         # ... 前半の取得処理 ...
