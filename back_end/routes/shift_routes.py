@@ -39,7 +39,8 @@ def shift_ass_main():
     
     start = request.args.get('start_date')
     end = request.args.get('end_date')
-    
+    if not start or not end:
+        return "Missing parameters", 400
     shift_ass_main = ShiftAss.get_shift_main(start,end)
     
     return jsonify(shift_ass_main), 200
