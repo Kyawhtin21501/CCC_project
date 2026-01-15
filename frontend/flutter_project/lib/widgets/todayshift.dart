@@ -14,16 +14,34 @@ class TodayShiftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Prepare date strings
+    // 1. Get current date normalized to midnight (00:00:00)
     final now = DateTime.now();
-    final todayStr = DateFormat('yyyy-MM-dd').format(now);
-    final tomorrowStr = DateFormat('yyyy-MM-dd').format(
-      now.add(const Duration(days: 1)),
-    );
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
 
-    // Filter shifts based on date
-    final todayShifts = shifts.where((s) => s['date'] == todayStr).toList();
-    final tomorrowShifts = shifts.where((s) => s['date'] == tomorrowStr).toList();
+    // 2. Robust Filtering: Parse the string from the API into a DateTime object
+    // and compare Year, Month, and Day specifically.
+    final todayShifts = shifts.where((s) {
+      try {
+        final shiftDate = DateTime.parse(s['date'].toString());
+        return shiftDate.year == today.year &&
+               shiftDate.month == today.month &&
+               shiftDate.day == today.day;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    final tomorrowShifts = shifts.where((s) {
+      try {
+        final shiftDate = DateTime.parse(s['date'].toString());
+        return shiftDate.year == tomorrow.year &&
+               shiftDate.month == tomorrow.month &&
+               shiftDate.day == tomorrow.day;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
 
     return DefaultTabController(
       length: 2,
@@ -71,8 +89,8 @@ class TodayShiftCard extends StatelessWidget {
         .toSet()
         .toList();
 
-    // Define business hours (e.g., 9:00 to 24:00)
-    final hours = List.generate(16, (i) => i + 9); // 9 to 24
+    // Define business hours (9:00 to 24:00)
+    final hours = List.generate(16, (i) => i + 9);
 
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
