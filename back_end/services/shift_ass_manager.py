@@ -320,13 +320,12 @@ class ShiftAss:
 
 
     @staticmethod 
-    def get_shift_for_dashboard():
+    def get_shift_for_dashboard(start_date, end_date):
         db: Session = next(get_db())
-        today = datetime.today().date()
-        tomorrow = today + timedelta(days=1)
+   
         datas = db.query(ShiftMain).filter(
-            ShiftMain.date == today,
-            ShiftMain.date ==  tomorrow
+            ShiftMain.date == start_date,
+            ShiftMain.date ==  end_date
         ).all()
         result = []
         for d in datas:
@@ -339,24 +338,18 @@ class ShiftAss:
     def get_shift_main(today, tomorrow):
         # ... 前半の取得処理 ...
         db: Session = next(get_db())
-        day1 = db.query(ShiftMain).filter(
-            ShiftMain.date == today).all()
-        day2 = db.query(ShiftMain).filter(
-            ShiftMain.date == tomorrow).all()
+        datas = db.query(ShiftMain).filter(
+            ShiftMain.date >= today,
+            ShiftMain.date <= tomorrow).all()
         
 
        
         results1 = []
-        for d in day1:
+        for d in datas:
             
             results1.append(d.to_dict()) 
-            # もし to_dict() がなければ、手動で辞書を作ります
-            # results.append({
-            #     "id": d.id, "date": d.date.isoformat(), "hour": d.hour, ...
-            # })
-        results2 = []
-        for d in day2:
-            results2.append(d.to_dict()) 
+    
+       
         
-        return results1 , results2
+        return results1 
  
