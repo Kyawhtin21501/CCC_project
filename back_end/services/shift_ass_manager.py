@@ -320,13 +320,19 @@ class ShiftAss:
 
 
     @staticmethod 
-    def get_shift_for_dashboard(today, tomorrow):
+    def get_shift_for_dashboard():
         db: Session = next(get_db())
-        data = db.query(ShiftMain).filter(
+        today = datetime.today().date()
+        tomorrow = today + timedelta(days=1)
+        datas = db.query(ShiftMain).filter(
             ShiftMain.date == today,
             ShiftMain.date ==  tomorrow
         ).all()
-        return data
+        result = []
+        for d in datas:
+            result.append(d.to_dict()) 
+        return result
+        
 
    
     @staticmethod

@@ -22,12 +22,11 @@ def shift_ass():
 
 @shift_ass_bp.get("/shift_ass_dash_board")
 def shift_ass_dash():
-    today = datetime.today().date()
-    tomorrow = today + timedelta(days=1)
-    day1 , day2 = ShiftAss.get_shift_main(today,tomorrow)
+    
+    S =  ShiftAss.get_shift_main()
     
   
-    return jsonify(day1, day2), 200
+    return jsonify(S), 200
 
 @shift_ass_bp.get("/shift_ass_data_main")
 def shift_ass_main():
