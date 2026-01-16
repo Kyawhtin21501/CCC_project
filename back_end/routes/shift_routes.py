@@ -22,10 +22,10 @@ def shift_ass():
 
 @shift_ass_bp.get("/shift_ass_dash_board")
 def shift_ass_dash():
-    
-    S =  ShiftAss.get_shift_main()
-    
-  
+    start = request.args.get("start_date")
+    end = request.args.get("end_date")
+    S =  ShiftAss.get_shift_main(start, end)
+
     return jsonify(S), 200
 
 @shift_ass_bp.get("/shift_ass_data_main")
