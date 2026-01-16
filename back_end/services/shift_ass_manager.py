@@ -340,9 +340,9 @@ class ShiftAss:
         # ... 前半の取得処理 ...
         db: Session = next(get_db())
         day1 = db.query(ShiftMain).filter(
-            ShiftMain.date == today).all()
+            ShiftMain.date >= today).all()
         day2 = db.query(ShiftMain).filter(
-            ShiftMain.date == tomorrow).all()
+            ShiftMain.date <= tomorrow).all()
         
 
        
@@ -350,10 +350,7 @@ class ShiftAss:
         for d in day1:
             
             results1.append(d.to_dict()) 
-            # もし to_dict() がなければ、手動で辞書を作ります
-            # results.append({
-            #     "id": d.id, "date": d.date.isoformat(), "hour": d.hour, ...
-            # })
+       
         results2 = []
         for d in day2:
             results2.append(d.to_dict()) 
