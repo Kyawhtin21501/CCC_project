@@ -502,6 +502,8 @@ Widget _buildActionBanner(ThemeData theme) {
         Expanded(
           child: Text(
             "${df.format(_startDate)} 〜 ${df.format(_endDate)}",
+            softWrap: false,
+            overflow: TextOverflow.visible,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
